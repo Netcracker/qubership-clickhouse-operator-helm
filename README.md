@@ -1,0 +1,1 @@
+# qubership-clickhouse-operator-helm
