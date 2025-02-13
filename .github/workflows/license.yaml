@@ -2,7 +2,7 @@ name: Add License Header
 on:
   push:
     branches:
-      - 'main'
+      - 'dbaas-initial-branch'
 env:
    COPYRIGHT_COMPANY: 'NetCracker Technology Corporation'
    COPYRIGHT_YEAR: '2024-2025'
