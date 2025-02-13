@@ -23,7 +23,7 @@ ENV ADAPTER=/usr/local/bin/qubership-clickhouse-dbaas-adapter \
     USER_UID=1001
 
 # install dbaas binary
-COPY build/_output/bin/qubership-clickhouse-dbaas-adapter ${ADAPTER}
+COPY --from=builder build/_output/bin/qubership-clickhouse-dbaas-adapter ${ADAPTER}
 COPY build/bin /usr/local/bin
 
 USER ${USER_UID}
