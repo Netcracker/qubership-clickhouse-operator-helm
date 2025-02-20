@@ -1,0 +1,173 @@
+{{- if and .Values.clickhouseCluster.install }}
+{{- if eq .Values.clickhouseCluster.scheme "dr" }}
+apiVersion: "clickhouse.altinity.com/v1"
+kind: "ClickHouseInstallation"
+
+metadata:
+  name: "{{ .Values.clickhouseCluster.name }}"
+  labels:
+    name: "{{ .Values.clickhouseCluster.name }}"
+    {{ include "kubernetes.labels" . | nindent 4 }}
+
+spec:
+  configuration:
+    settings:
+      prometheus/asynchronous_metrics: 'true'
+      prometheus/endpoint: /metrics
+      prometheus/events: 'true'
+      prometheus/metrics: 'true'
+      prometheus/port: '8888'
+    users:
+      {{ .Values.clickhouseCluster.user.name }}/networks/ip: {{ .Values.clickhouseCluster.user.networks}}
+      {{ .Values.clickhouseCluster.user.name}}/profile: {{ .Values.clickhouseCluster.user.profile }}
+      {{ .Values.clickhouseCluster.user.name}}/password: {{ .Values.clickhouseCluster.user.password }}
+    zookeeper:
+      nodes:
+        - host: {{ .Values.clickhouseCluster.zookeeperHost }}
+    clusters:
+      - name: dr-cluster
+        layout:
+          replicas:
+            - templates:
+                podTemplate: clickhouse-left
+                replicaServiceTemplate: replica-service-template
+            - templates:
+                podTemplate: clickhouse-left
+                replicaServiceTemplate: replica-service-template
+            - templates:
+                podTemplate: clickhouse-right
+                replicaServiceTemplate: replica-service-template
+            - templates:
+                podTemplate: clickhouse-right
+                replicaServiceTemplate: replica-service-template
+  templates:
+    serviceTemplates:
+      - name: replica-service-template
+        spec:
+          ports:
+            - name: http
+              port: 8123
+            - name: tcp
+              port: 9000
+            - name: interserver
+              port: 9009
+            - name: metrics
+              port: 8888
+          type: ClusterIP
+          clusterIP: None
+    volumeClaimTemplates:
+      - name: clickhouse-pvc-left
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: {{ .Values.clickhouseCluster.pvSize }}
+{{- if .Values.clickhouseCluster.storageClassName }}
+          storageClassName: {{ .Values.clickhouseCluster.storageClassName }}
+{{- end }}
+{{- if and .Values.clickhouseCluster.localStorage }}
+          selector:
+            matchLabels:
+{{ toYaml .Values.clickhouseCluster.nodeSelectorLeft | indent 14 }}
+{{- end }}
+      - name: clickhouse-pvc-right
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: {{ .Values.clickhouseCluster.pvSize }}
+{{- if .Values.clickhouseCluster.storageClassName }}
+          storageClassName: {{ .Values.clickhouseCluster.storageClassName }}
+{{- end }}
+{{- if and .Values.clickhouseCluster.localStorage }}
+          selector:
+            matchLabels:
+{{ toYaml .Values.clickhouseCluster.nodeSelectorRight | indent 14 }}
+{{- end }}
+    podTemplates:
+      - name: clickhouse-left
+        zone:
+          matchLabels:
+{{ toYaml .Values.clickhouseCluster.nodeSelectorLeft | indent 12 }}
+        podDistribution:
+          - type: ClickHouseAntiAffinity
+            scope: ClickHouseInstallation
+        spec:
+          securityContext:
+{{ toYaml .Values.clickhouseCluster.securityContext.pod | indent 12 }}
+          containers:
+            - name: clickhouse-pod
+              image: {{ template "clickhouse.image" . }}
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: SAMPLES_TTL
+                  value: {{ .Values.clickhouseCluster.ttlSamples }}
+                - name: TIME_SERIES_TTL
+                  value: {{ .Values.clickhouseCluster.ttlTimeseries }}
+                - name: ALARMS_TTL
+                  value: {{ .Values.clickhouseCluster.ttlAlarms }}
+                - name: LINK_METRICS_TTL
+                  value: {{ .Values.clickhouseCluster.ttlLinkmetrics }}
+              volumeMounts:
+                - name: clickhouse-pvc-left
+                  mountPath: /var/lib/clickhouse
+                - name: clickhouse-pvc-left
+                  mountPath: /var/log/clickhouse-server
+              securityContext:
+{{ toYaml .Values.clickhouseCluster.securityContext.container | indent 16 }}
+              ports:
+                - containerPort: 8888
+                  name: metrics
+                  protocol: TCP
+              resources:
+{{ toYaml .Values.clickhouseCluster.resources | indent 16 }}
+              readinessProbe:
+                httpGet:
+                  path: /ping
+                  port: http
+                  scheme: HTTP
+      - name: clickhouse-right
+        zone:
+          matchLabels:
+{{ toYaml .Values.clickhouseCluster.nodeSelectorRight | indent 12 }}
+        podDistribution:
+          - type: ClickHouseAntiAffinity
+            scope: ClickHouseInstallation
+        spec:
+          securityContext:
+{{ toYaml .Values.clickhouseCluster.securityContext.pod | indent 12 }}
+          containers:
+            - name: clickhouse-pod
+              image: {{ template "clickhouse.image" . }}
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: SAMPLES_TTL
+                  value: {{ .Values.clickhouseCluster.ttlSamples }}
+                - name: TIME_SERIES_TTL
+                  value: {{ .Values.clickhouseCluster.ttlTimeseries }}
+                - name: ALARMS_TTL
+                  value: {{ .Values.clickhouseCluster.ttlAlarms }}
+                - name: LINK_METRICS_TTL
+                  value: {{ .Values.clickhouseCluster.ttlLinkmetrics }}
+              volumeMounts:
+                - name: clickhouse-pvc-right
+                  mountPath: /var/lib/clickhouse
+                - name: clickhouse-pvc-right
+                  mountPath: /var/log/clickhouse-server
+              securityContext:
+{{ toYaml .Values.clickhouseCluster.securityContext.container | indent 16 }}
+              ports:
+                - containerPort: 8888
+                  name: metrics
+                  protocol: TCP
+              resources:
+{{ toYaml .Values.clickhouseCluster.resources | indent 16 }}
+              readinessProbe:
+                httpGet:
+                  path: /ping
+                  port: http
+                  scheme: HTTP
+{{- end }}
+{{- end }}

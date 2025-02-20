@@ -1,0 +1,43 @@
+{{- if and .Values.clickhouseCluster.install }}
+{{- if and (eq (include "monitoring.install" .) "true") }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    name: clickhouse-service-monitor
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/managed-by: monitoring-operator
+    app.kubernetes.io/name: clickhouse-service-monitor
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    app.kubernetes.io/technology: "go"
+    app.netcracker.com/component: monitoring
+    k8s-app: clickhouse-service-monitor
+  name: clickhouse-service-monitor
+spec:
+  endpoints:
+    - interval: 30s
+      port: metrics
+  jobLabel: k8s-app
+  selector:
+    matchLabels:
+      clickhouse.altinity.com/app: chop
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/name: clickhouse-backup-daemon-service-monitor
+  name: clickhouse-backup-daemon-service-monitor
+spec:
+  endpoints:
+    - interval: 60s
+      path: /health/prometheus
+      port: web
+  jobLabel: k8s-app
+  selector:
+    matchLabels:
+      app: clickhouse-backup-orchestrator
+{{- end }}
+{{- end }}

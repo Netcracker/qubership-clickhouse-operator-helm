@@ -1,0 +1,12 @@
+.idea/
+.vscode/
+.history
+target/
+
+*.orig
+*.zip
+
+### Operator rules
+# Temporary Build Files
+build/_output
+build/_test

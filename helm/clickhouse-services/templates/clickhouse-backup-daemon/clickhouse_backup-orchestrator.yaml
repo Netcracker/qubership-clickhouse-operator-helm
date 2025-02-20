@@ -1,0 +1,239 @@
+{{- if .Values.backupDaemon.install }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clickhouse-backup-orchestrator
+  labels:
+    app: clickhouse-backup-orchestrator
+    name: clickhouse-backup-orchestrator
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    app.kubernetes.io/technology: "python"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: clickhouse-backup-orchestrator
+  template:
+    metadata:
+      labels:
+        app: clickhouse-backup-orchestrator
+    spec:
+      {{- if .Values.backupDaemon.affinity }}
+      affinity: {{ .Values.backupDaemon.affinity | toJson }}
+      {{- else if .Values.affinity }}
+      affinity: {{ .Values.affinity | toJson }}
+      {{- end }}
+      volumes:
+        - name: backup-storage
+      {{ if ne (lower .Values.backupDaemon.storage.remote) "s3" }}
+          persistentVolumeClaim:
+            claimName: backup-ochestrator-pvc
+      {{- else }}
+          emptyDir: {}
+      {{ end }}
+{{- if .Values.tls.enabled }}
+        - name: {{ include "clickhouse.certServicesSecret" . }}
+          secret:
+            secretName: {{ include "clickhouse.certServicesSecret" . }}
+            defaultMode: 420
+{{- end }}
+      {{ if .Values.backupDaemon.priorityClassName }}
+      priorityClassName: {{ .Values.backupDaemon.priorityClassName }}
+      {{ end }}
+      containers:
+        - name: clickhouse-backup-orchestrator
+          image: {{ template "docker_ch_backup_orch.image" . }}
+          ports:
+{{- if .Values.tls.enabled }}
+            - name: web
+              containerPort: 8443
+              protocol: TCP
+{{- else }}
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+{{- end }}
+          env:
+            - name: CLUSTER
+              value: {{ default "replicated" .Values.backupDaemon.cluster }}
+            - name: WATCH_NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: REMOTE_STORAGE
+              value: {{ .Values.backupDaemon.storage.remote }}
+            - name: SKIP_LOCK_CHECK
+              value: "true"
+            - name: S3_SSL_VERIFY
+              value: "false"
+{{- if .Values.disasterRecovery }}
+            - name: KEEP_LOCAL_BACKUPS
+              value: "false"
+{{- end }}
+{{- if .Values.tls.enabled }}
+            - name: TLS_ENABLED
+              value: "true"
+{{- end }}
+{{- if .Values.tracing.enabled }}
+            - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+              value: {{ .Values.tracing.host }}
+            - name: OTEL_EXPORTER_OTLP_TRACES_SVC_NAME
+              value: {{ .Values.tracing.service }}
+{{- end }}
+            - name: TIMEOUT
+              value: {{ .Values.backupDaemon.timeout | quote }}
+            {{- include "clickhouse_backup.envs" . | nindent 10 }}
+{{- if and .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsUsername }}
+            - name: BACKUP_DAEMON_API_CREDENTIALS_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: backup-daemon-api-credentials
+                  key: username
+            - name: BACKUP_DAEMON_API_CREDENTIALS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backup-daemon-api-credentials
+                  key: password
+{{- end }}
+          resources:
+{{ toYaml .Values.backupDaemon.orchestrator.resources | indent 12 }}
+          volumeMounts:
+            - name: backup-storage
+              mountPath: /backup-storage
+{{ if eq (lower .Values.backupDaemon.storage.remote) "nfs" }}
+            - name: backup-storage
+              mountPath: /backup-storage-external
+{{ end }}
+{{- if and .Values.tls.enabled }}
+            - name: {{ include "clickhouse.certServicesSecret" . }}
+              mountPath: {{ default "/tls/" }}
+{{- end }}
+          livenessProbe:
+            failureThreshold: 10
+            initialDelaySeconds: 10
+            periodSeconds: 25
+            successThreshold: 1
+            tcpSocket:
+{{- if and .Values.tls.enabled }}
+              port: 8443
+{{- else }}
+              port: 8080
+{{- end }}
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 10
+            initialDelaySeconds: 10
+            periodSeconds: 25
+            successThreshold: 1
+            tcpSocket:
+{{- if and .Values.tls.enabled }}
+              port: 8443
+{{- else }}
+              port: 8080
+{{- end }}
+            timeoutSeconds: 5
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "clickhouse.globalContainerSecurityContext" . | nindent 12 }}
+            {{- with .Values.backupDaemon.orchestrator.securityContext.container }}
+            {{- toYaml . | nindent 12 -}}
+            {{- end }}
+      tolerations:
+        {{- range $tKey, $t := .Values.backupDaemon.tolerations }}
+        - key: {{ $t.key }}
+          operator: {{ $t.operator }}
+          value: {{ $t.value }}
+          effect: {{ $t.effect }}
+          tolerationSeconds: {{ $t.tolerationSeconds }}
+        {{- end }}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      serviceAccountName: {{ .Values.clickhouseOperator.serviceAccountName }}
+      nodeSelector:
+{{ toYaml .Values.backupDaemon.orchestrator.nodeSelector | indent 8 }}
+      securityContext:
+         {{- include "clickhouse.globalPodSecurityContext" . | nindent 8 }}
+         {{- with .Values.backupDaemon.orchestrator.securityContext.pod }}
+         {{- toYaml . | nindent 8 -}}
+         {{- end }}
+---
+
+{{ if ne (lower .Values.backupDaemon.storage.remote) "s3" }}
+apiVersion: "v1"
+kind: "PersistentVolumeClaim"
+metadata:
+  annotations:
+    helm.sh/resource-policy: "keep"
+  labels:
+    app:  clickhouse-backup-orchestrator
+  name: backup-ochestrator-pvc
+spec:
+  accessModes:
+{{ toYaml .Values.backupDaemon.orchestrator.accessModes | indent 4 }}
+{{- if .Values.backupDaemon.orchestrator.storageClassName }}
+{{- if (eq "-" .Values.backupDaemon.orchestrator.storageClassName) }}
+  storageClassName: ""
+{{- else }}
+  storageClassName: "{{ .Values.backupDaemon.orchestrator.storageClassName }}"
+{{- end }}
+{{- end }}
+{{- if .Values.backupDaemon.orchestrator.volumeName }}
+  volumeName: "{{ .Values.backupDaemon.orchestrator.volumeName }}"
+{{- end }}
+  resources:
+    requests:
+      storage: "{{ .Values.backupDaemon.orchestrator.pvSize }}"
+{{ end }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: clickhouse-backup-orchestrator
+  name: clickhouse-backup-orchestrator
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+{{- if and .Values.tls.enabled }}
+    - port: 8443
+      targetPort: 8443
+      protocol: TCP
+      name: web
+{{- else }}
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: web
+{{- end }}
+  selector:
+    app: clickhouse-backup-orchestrator
+{{- end }}
+
+---
+{{ if eq (include "clickhouse.isS3Enabled" .) "true" }} # true if DR==true?
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "s3-remote-storage-credentials"
+data:
+  accessKeyId: {{ .Values.backupDaemon.storage.s3.access_key | b64enc }}
+  secretAccessKey: {{ .Values.backupDaemon.storage.s3.secret_key | b64enc }}
+type: Opaque
+{{ end }}
+
+---
+{{- if and .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsUsername }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "backup-daemon-api-credentials"
+data:
+  username: {{ .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsUsername | b64enc }}
+  password: {{ .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsPassword | b64enc }}
+type: Opaque
+{{- end }}

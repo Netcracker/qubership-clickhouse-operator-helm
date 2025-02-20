@@ -1,0 +1,46 @@
+{{- if .Values.integrationTests.install }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: clickhouse-integration-tests
+  labels:
+    name: clickhouse-integration-tests
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    app.kubernetes.io/technology: "python"
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - delete
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+      - services
+      - configmaps
+    verbs:
+      - get
+  - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+      - statefulsets/scale
+      - deployments
+      - deployments/status
+      - deployments/scale
+    verbs:
+      - get
+      - list
+      - delete
+      - update
+      - patch
+  - apiGroups:
+      - clickhouse.altinity.com
+    verbs:
+      - list
+    resources:
+      - clickhouseinstallations
+{{- end }}

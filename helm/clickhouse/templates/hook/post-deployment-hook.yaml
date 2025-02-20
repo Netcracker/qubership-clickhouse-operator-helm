@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "post-deployment-job"
+  labels:
+{{- if .Values.podLabels }}
+{{ .Values.podLabels | toYaml | nindent 4 }}
+{{- end }}
+  annotations:
+    "helm.sh/hook": post-install, post-upgrade
+    "helm.sh/hook-weight": "2"
+    "helm.sh/hook-delete-policy": hook-succeeded, hook-failed
+spec:
+  template:
+    metadata:
+      name: "post-deployment-job"
+      labels:
+{{- if .Values.podLabels }}
+{{ .Values.podLabels | toYaml | nindent 8 }}
+{{- end }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: post-hook-sa
+      containers:
+      - name: post-deployment-job
+        image: {{ template "clickhouse_post_hook.image" . }}
+        imagePullPolicy: Always
+        env:
+          - name: IS_HOOK
+            value: "True"
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: SECRET_NAMES
+            value: 
+          {{  include "clickhouse.users" . | indent 4 }}  
+        securityContext:
+            {{- include "clickhouse.globalContainerSecurityContext" . | nindent 12 }}
+            {{- with .Values.postHook.securityContext.container }}
+            {{- toYaml . | nindent 12 -}}
+            {{- end }}
+        resources:
+          requests:
+            memory: {{ default "256Mi" .Values.postHook.resources.requests.memory }}
+            cpu: {{ default "200m" .Values.postHook.resources.requests.cpu }}
+          limits:
+            memory: {{ default "256Mi" .Values.postHook.resources.limits.memory }}
+            cpu: {{ default "400m" .Values.postHook.resources.limits.cpu }} 
+      securityContext:
+        {{ (include "clickhouse.globalPodSecurityContext" . | nindent 8) }}
+        {{- with .Values.postHook.securityContext.pod }}
+        {{- toYaml . | nindent 8 -}}
+        {{- end }}

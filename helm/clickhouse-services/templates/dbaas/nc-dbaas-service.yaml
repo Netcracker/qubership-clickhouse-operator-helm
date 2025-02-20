@@ -1,0 +1,24 @@
+{{- if .Values.dbaas.install }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: nc-dbaas-clickhouse-adapter
+  labels:
+    name: nc-dbaas-clickhouse-adapter
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    app: nc-dbaas-clickhouse-adapter
+spec:
+  ports:
+    - name: web
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    {{- if .Values.INTERNAL_TLS_ENABLED }}
+    - name: web-tls
+      protocol: TCP
+      port: 8443
+      targetPort: 8080
+    {{- end }}
+  selector:
+    app: nc-dbaas-clickhouse-adapter
+{{ end }}

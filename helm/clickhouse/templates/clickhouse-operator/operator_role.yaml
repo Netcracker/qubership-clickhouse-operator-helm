@@ -1,0 +1,103 @@
+{{- if and .Values.clickhouseOperator.role.install }}
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ .Values.clickhouseOperator.name }}
+  labels:
+    name: {{ .Values.clickhouseOperator.name }}
+    {{ include "kubernetes.labels" . | nindent 4 }}
+
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - pods
+      - secrets
+      - services
+      - persistentvolumeclaims
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - create
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - endpoints
+    verbs:
+      - get
+      - list
+      - watch
+{{- if .Values.clickhouseOperator.events }}
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+{{- end }}
+  - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+      - replicasets
+      - deployments
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - create
+      - delete
+  - apiGroups:
+      - policy
+    resources:
+      - poddisruptionbudgets
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - create
+      - delete
+  - apiGroups:
+      - clickhouse.altinity.com
+    resources:
+      - clickhouseinstallations
+      - clickhouseinstallationtemplates
+      - clickhouseoperatorconfigurations
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - delete
+      - watch
+  - apiGroups:
+      - clickhouse.altinity.com
+    resources:
+      - clickhouseinstallations/finalizers
+      - clickhouseinstallationtemplates/finalizers
+      - clickhouseoperatorconfigurations/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - clickhouse.altinity.com
+    resources:
+      - clickhouseinstallations/status
+      - clickhouseinstallationtemplates/status
+      - clickhouseoperatorconfigurations/status
+    verbs:
+      - get
+      - update
+      - patch
+      - create
+      - delete
+{{- end }}

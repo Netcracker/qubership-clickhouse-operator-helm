@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: etc-clickhouse-operator-configd-files
+  labels:
+    name: etc-clickhouse-operator-configd-files
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    app: {{ .Values.clickhouseOperator.name }}
+data:
+  01-clickhouse-listen.xml: |
+    <yandex>
+        <!-- Listen wildcard address to allow accepting connections from other containers and host network. -->
+        <listen_host>::</listen_host> <!-- IPv6 address -->
+        <listen_host>0.0.0.0</listen_host> <!-- IPv4  address -->
+        <listen_try>1</listen_try>
+    </yandex>
+  02-clickhouse-logger.xml: |
+    <yandex>
+        <logger>
+            <!-- Possible levels: https://github.com/pocoproject/poco/blob/develop/Foundation/include/Poco/Logger.h#L105 -->
+            <level>{{ .Values.clickhouseOperator.logParams.loglevel }}</level>
+            <log>/var/log/clickhouse-server/clickhouse-server.log</log>
+            <errorlog>/var/log/clickhouse-server/clickhouse-server.err.log</errorlog>
+            <size>100M</size>
+            <count>10</count>
+            <!-- Default behavior is autodetection (log to console if not daemon mode and is tty) -->
+            <console>1</console>
+        </logger>
+    </yandex>
+  03-clickhouse-asynchronous-metric-log.xml: |
+    <yandex>
+      <asynchronous_metric_log>
+          <database>system</database>
+          <table>asynchronous_metric_log</table>
+          <engine>ENGINE = MergeTree PARTITION BY (event_date)
+                ORDER BY (event_time)
+                TTL event_date + INTERVAL {{ default "1 DAY" .Values.clickhouseCluster.configuration.custom.asynchronous_metric_log_ttl }} DELETE
+          </engine>
+      </asynchronous_metric_log>
+    </yandex>
+  04-clickhouse-metric_log.xml: |
+    <yandex>
+      <metric_log>
+          <database>system</database>
+          <table>metric_log</table>
+          <engine>ENGINE = MergeTree PARTITION BY (event_date)
+                ORDER BY (event_time)
+                TTL event_date + INTERVAL {{ default "1 DAY" .Values.clickhouseCluster.configuration.custom.metric_log_ttl }} DELETE
+          </engine>
+      </metric_log>
+    </yandex>
+  05-clickhouse-query_log.xml: |    
+    <yandex>
+      <query_log>
+          <database>system</database>
+          <table>query_log</table>
+          <partition_by>toMonday(event_date)</partition_by>
+          <ttl>event_date + INTERVAL {{ default "1 DAY" .Values.clickhouseCluster.configuration.custom.query_log_ttl }} DELETE</ttl>
+      </query_log>
+    </yandex>
+  06-clickhouse-query_thread_log.xml: |
+    <yandex>
+      <query_thread_log>
+          <database>system</database>
+          <table>query_thread_log</table>
+          <partition_by>toMonday(event_date)</partition_by>
+          <ttl>event_date + INTERVAL {{ default "1 DAY" .Values.clickhouseCluster.configuration.custom.query_thread_log_ttl }} DELETE</ttl>
+      </query_thread_log>
+    </yandex>
+  07-clickhouse-trace_log.xml: |
+    <yandex>
+      <trace_log>
+          <database>system</database>
+          <table>trace_log</table>
+          <partition_by>toMonday(event_date)</partition_by>
+          <ttl>event_date + INTERVAL {{ default "1 DAY" .Values.clickhouseCluster.configuration.custom.trace_log_ttl }} DELETE</ttl>
+      </trace_log>
+    </yandex>
+  08-clickhouse-part_log.xml: |
+    <yandex>
+      <part_log>
+          <database>system</database>
+          <table>part_log</table>
+          <partition_by>toMonday(event_date)</partition_by>
+          <ttl>event_date + INTERVAL {{ default "1 DAY" .Values.clickhouseCluster.configuration.custom.part_log_ttl }} DELETE</ttl>
+      </part_log>
+    </yandex>
+  09-clickhouse-crash_log.xml: |
+    <yandex>    
+      <crash_log>
+          <database>system</database>
+          <table>crash_log</table>
+          <partition_by>toMonday(event_date)</partition_by>
+          <ttl>event_date + INTERVAL {{ default "1 DAY" .Values.clickhouseCluster.configuration.custom.crash_log_ttl }} DELETE</ttl>
+      </crash_log>
+    </yandex>
+  10-clickhouse-text_log.xml: |
+    <yandex>
+      <text_log>
+          <database>system</database>
+          <table>text_log</table>
+          <partition_by>toMonday(event_date)</partition_by>
+          <ttl>event_date + INTERVAL {{ default "1 DAY" .Values.clickhouseCluster.configuration.custom.text_log_ttl }} DELETE</ttl>
+      </text_log>
+    </yandex>

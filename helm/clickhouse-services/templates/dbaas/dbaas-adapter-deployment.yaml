@@ -1,0 +1,250 @@
+{{- if .Values.dbaas.install }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nc-dbaas-clickhouse-adapter
+  labels:
+    app: nc-dbaas-clickhouse-adapter
+    name: nc-dbaas-clickhouse-adapter
+    {{ include "kubernetes.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nc-dbaas-clickhouse-adapter
+{{ if .Values.dbaas.podLabels }}
+{{ .Values.dbaas.podLabels | toYaml | nindent 6 }}
+{{ else if .Values.podLabels }}
+{{ .Values.podLabels | toYaml | nindent 6 }}
+{{ end }}
+  template:
+    metadata:
+      annotations:
+        dbaas: {{ printf "%s_%s" .Values.dbaas.clickhouse.username .Values.dbaas.clickhouse.password | sha256sum | quote }}
+      labels:
+        app: nc-dbaas-clickhouse-adapter
+{{ if .Values.dbaas.podLabels }}
+{{ .Values.dbaas.podLabels | toYaml | nindent 8 }}
+{{ else if .Values.podLabels }}
+{{ .Values.podLabels | toYaml | nindent 8 }}
+{{ end }}
+    spec:
+      {{- if .Values.dbaas.priorityClassName }}
+      priorityClassName: {{ .Values.dbaas.priorityClassName }}
+      {{- end }}
+      serviceAccountName: {{ .Values.clickhouseOperator.serviceAccountName }}
+      {{- if .Values.dbaas.affinity }}
+      affinity: {{ .Values.dbaas.affinity | toJson }}
+      {{- else if .Values.affinity }}
+      affinity: {{ .Values.affinity | toJson }}
+      {{- end }}
+      volumes:
+        - name: dbaas-physical-databases-labels-mount
+          configMap:
+            name: nc-dbaas-physical-databases-labels
+            defaultMode: 420
+        {{- if .Values.tls.enabled }}
+        - name: tls-cert
+          secret:
+            secretName: {{ .Values.tls.certificateSecretName }}
+            defaultMode: 416
+        {{- end }}
+{{- if .Values.dbaas.migrateRoles }}
+      initContainers:
+        - name: nc-dbaas-clickhouse-adapter-init
+          {{- if .Values.deployDescriptor }}
+          {{- if index .Values.deployDescriptor "clickhouse_dbaas_adapter" }}
+          image: {{ index .Values.deployDescriptor "clickhouse_dbaas_adapter" "image" }}
+            {{- else }}
+          image: {{ index .Values.deployDescriptor.clickhouse_dbaas_adapter.image }}
+            {{- end }}
+          {{- else }}
+          image: {{ .Values.dbaas.dockerImage }}
+          {{- end }}
+          args:
+            - init
+          env:
+            - name: CLICKHOUSE_DATABASE
+              value: {{ default "system" .Values.dbaas.dbName }}
+            - name: CLICKHOUSE_HOST
+              value: {{ default (printf "clickhouse-cluster.%s" .Release.Namespace) .Values.dbaas.chHost }}
+            - name: CLICKHOUSE_PORT
+              value: {{ default "9000" .Values.dbaas.chPort | quote }}
+            - name: CLICKHOUSE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: nc-dbaas-user-credentials
+                  key: username
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nc-dbaas-user-credentials
+                  key: password
+            - name: CLICKHOUSE_SSL
+            {{- if .Values.tls.enabled }}
+              value: "true"
+            {{- else }}
+              value: "false"
+            {{- end }}
+            - name: MULTI_USERS_ENABLED
+              value: {{ default "false" .Values.dbaas.multiUsers | quote }}
+{{- if .Values.backupDaemon.install }}
+{{- if and .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsUsername }}
+            - name: BACKUP_DAEMON_API_CREDENTIALS_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: backup-daemon-api-credentials
+                  key: username
+            - name: BACKUP_DAEMON_API_CREDENTIALS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backup-daemon-api-credentials
+                  key: password
+{{- end }}
+{{- end }}
+          resources:
+{{ toYaml .Values.dbaas.resources | indent 12 }}
+          volumeMounts:
+{{- if .Values.tls.enabled }}
+            - name: tls-cert
+              mountPath: /certs/
+{{- end }}
+          securityContext:
+            {{- include "clickhouse.globalContainerSecurityContext" . | nindent 12 }}
+            {{- with .Values.dbaas.securityContext.container }}
+            {{- toYaml . | nindent 12 -}}
+            {{- end }}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+{{- end }}
+      containers:
+        - name: nc-dbaas-clickhouse-adapter
+          {{- if .Values.deployDescriptor }}
+          {{- if index .Values.deployDescriptor "clickhouse_dbaas_adapter" }}
+          image: {{ index .Values.deployDescriptor "clickhouse_dbaas_adapter" "image" }}
+            {{- else }}
+          image: {{ index .Values.deployDescriptor.clickhouse_dbaas_adapter.image }}
+            {{- end }}
+          {{- else }}
+          image: {{ .Values.dbaas.dockerImage }}
+          {{- end }}
+          ports:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: CLICKHOUSE_DATABASE
+              value: {{ default "system" .Values.dbaas.dbName }}
+            - name: DBAAS_ADAPTER_ADDRESS
+              value: {{ default (printf "http://nc-dbaas-clickhouse-adapter.%s:8080" .Release.Namespace) .Values.dbaas.adapter.address }}
+            - name: DBAAS_AGGREGATOR_REGISTRATION_ADDRESS
+              value: {{ .Values.dbaas.aggregator.registrationAddress | default "http://dbaas-aggregator.dbaas:8080"  }}
+            - name: DBAAS_AGGREGATOR_REGISTRATION_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: nc-dbaas-aggregator-registration-credentials
+                  key: username
+            - name: DBAAS_AGGREGATOR_REGISTRATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nc-dbaas-aggregator-registration-credentials
+                  key: password
+            - name: CLICKHOUSE_HOST
+              value: {{ default (printf "clickhouse-cluster.%s" .Release.Namespace) .Values.dbaas.chHost }}
+            - name: CLICKHOUSE_PORT
+              value: {{ default "9000" .Values.dbaas.chPort | quote }}
+            - name: CLICKHOUSE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: nc-dbaas-user-credentials
+                  key: username
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nc-dbaas-user-credentials
+                  key: password
+            - name: DBAAS_ADAPTER_API_USER
+              valueFrom:
+                secretKeyRef:
+                  name: nc-dbaas-adapter-credentials
+                  key: username
+            - name: DBAAS_ADAPTER_API_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nc-dbaas-adapter-credentials
+                  key: password
+            - name: DBAAS_AGGREGATOR_PHYSICAL_DATABASE_IDENTIFIER
+              value: {{ .Values.dbaas.aggregator.physicalDatabaseIdentifier | default (printf "%s:%s" .Release.Namespace "clickhouse")}}
+            - name: CLOUD_NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: CLICKHOUSE_SSL
+            {{- if .Values.tls.enabled }}
+              value: "true"
+            {{- else }}
+              value: "false"
+            {{- end }}
+            - name: MULTI_USERS_ENABLED
+              value: {{ default "false" .Values.dbaas.multiUsers | quote }}
+            - name: INTERNAL_TLS_ENABLED
+              value: {{ default "false" .Values.INTERNAL_TLS_ENABLED | quote }}
+          resources:
+{{ toYaml .Values.dbaas.resources | indent 12 }}
+          volumeMounts:
+            - name: dbaas-physical-databases-labels-mount
+              mountPath: /app/config
+  {{- if .Values.tls.enabled }}
+            - name: tls-cert
+              mountPath: /certs/
+  {{- end }}
+          securityContext:
+            {{- include "clickhouse.globalContainerSecurityContext" . | nindent 12 }}
+            {{- with .Values.dbaas.securityContext.container }}
+            {{- toYaml . | nindent 12 -}}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+              {{- if .Values.INTERNAL_TLS_ENABLED }}
+              scheme: HTTPS
+              {{- else }}
+              scheme: HTTP
+              {{- end }}
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+              {{- if .Values.INTERNAL_TLS_ENABLED }}
+              scheme: HTTPS
+              {{- else }}
+              scheme: HTTP
+              {{- end }}
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 10
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      serviceAccountName: {{ .Values.clickhouseOperator.serviceAccountName }}
+      serviceAccount: {{ .Values.clickhouseOperator.serviceAccountName }}
+      securityContext:
+        {{- include "clickhouse.globalPodSecurityContext" . | nindent 8 }}
+        {{- with .Values.dbaas.securityContext.pod }}
+        {{- toYaml . | nindent 8 -}}
+        {{- end }}
+  {{- if .Values.dbaas.chHost }}
+    {{ if not (contains "." .Values.dbaas.chHost) }}
+      {{- fail "Please, specify FQDN for Clickhouse host, in <svc-name>.<ns-name> format" }}
+    {{- end }}
+  {{- end }}
+{{- end }}

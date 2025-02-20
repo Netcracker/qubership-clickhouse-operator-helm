@@ -1,0 +1,173 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ .Values.clickhouseOperator.name }}
+  labels:
+    name: {{ .Values.clickhouseOperator.name }}
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    app: {{ .Values.clickhouseOperator.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.clickhouseOperator.name }}
+{{ if .Values.clickhouseOperator.podLabels }}
+{{ .Values.clickhouseOperator.podLabels | toYaml | nindent 6 }}
+{{ else if .Values.podLabels }}
+{{ .Values.podLabels | toYaml | nindent 6 }}
+{{ end }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.clickhouseOperator.name }}
+{{ if .Values.clickhouseOperator.podLabels }}
+{{ .Values.clickhouseOperator.podLabels | toYaml | nindent 8 }}
+{{ else if .Values.podLabels }}
+{{ .Values.podLabels | toYaml | nindent 8 }}
+{{ end }}
+      annotations:
+        prometheus.io/port: '{{ .Values.clickhouseOperator.metricsExporterPort }}'
+        prometheus.io/scrape: 'true'
+    spec:
+      {{ if .Values.clickhouseOperator.priorityClassName }}
+      priorityClassName: {{ .Values.clickhouseOperator.priorityClassName }}
+      {{ end }}
+      serviceAccountName: {{ .Values.clickhouseOperator.serviceAccountName }}
+      {{ if .Values.clickhouseOperator.affinity }}
+      affinity: {{ .Values.clickhouseOperator.affinity | toJson }}
+      {{ else if .Values.affinity }}
+      affinity: {{ .Values.affinity | toJson }}
+      {{ end }}
+      securityContext:
+        {{- include "clickhouse.globalPodSecurityContext" . | nindent 8 }}
+        {{- with .Values.clickhouseOperator.securityContext.pod }}
+        {{- toYaml . | nindent 8 -}}
+        {{- end }}
+      volumes:
+        - name: etc-clickhouse-operator-folder
+          configMap:
+            name: etc-clickhouse-operator-files
+        - name: etc-clickhouse-operator-confd-folder
+          configMap:
+            name: etc-clickhouse-operator-confd-files
+        - name: etc-clickhouse-operator-configd-folder
+          configMap:
+            name: etc-clickhouse-operator-configd-files
+        - name: etc-clickhouse-operator-templatesd-folder
+          configMap:
+            name: etc-clickhouse-operator-templatesd-files
+        - name: etc-clickhouse-operator-usersd-folder
+          configMap:
+            name: etc-clickhouse-operator-usersd-files
+{{- if .Values.backupDaemon.install }}
+        - name: backup-config
+          configMap:
+            name: clickhouse-backup-config.yaml
+            defaultMode: 420
+{{- end }}
+{{- if and .Values.tls.enabled }}
+        - name: {{ .Values.tls.certificateSecretName }}
+          secret:
+            secretName: {{ .Values.tls.certificateSecretName }}
+            defaultMode: 420
+{{- end }}
+      containers:
+        - name: clickhouse-operator
+          image: {{ template "clickhouse-operator.image" . }}
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: etc-clickhouse-operator-folder
+              mountPath: /etc/clickhouse-operator
+            - name: etc-clickhouse-operator-confd-folder
+              mountPath: /etc/clickhouse-operator/{{ .Values.clickhouseOperator.chCommonConfigsPath }}
+            - name: etc-clickhouse-operator-configd-folder
+              mountPath: /etc/clickhouse-operator/{{ .Values.clickhouseOperator.chHostConfigsPath }}
+            - name: etc-clickhouse-operator-templatesd-folder
+              mountPath: /etc/clickhouse-operator/{{ .Values.clickhouseOperator.chiTemplatesPath }}
+            - name: etc-clickhouse-operator-usersd-folder
+              mountPath: /etc/clickhouse-operator/{{ .Values.clickhouseOperator.chUsersConfigsPath }}
+            {{- if and .Values.tls.enabled }}
+            - name: {{ .Values.tls.certificateSecretName }}
+              mountPath:  /tls/
+            {{- end }}
+          env:
+            - name: OPERATOR_POD_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: OPERATOR_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: OPERATOR_POD_SERVICE_ACCOUNT
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.serviceAccountName
+          resources:
+{{ toYaml .Values.clickhouseOperator.resources | indent 12 }}
+          securityContext:
+            {{- include "clickhouse.globalContainerSecurityContext" . | nindent 12 }}
+            {{- with .Values.clickhouseOperator.securityContext.container }}
+            {{- toYaml . | nindent 12 -}}
+            {{- end }}
+        - name: metrics-exporter
+          image: {{ template "metrics-exporter.image" . }}
+          ports:
+            - name: metrics
+              containerPort: 8888
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 10
+            initialDelaySeconds: 60
+            periodSeconds: 25
+            successThreshold: 1
+            tcpSocket:
+              port: 8888
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 10
+            initialDelaySeconds: 60
+            periodSeconds: 25
+            successThreshold: 1
+            tcpSocket:
+              port: 8888
+            timeoutSeconds: 5
+          securityContext:
+            {{- include "clickhouse.globalContainerSecurityContext" . | nindent 12 }}
+            {{- with .Values.clickhouseOperator.securityContext.container }}
+            {{- toYaml . | nindent 12 -}}
+            {{- end }}
+          volumeMounts:
+            - name: etc-clickhouse-operator-folder
+              mountPath: /etc/clickhouse-operator
+            - name: etc-clickhouse-operator-confd-folder
+              mountPath: /etc/clickhouse-operator/{{ .Values.clickhouseOperator.chHostConfigsPath }}
+            - name: etc-clickhouse-operator-configd-folder
+              mountPath: /etc/clickhouse-operator/{{ .Values.clickhouseOperator.chCommonConfigsPath }}
+            - name: etc-clickhouse-operator-templatesd-folder
+              mountPath: /etc/clickhouse-operator/{{ .Values.clickhouseOperator.chiTemplatesPath }}
+            - name: etc-clickhouse-operator-usersd-folder
+              mountPath: /etc/clickhouse-operator/{{ .Values.clickhouseOperator.chUsersConfigsPath }}
+{{- if and .Values.tls.enabled }}
+            - name: {{ .Values.tls.certificateSecretName }}
+              mountPath: /tls/
+{{- end }}
+          resources:
+{{ toYaml .Values.clickhouseOperator.metricsExporterResources | indent 12 }}
+      nodeSelector:
+{{ toYaml .Values.clickhouseOperator.nodeSelector | indent 8 }}
+      tolerations:
+{{ if .Values.clickhouseOperator.tolerations }}
+{{ .Values.clickhouseOperator.tolerations | toYaml | indent 8 }}
+{{ else if .Values.tolerations }}
+{{ .Values.tolerations | toYaml | indent 8 }}
+{{ end }}

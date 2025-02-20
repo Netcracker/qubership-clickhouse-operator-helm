@@ -1,0 +1,815 @@
+# Default values for ClickHouse-operator and ClickHouse-cluster
+# This is a YAML-formatted file
+# Declare variables to be passed into your templates.
+
+## Set of affinities that will be applied to all of the pods.
+# Type: object
+# Mandatory: no
+#
+affinity: {}
+
+
+global:
+  cloudIntegrationEnabled: true
+
+## Set of tolerations that will be applied to all of the pods.
+# Type: object
+# Mandatory: no
+#
+tolerations: []
+#  - key: clickhouse
+#    operator: Exists
+#    effect: NoSchedule
+#
+
+## Set of the labels that will be applied to all of the pods.
+# Type: object
+# Mandatory: no
+#
+podLabels: {}
+#  custom: label1
+
+clickhouseOperator:
+
+  ## A name of a microservice to deploy with.
+  ## This name will be used as name of the microservice deployment and in labels.
+  # Type: string
+  # Mandatory: no
+  #
+  name: clickhouse
+
+  ## A docker image to use for ClickHouse-operator deployment
+  # Type: string
+  # Mandatory: yes
+  #
+  image: altinity/clickhouse-operator:0.21.3
+
+  ## The resources describes the compute resource requests and limits for single Pod(operator).
+  ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
+  # Type: object
+  # Mandatory: no
+  #
+  resources: {}
+  # limits:
+  #   cpu: 200m
+  #   memory: 200Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 100Mi
+
+  securityContext:
+    ## The UID to run the entrypoint of the container process.
+    # Defaults to user specified in image metadata if unspecified.
+    # Type: integer
+    # Mandatory: no
+    #
+    container: {}
+#      runAsUser: 101
+
+    ## The GID to run the entrypoint of the container process.
+    # Defaults to group specified in image metadata if unspecified.
+    # Type: integer
+    # Mandatory: no
+#      runAsGroup: 101
+
+    ## The UID to run the entrypoint of the container process.
+    # Defaults to user specified in image metadata if unspecified.
+    # Type: integer
+    # Mandatory: no
+    #
+    pod: {}
+#      runAsUser: 101
+
+      ## The GID to run the entrypoint of the container process.
+      # Defaults to group specified in image metadata if unspecified.
+      # Type: integer
+      # Mandatory: no
+
+    ## A special supplemental group that applies to all containers in a pod.
+    # Some volume types allow the Kubelet to change the ownership of that volume
+    # to be owned by the pod:
+    #   1. The owning GID will be the FSGroup
+    #   2. The setgid bit is set (new files created in the volume will be owned by FSGroup)
+    #   3. The permission bits are OR'd with rw-rw----
+    # If unset, the Kubelet will not modify the ownership and permissions of any volume.
+    # Type: integer
+    # Mandatory: no
+    # fsGroup: 101
+
+  ## Provide a name in place of clickhouse-operator for ServiceAccount
+  # Type: string
+  # Mandatory: no
+  #
+  serviceAccountName: clickhouse-operator
+
+  ## A docker image to use for metric-exporter
+  # Type: string
+  # Mandatory: yes
+  #
+  metricsExporterImage: altinity/metrics-exporter:0.21.3
+
+  ## Port for metric-exporter service
+  # Type: integer
+  # Mandatory: no
+  #
+  metricsExporterPort: 8888
+
+  ## The resources describes the compute resource requests and limits for single Pods(metric-exporter).
+  ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
+  # Type: object
+  # Mandatory: no
+  #
+  metricsExporterResources: {}
+  # limits:
+  #   cpu: 200m
+  #   memory: 200Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 100Mi
+
+  ## How many seconds to wait for created/updated StatefulSet to be Ready.
+  # Type: integer
+  # Mandatory: no
+  #
+  statefulSetUpdateTimeout: 300
+
+  ## How many seconds to wait between checks for created/updated StatefulSet status.
+  # Type: integer
+  # Mandatory: no
+  #
+  statefulSetUpdatePollPeriod: 10
+
+  ## What to do in case created StatefulSet is not in Ready after `statefulSetUpdateTimeout` seconds
+  ## Possible options:
+  ## 1. abort - do nothing, just break the process and wait for admin
+  ## 2. delete - delete newly created problematic StatefulSet
+  ## 3. ignore - ignore error, pretend nothing happened and move on to the next StatefulSet
+  # Type: string
+  # Mandatory: no
+  #
+  onStatefulSetCreateFailureAction: ignore
+
+  ## What to do in case updated StatefulSet is not in Ready after `statefulSetUpdateTimeout` seconds
+  ## Possible options:
+  ## 1. abort - do nothing, just break the process and wait for admin
+  ## 2. rollback - delete Pod and rollback StatefulSet to previous Generation.
+  ## Pod would be recreated by StatefulSet based on rollback-ed configuration
+  ## 3. ignore - ignore error, pretend nothing happened and move on to the next StatefulSet
+  # Type: string
+  # Mandatory: no
+  #
+  onStatefulSetUpdateFailureAction: rollback
+
+  ## Path to folder where ClickHouse configuration files common for all instances within CHI are located.
+  # Type: string
+  # Mandatory: no
+  #
+  chCommonConfigsPath: config.d
+
+  ## Path to folder where ClickHouse configuration files unique for each instance (host) within CHI are located.
+  ## Type: string
+  # Mandatory: no
+  #
+  chHostConfigsPath: conf.d
+
+  ## Path to folder where ClickHouse configuration files with users settings are located.
+  ## Files are common for all instances within CHI
+  # Type: string
+  # Mandatory: no
+  #
+  chUsersConfigsPath: users.d
+
+  ## Path to folder where ClickHouseInstallation .yaml manifests are located.
+  ## Manifests are applied in sorted alpha-numeric order
+  # Type: string
+  # Mandatory: no
+  #
+  chiTemplatesPath: templates.d
+
+  ## Max number of concurrent reconciles in progress.
+  # Type: string
+  # Mandatory: no
+  #
+  reconcileThreadsNumber: 10
+
+  ## Define which Nodes the Pods are scheduled on.
+  # Type: object
+  # Mandatory: yes
+  #
+  # nodeSelector:
+  #  region: primary
+
+  ## Default values for ClickHouse user configuration.
+  ## Type: object
+  # Mandatory: no
+  #
+  chUserConf:
+    ## user/profile
+    # Type: string
+    # Mandatory: no
+    #
+    chConfigUserDefaultProfile: default
+
+    ## user/quota
+    # Type: string
+    # Mandatory: no
+    #
+    chConfigUserDefaultQuota: default
+
+    ## user/networks/ip
+    # Type: object
+    # Mandatory: no
+    #
+    chConfigUserDefaultNetworksIP:
+      - "127.0.0.1"
+
+    ## user/password
+    # Type: string
+    # Mandatory: no
+    #
+    chConfigUserDefaultPassword: default
+
+  ## ClickHouse credentials (username, password and port) to be used by operator to connect to ClickHouse instances for:
+  ## 1. Metrics requests
+  ## 2. Schema maintenance
+  ## 3. DROP DNS CACHE
+  ## User with such credentials can be specified in additional ClickHouse .xml config files,
+  ## located in `chUsersConfigsPath` folder
+  # Type: object
+  # Mandatory: no
+  #
+  credentialsToInstances:
+    ## Username
+    # Type: string
+    # Mandatory: no
+    #
+    chUsername: clickhouse_operator
+
+    ## Password
+    # Type: string
+    # Mandatory: no
+    #
+    chPassword: clickhouse_operator_password
+
+    ## Port ClickHouse http api
+    # Type: integer
+    # Mandatory: no
+    #
+    chPort: 8123
+
+    ## Name of the k8s secret in which chUsername/chPassword credentials are stored
+    # Type: string
+    # Mandatory: no
+    #
+    chCredentialsSecretName: clickhouse-operator-credentials
+
+  ## Log parameters
+  # Type: object
+  # Mandatory: no
+  #
+  logParams:
+    ## Logs are written to standard error instead of to files
+    # Type: bool
+    # Mandatory: no
+    #
+    logtostderr: true
+
+    ## Logs are written to standard error as well as to files
+    # Type: bool
+    # Mandatory: no
+    #
+    alsologtostderr: false
+
+    ## Log level
+    # Type: string
+    # Mandatory: no
+    #
+    loglevel: warning
+  ## Allow to disable deploy role and rolebinding
+  # Type: object
+  # Mandatory: no
+  #
+  role:
+    install: yes
+
+  ## Set of affinities that will be applied to operator pod.
+  # Type: object
+  # Mandatory: no
+  #
+  affinity: {}
+
+  ## Set of tolerations that will be applied to operator pod.
+  # Type: object
+  # Mandatory: no
+  #
+  tolerations: []
+  #  - key: clickhouse
+  #    operator: Exists
+  #    effect: NoSchedule
+  #
+
+  ## Set of the labels that will be applied to operator pod.
+  # Type: object
+  # Mandatory: no
+  #
+  podLabels: {}
+  #  custom: label1
+
+  events: false
+#  priorityClassName: "high-priority"
+
+clickhouseCluster:
+  ## Enable clickhouse-cluster installation with specific scheme
+  # Type: string
+  # Mandatory: no
+  install: yes
+
+  ## Install cluster on 'single' or 'dr' mode
+  # Type: string
+  # Mandatory: no
+  #
+  scheme: single
+
+  ## A name of a microservice to deploy with.
+  ## This name will be used as name of the microservice deployment and in labels.
+  # Type: string
+  # Mandatory: no
+  #
+  name: cluster
+
+  ## A docker image to use for ClickHouse-server deployment
+  # Type: string
+  # Mandatory: yes
+  #
+#  image: yandex/clickhouse-server:21.10.2.15
+  image: ghcr.io/netcracker/qubership-clickhouse-233:main
+
+  ## Address of zookeeper cluster
+  # Type: string
+  # Mandatory: yes
+  #
+  zookeeperHost: zookeeper.zookeeper.svc
+
+  ## Count of shards (in single mode)
+  # Type: integer
+  # Mandatory: no
+  #
+  shardsCount: 1
+
+  ## Count of cluster replicas
+  # Type: integer
+  # Mandatory: no
+  #
+  replicasCount: 2
+
+  ## PVs size for ClickHouse data and logs
+  # Type: string
+  # Mandatory: no
+  #
+  pvSize: 5Gi
+
+  ## A claim can request a particular class by specifying the name of a StorageClass.
+  ## Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+  # Type: string
+  # Mandatory: no
+  #
+#  storageClassName: local-path
+
+  ## This params need for using selectors for local storage(hostpath)
+  # Type: string
+  # Mandatory no
+  #
+  # localStorage: true
+
+  ## Labels for clickhouse cluster replicas and PVCs(only for DR)
+  # Type: object
+  # Mandatory: yes
+  #
+  # nodeSelectorLeft:
+  #   clickhouse: left
+
+  ## Labels for clickhouse cluster replicas and PVCs(only for DR)
+  # Type: object
+  # Mandatory: yes
+  # nodeSelectorRight:
+  #  clickhouse: right
+
+  ## Labels for clickhouse cluster replicas and PVCs(only for single schema)
+  # Type: object
+  # Mandatory: yes
+  # nodeSelector:
+  #   clickhouse: allow
+
+  ## The resources describes the compute resource requests and limits for single Pod(clickhouse-server).
+  ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
+  # Type: object
+  # Mandatory: no
+  #
+  resources: {}
+  # limits:
+  #   cpu: 200m
+  #   memory: 200Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 100Mi
+
+  ## SecurityContext holds pod-level security attributes.
+  # The parameters are required if a Pod Security Policy is enabled
+  #  for Kubernetes cluster and required if a Security Context Constraints is enabled
+  # for Openshift cluster.
+  # Type: object
+  # Mandatory: no
+  #
+  securityContext:
+
+    ## Container level security attributes
+    # Type: object
+    # Mandatory: no
+    #
+    container: {}
+
+      ## The UID to run the entrypoint of the container process.
+      # Defaults to user specified in image metadata if unspecified.
+      # Type: integer
+      # Mandatory: no
+      #
+#      runAsUser: 101
+
+      ## The GID to run the entrypoint of the container process.
+      # Defaults to group specified in image metadata if unspecified.
+      # Type: integer
+      # Mandatory: no
+#      runAsGroup: 101
+
+    ## Pod level security attributes
+    # Type: object
+    # Mandatory: no
+    #
+    pod: {}
+
+      ## A special supplemental group that applies to all containers in a pod.
+      # Some volume types allow the Kubelet to change the ownership of that volume
+      # to be owned by the pod:
+      #   1. The owning GID will be the FSGroup
+      #   2. The setgid bit is set (new files created in the volume will be owned by FSGroup)
+      #   3. The permission bits are OR'd with rw-rw----
+      # If unset, the Kubelet will not modify the ownership and permissions of any volume.
+      # Type: integer
+      # Mandatory: no
+      # fsGroup: 101
+
+  ## This section describes params of Openshift route to connect to ClickHouse http api port
+  # Type: object
+  # Mandatory: no
+  #
+  # routeHttp:
+    ## Host address for Openshift route
+    # Type: string
+    # Mandatory: no
+    #
+    # host: clickhouse-rest.test.org
+
+    # Set of labels for Route
+    # Default labels can be overwritten
+    # Type: object
+    # Mandatory: no
+    #
+    # labels: {}
+
+    # Set of annotations for Route
+    # Type: object
+    # Mandatory: no
+    #
+    # annotations: {}
+
+
+  ## This section describes params of Openshift route to connect to ClickHouse client tcp port
+  # Type: object
+  # Mandatory: no
+  #
+  # routeTcp:
+    ## Host address for Openshift route
+    # Type: string
+    # Mandatory: no
+    # host: clickhouse-client.test.org
+
+    # Set of labels for Route
+    # Default labels can be overwritten
+    # Type: object
+    # Mandatory: no
+    #
+    # labels: {}
+
+    # Set of annotations for Route
+    # Type: object
+    # Mandatory: no
+    #
+    # annotations: {}
+
+  ## This section describes params of Kubernetes ingress to connect to ClickHouse http api port
+  # Type: object
+  # Mandatory: no
+  #
+#  ingressHttp:
+    ## Host address for Openshift route
+    # Type: string
+    # Mandatory: no
+    #
+#    host: clickhouse-rest.test.org
+
+    # Set of labels for Route
+    # Default labels can be overwritten
+    # Type: object
+    # Mandatory: no
+    #
+#    labels: {}
+
+    # Set of annotations for Route
+    # Type: object
+    # Mandatory: no
+    #
+#    annotations: {}
+
+
+  ## This section describes params of Kubernetes route to connect to ClickHouse client tcp port
+  # Type: object
+  # Mandatory: no
+  #
+#  ingressTcp:
+    ## Host address for Openshift route
+    # Type: string
+    # Mandatory: no
+#    host: clickhouse-client.test.org
+
+    # Set of labels for Route
+    # Default labels can be overwritten
+    # Type: object
+    # Mandatory: no
+    #
+    # labels: {}
+
+    # Set of annotations for Route
+    # Type: object
+    # Mandatory: no
+    #
+    # annotations: {}
+
+
+  ## ClickHouse user configuration.
+  ## Type: object
+  # Mandatory: no
+  #
+  users:
+    ## user/name
+    # Type: string
+    # Mandatory: no
+    #
+    clickhouseTest:
+      profile: default
+      password: clickhouseTest
+      networks/ip: "::/0"
+
+    # an example of readonly user, that got grants only for prom db
+#    readonly:
+#      profile: readonly
+#      password: readonly
+#      allow_databases/database: ["prom"]
+
+  ## Allow to disable create ServiceMonitor CR for clickhouse-cluster during deploy
+  # Type: string
+  # Mandatory: no
+  #
+  serviceMonitor: false
+
+  prometheusRules:
+    clickhouseUptime: 180
+    distributedFilesToInsertThreshold: 50
+    maxPartCountForPartitionThreshold: 100
+    lowInsertedRowsPerQueryThreshold: 1000
+    longestRunningQueryTimeThreshold: 600
+    replicasMaxAbsoluteDelayThreshold: 300
+    clickHouseConnectionsThreshold: 100
+    clickHouseRunningQueriesThreshold: 80
+    clickHouseMutationsThreshold: 100
+
+  ## This parameters allows to specify all of the clickhouse parameters
+  # Type: object
+  # Mandatory: no
+  configuration:
+#    settings:
+#      enable_ssl: true
+#      openSSL/server/certificateFile: "/etc/clickhouse-server/certs/tls.crt"
+#      openSSL/server/privateKeyFile: "/etc/clickhouse-server/certs/tls.key"
+#      https_port: "8443"
+#      tcp_port_secure: "9440"
+    profiles: {}
+    custom: {}
+      # Clickhouse INTERVAL type is used. Value can be: SECOND, MINUTE, HOUR, DAY, WEEK, MONTH, QUARTER, YEAR
+#      asynchronous_metric_log_ttl: "1 DAY"
+#      metric_log_ttl: "1 DAY"
+#      query_log_ttl: "1 DAY"
+#      query_thread_log_ttl: "1 DAY"
+#      trace_log_ttl: "1 DAY"
+#      part_log_ttl: "1 DAY"
+#      crash_log_ttl: "1 DAY"
+#      text_log_ttl: "1 DAY"
+
+  ## Set of affinities that will be applied to clickhouse pods.
+  # Type: object
+  # Mandatory: no
+  #
+  affinity: {}
+
+  ## Set of tolerations that will be applied to clickhouse pods.
+  # Type: object
+  # Mandatory: no
+  #
+  tolerations: []
+#    - key: clickhouse
+#      operator: Exists
+#      effect: NoSchedule
+
+
+  ## Set of the labels that will be applied to clickhouse pods.
+  # Type: object
+  # Mandatory: no
+  #
+  podLabels: {}
+#    custom: label1
+  ## If zookeeper connectivity should be checked during liveness and readiness probes.
+  strictHealthCheck: true
+#  priorityClassName: "high-priority"
+
+backupDaemon:
+  ## Enable clickhouse-cluster installation with specific scheme
+  # Type: string
+  # Mandatory: no
+  install: no
+
+  ## A docker image to use for ClickHouse-server deployment
+  # Type: string
+  # Mandatory: yes
+  #
+  #
+  image: altinity/clickhouse-backup:2.4.2
+  timeout: "10"
+  envs: {}
+  storage:
+    remote: "none"
+#    nfs:
+#      imageSidecar: ghcr.io/netcracker/qubership-clickhouse-backup-sidecar:main
+#      resources:
+#        limits:
+#          cpu: 100m
+#          memory: 256Mi
+#        requests:
+#          cpu: 100m
+#          memory: 256Mi
+#      pvSize: 5Gi
+#      storageClassName: local-path
+#      matchLabels:
+#        ivshch: ivshlabel
+
+#    s3:
+#      access_key: minio
+#      bucket: click-backups
+#      endpoint: https://minio-service
+#      secret_key: minio123
+#      debug: true
+#      disable_ssl: true
+#      acl: private
+#      force_path_style: true
+
+
+  ## The resources describes the compute resource requests and limits for single Pod(clickhouse-server).
+  ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
+  # Type: object
+  # Mandatory: no
+  #
+  resources:
+   limits:
+     cpu: 100m
+     memory: 256Mi
+   requests:
+     cpu: 50m
+     memory: 256Mi
+  #
+  securityContext:
+
+    ## Container level security attributes
+    # Type: object
+    # Mandatory: no
+    #
+    container: {}
+    pod: {}
+      ## The UID to run the entrypoint of the container process.
+      # Defaults to user specified in image metadata if unspecified.
+      # Type: integer
+      # Mandatory: no
+      #
+#      runAsUser: 101
+
+      ## The GID to run the entrypoint of the container process.
+      # Defaults to group specified in image metadata if unspecified.
+      # Type: integer
+      # Mandatory: no
+#      runAsGroup: 101
+
+  ## Set of tolerations that will be applied to clickhouse pods.
+  # Type: object
+  # Mandatory: no
+  #
+  tolerations: []
+
+  ## Provide a name in place of clickhouse-operator for ServiceAccount
+  # Type: string
+  # Mandatory: no
+  #
+  serviceAccountName: clickhouse-operator
+
+dbaas:
+  # Optional flag for Clickhouse DBaaS Adapter deployment
+  install: false
+  clickhouse:
+    username: "nc_dbaas_userTest"
+    password: "paSSw0rdTest"
+
+tls:
+  enabled: false
+  zookeeper: false
+  certificates:
+    ca_crt:
+    tls_key:
+    tls_crt:
+  certificateSecretName: ch-cert
+  generateCerts:
+    clusterIssuerName: ""
+    enabled: false
+    duration: 365
+    subjectAlternativeName:
+      additionalDnsNames: [ ]
+      additionalIpAddresses: [ ]
+
+tracing:
+  enabled: false
+  host: "jaeger-collector.tracing.svc:4317"
+  service: "nc-clickhouse-backup-daemon"
+
+integrationTests:
+  install: false
+  image: "ghcr.io/netcracker/qubership-clickhouse-integration-tests:main"
+  tags: "smoke"
+  clickhouseHost: "clickhouse-cluster"
+  clickhousePort: 8123
+  credentials:
+    clickhouse:
+      user: "clickhouse"
+  clickhouseBackupHost: "clickhouse-backup-orchestrator"
+  clickhouseBackupPort: 8080
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 200m
+    limits:
+      memory: 256Mi
+      cpu: 400m
+  securityContext:
+    pod: { }
+    container: { }
+
+clickhouseSecretMonitor:
+  install: true
+  dockerImage: ghcr.io/netcracker/qubership-clickhouse-secret-monitor:main
+  securityContext:
+    container: {}
+    pod: {}
+  resources: 
+    limits: {}
+    requests: {}
+
+clickhouseHook:
+  install: true
+  dockerImage: ghcr.io/netcracker/qubership-credential-manager:main    
+  securityContext:
+    container: {}
+    pod: {}
+  resources: 
+    limits: {}
+    requests: {}
+
+postHook:
+  install: true
+  dockerImage: "ghcr.io/netcracker/qubership-clickhouse-hook:main"
+  securityContext:
+    container: {}
+    pod: {}
+  resources: 
+    limits: {}
+    requests: {}
+  
+
+# STORAGE_RWO_CLASS: "local-path"
+
+# INFRA_CLICKHOUSE_REPLICAS: 1
+# INFRA_CLICKHOUSE_ZK_HOST: "zk-host"
+# INFRA_CLICKHOUSE_FS_GROUP: 100600

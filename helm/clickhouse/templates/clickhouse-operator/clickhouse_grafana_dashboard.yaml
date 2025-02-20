@@ -1,0 +1,12 @@
+{{ if (eq (include "monitoring.install" .) "true") }}
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDashboard
+metadata:
+  name: clickhouse-grafana-dashboard
+  labels:
+    name: clickhouse-grafana-dashboard
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    app: grafana
+spec:
+  gzipJson: {{ .Files.Get "monitoring/clickhouse_grafana_dashboard.json.gz" | b64enc | quote }}
+{{ end }}
