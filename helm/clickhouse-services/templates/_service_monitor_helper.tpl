@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: monitoring
     app.kubernetes.io/managed-by: monitoring-operator
     app.kubernetes.io/name: clickhouse-service-monitor
-    app.netcracker.com/component: monitoring
+    app.kubernetes.io/component: monitoring
     app.kubernetes.io/part-of: platform-monitoring
     app.kubernetes.io/instance: {{ get . "rel_name" }}
     app.kubernetes.io/version: {{ get . "app_version" | quote }}

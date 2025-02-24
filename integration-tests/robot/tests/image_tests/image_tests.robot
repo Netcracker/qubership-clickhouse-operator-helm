@@ -21,11 +21,11 @@ Compare Images From Resources With Dd
 Test Hardcoded Images For Clickhouse Services
     [Tags]  clickhouse_images  clickhouse
     ${dd_images}=  Get Dd Images From Config Map  clickhouse-tests-config  ${NAMESPACE}
-    Skip If  '${dd_images}' == '${None}'  There is no deployDescriptor, not possible to check case!
+    Skip If  '${dd_images}' == '${None}'  There is no Descriptor, not possible to check case!
     Compare Images From Resources With Dd  ${dd_images}
 
 Test Hardcoded Images For Supplementary Services
     [Tags]  clickhouse_images  clickhouse
     ${dd_images}=  Get Dd Images From Config Map  supplementary-tests-config  ${NAMESPACE}
-    Skip If  '${dd_images}' == '${None}'  There is no deployDescriptor, not possible to check case!
+    Skip If  '${dd_images}' == '${None}'  There is no Descriptor, not possible to check case!
     Compare Images From Resources With Dd  ${dd_images}

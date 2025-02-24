@@ -142,15 +142,15 @@ dbaas:
     # The address of the aggregator where the adapter registers its physical database cluster.
     registrationAddress: "http://dbaas-aggregator.dbaas:8080"
     # Username for database registration.
-    registrationUsername: "cluster-dba"
+    registrationUsername: "cluster-Test"
     # Password for database registration.
-    registrationPassword: "Bnmq5567_PO"
+    registrationPassword: "Bnmq5567_Test"
     # physicalDatabaseIdentifier: "clickhouse"
   labels:
     clusterName: "clickhouse"
   clickhouse:
-    username: "nc_dbaas_userTest"
-    password: "paSSw0rdTest"
+    username: "nc_dbaas_Test"
+    password: "paSSwrdTest"
   adapter:
     username: "dbaas-aggregator"
     password: "dbaas-aggregator"

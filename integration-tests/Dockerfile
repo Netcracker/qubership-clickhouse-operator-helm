@@ -12,20 +12,23 @@ ENV STATUS_CUSTOM_RESOURCE_NAME=clickhouse-integration-tests
 
 ARG SETUPTOOLS="70.0.0"
 
+# Create necessary directories
 RUN mkdir -p ${ROBOT_HOME} && mkdir -p ${ROBOT_OUTPUT}
 
+# Copy configuration and scripts
 COPY docker/pip.conf /etc/pip.conf
 COPY docker/requirements.txt ${ROBOT_HOME}/requirements.txt
 COPY clickhouse_pods_checker.py ${ROBOT_HOME}/clickhouse_pods_checker.py
 
-# Upgrade all tools to avoid vulnerabilities 
-RUN set -x && apk upgrade --no-cache --available
+# Upgrade all tools to avoid vulnerabilities and add build tools
+RUN set -x && apk upgrade --no-cache --available \
+    && apk add --no-cache build-base python3-dev
 
-RUN pip3 install Cython
-
-# Update pip and install dependencies
+# Install Cython, upgrade pip/setuptools, and install specific clickhouse-connect version
 RUN pip3 install --upgrade pip \
     && pip3 install setuptools==${SETUPTOOLS} \
+    && pip3 install Cython \
+    && pip3 install clickhouse-connect==0.4.6 \
     && pip3 install -r ${ROBOT_HOME}/requirements.txt \
     && rm -rf /var/cache/apk/*
 

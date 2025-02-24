@@ -1,1 +1,1 @@
-FROM artifactorycn.netcracker.com:17114/clickhouse/clickhouse-server:22.6.9.11-alpine
+FROM clickhouse/clickhouse-server:22.6.9.11-alpine

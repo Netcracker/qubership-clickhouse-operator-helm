@@ -33,38 +33,12 @@ fsGroup: 101
 {{- end -}}
 
 {{- define "docker_ch_backup_orch.image" -}}
-  {{- if .Values.deployDescriptor -}}
-    {{- if index .Values.deployDescriptor "docker_ch_backup_orch" -}}
-      {{- printf "%s" (index .Values.deployDescriptor "docker_ch_backup_orch" "image") -}}
-    {{- end -}}
-  {{- else -}}
-    {{- printf "%s" .Values.backupDaemon.orchestrator.image -}}
-  {{- end -}}
 {{- end -}}
 
-{{- define "docker_ch_site_manager.image" -}}
-   {{- if .Values.deployDescriptor -}}
-    {{- if index .Values.deployDescriptor "docker_ch_site_manager" -}}
-      {{- printf "%s" (index .Values.deployDescriptor "docker_ch_site_manager" "image") -}}
-    {{- end -}}
-  {{- else -}}
-    {{- printf "%s" .Values.disasterRecovery.siteManager.image -}}
-  {{- end -}}
+{{- define "docker_ch_dbaas.image" -}}
 {{- end -}}
 
-{{/*
-Find a clickhouseIntegrationTests image in various places.
-Image can be found from:
-* SaaS/App deployer (or groovy.deploy.v3) from .Values.deployDescriptor "clickhouseIntegrationTests" "image"
-* DP.Deployer from .Values.deployDescriptor.clickhouseIntegrationTests.image
-* or from default values .Values.clickhouseIntegrationTests.image
-*/}}
 {{- define "clickhouseIntegrationTests.image" -}}
-  {{- if .Values.deployDescriptor -}}
-      {{- printf "%s" (index .Values.deployDescriptor "clickhouse_integration_tests" "image") -}}
-  {{- else -}}
-    {{- printf "%s" .Values.integrationTests.image -}}
-  {{- end -}}
 {{- end -}}
 
 {{- define "clickhouse_backup.envs" -}}
@@ -110,32 +84,14 @@ Image can be found from:
   {{- if and (ne (.Values.INFRA_CLICKHOUSE_ADMIN_PASSWORD | toString) "<nil>") .Values.global.cloudIntegrationEnabled -}}
     {{- .Values.INFRA_CLICKHOUSE_ADMIN_PASSWORD | toString }}
   {{- else -}}
-    {{- default "clickhouseTest" .Values.clickhouseCluster.users.clickhouseTest.password -}}
+    {{- default "clickhouse" .Values.clickhouseCluster.users.clickhouse.password -}}
   {{- end -}}
 {{- end -}}
 
 {{- define "find_image" -}}
-  {{- $image := .default -}}
-  {{- if .vals.deployDescriptor -}}
-    {{- if index .vals.deployDescriptor .SERVICE_NAME -}}
-      {{- $image = (index .vals.deployDescriptor .SERVICE_NAME "image") -}}
-    {{- end -}}
-  {{- end -}}
-  {{ printf "%s" $image }}
 {{- end -}}
 
 {{- define "supplementary-tests.monitoredImages" -}}
-  {{- if .Values.deployDescriptor -}}
-    {{- if eq (.Values.backupDaemon.install | toString) "yes" -}}
-      {{- printf "deployment clickhouse-backup-orchestrator clickhouse-backup-orchestrator %s, " (include "find_image" (dict "SERVICE_NAME" "docker_ch_backup_orch" "vals" .Values "default" "not_found")) -}}
-    {{- end -}}
-    {{- if .Values.dbaas.install -}}
-      {{- printf "deployment nc-dbaas-clickhouse-adapter nc-dbaas-clickhouse-adapter %s, " (include "find_image" (dict "SERVICE_NAME" "clickhouse_dbaas_adapter" "vals" .Values "default" "not_found")) -}}
-    {{- end -}}
-    {{- if .Values.integrationTests.install -}}
-      {{- printf "deployment clickhouse-integration-tests clickhouse-integration-tests %s" (include "find_image" (dict "SERVICE_NAME" "clickhouse_integration_tests" "vals" .Values "default" "not_found")) -}}
-    {{- end -}}
-  {{- end -}}
 {{- end -}}
 
 {{/* Kubernetes labels */}}
@@ -190,4 +146,22 @@ Get TLS secret name for services
 */}}
 {{- define "clickhouse.certServicesSecret" -}}
 {{ printf "%s-services" .Values.tls.certificateSecretName }}
+{{- end -}}
+
+{{- define "clickhouse.dbaas.user" -}}
+{{- end -}}
+
+{{- define "clickhouse.dbaas.password" -}}
+{{- end -}}
+
+{{- define "clickhouse.dbaas.aggregator.user" -}}
+{{- end -}}
+
+{{- define "clickhouse.dbaas.aggregator.password" -}}
+{{- end -}}
+
+{{- define "clickhouse.dbaas.adapter.user" -}}
+{{- end -}}
+
+{{- define "clickhouse.dbaas.adapter.password" -}}
 {{- end -}}

@@ -52,15 +52,7 @@ spec:
 {{- if .Values.dbaas.migrateRoles }}
       initContainers:
         - name: nc-dbaas-clickhouse-adapter-init
-          {{- if .Values.deployDescriptor }}
-          {{- if index .Values.deployDescriptor "clickhouse_dbaas_adapter" }}
-          image: {{ index .Values.deployDescriptor "clickhouse_dbaas_adapter" "image" }}
-            {{- else }}
-          image: {{ index .Values.deployDescriptor.clickhouse_dbaas_adapter.image }}
-            {{- end }}
-          {{- else }}
-          image: {{ .Values.dbaas.dockerImage }}
-          {{- end }}
+          image: {{ template "docker_ch_dbaas.image" . }}
           args:
             - init
           env:
@@ -120,15 +112,7 @@ spec:
 {{- end }}
       containers:
         - name: nc-dbaas-clickhouse-adapter
-          {{- if .Values.deployDescriptor }}
-          {{- if index .Values.deployDescriptor "clickhouse_dbaas_adapter" }}
-          image: {{ index .Values.deployDescriptor "clickhouse_dbaas_adapter" "image" }}
-            {{- else }}
-          image: {{ index .Values.deployDescriptor.clickhouse_dbaas_adapter.image }}
-            {{- end }}
-          {{- else }}
-          image: {{ .Values.dbaas.dockerImage }}
-          {{- end }}
+          image: {{ template "docker_ch_dbaas.image" . }}
           ports:
             - name: web
               containerPort: 8080

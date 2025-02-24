@@ -732,7 +732,7 @@ dbaas:
   install: false
   clickhouse:
     username: "nc_dbaas_userTest"
-    password: "paSSw0rdTest"
+    password: "paSSwrdTest"
 
 tls:
   enabled: false

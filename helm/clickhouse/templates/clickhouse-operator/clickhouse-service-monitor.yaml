@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
     app.kubernetes.io/technology: "go"
-    app.netcracker.com/component: monitoring
+    app.kubernetes.io/component: monitoring
     k8s-app: clickhouse-service-monitor
   name: clickhouse-service-monitor
 spec:
