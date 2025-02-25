@@ -10,8 +10,6 @@ ENV STATUS_CUSTOM_RESOURCE_VERSION=v1
 ENV STATUS_CUSTOM_RESOURCE_PLURAL=deployments
 ENV STATUS_CUSTOM_RESOURCE_NAME=clickhouse-integration-tests
 
-ARG SETUPTOOLS="70.0.0"
-
 RUN mkdir -p ${ROBOT_HOME} && mkdir -p ${ROBOT_OUTPUT}
 
 COPY docker/pip.conf /etc/pip.conf
@@ -22,8 +20,9 @@ COPY clickhouse_pods_checker.py ${ROBOT_HOME}/clickhouse_pods_checker.py
 # Upgrade all tools to avoid vulnerabilities 
 RUN set -x && apk upgrade --no-cache --available
 
+RUN pip3 install "cython<3.0.0" wheel && pip3 install 'PyYAML==6.0' --no-build-isolation
+
 RUN set -x \
-    && pip3 install setuptools==${SETUPTOOLS} \
     && pip3 install -r ${ROBOT_HOME}/requirements.txt \
     && rm -rf /var/cache/apk/*
 
