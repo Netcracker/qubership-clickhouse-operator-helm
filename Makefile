@@ -7,7 +7,7 @@ override TAG_ENV = local
 endif
 
 ifndef DOCKER_NAMES
-override DOCKER_NAMES = "artifactorycn.netcracker.com:17009/netcracker/qubership-clickhouse-backup-orchestrator:${TAG_ENV}"
+override DOCKER_NAMES = "ghcr.io/netcracker/qubership-clickhouse-backup-orchestrator:${TAG_ENV}"
 endif
 
 sandbox-build: deps docker-build
