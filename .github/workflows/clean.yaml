@@ -9,6 +9,22 @@ jobs:
   delete:
     if: github.event.ref_type == 'branch'
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        component:
+          - name: qubership-clickhouse-243
+            context: ""
+          - name: qubership-clickhouse-services
+            context: ""
+          - name: qubership-clickhouse-integration-tests
+            context: ""
+          - name: qubership-clickhouse-hook
+            context: ""
+          - name: qubership-clickhouse-secret-monitor
+            context: ""
+          - name: qubership-clickhouse-transfer
+            context: ""               
     steps:
       - name: Prepare Tag
         run: echo "TAG_NAME=$(echo ${TAG_NAME} | sed 's@refs/heads/@@;s@/@_@g')" >> $GITHUB_ENV
@@ -22,12 +38,12 @@ jobs:
         id: get-ids-for-delete
         uses: Netcracker/get-package-ids@v0.0.1
         with:
-          component-name: ${{ env.COMPONENT_NAME }}
+          component-name: ${{ matrix.component.name }}
           component-tag: ${{ env.TAG_NAME }}
           access-token: ${{secrets.GITHUB_TOKEN}}
       - uses: actions/delete-package-versions@v5
         with: 
-          package-name: ${{ env.COMPONENT_NAME }}
+          package-name: ${{ matrix.component.name }}
           package-type: 'container'
           package-version-ids: ${{ steps.get-ids-for-delete.outputs.ids-for-delete }}
         if: ${{ steps.get-ids-for-delete.outputs.ids-for-delete != '' }}

@@ -232,7 +232,7 @@ fsGroup: {{ .Values.INFRA_CLICKHOUSE_FS_GROUP }}
   {{- if and (ne (.Values.INFRA_CLICKHOUSE_ADMIN_PASSWORD | toString) "<nil>") .Values.global.cloudIntegrationEnabled -}}
     {{- .Values.INFRA_CLICKHOUSE_ADMIN_PASSWORD | toString }}
   {{- else -}}
-    {{- default "clickhouseTest" .Values.clickhouseCluster.users.clickhouseTest.password -}}
+    {{- default "clickhouse" .Values.clickhouseCluster.users.clickhouse.password -}}
   {{- end -}}
 {{- end -}}
 

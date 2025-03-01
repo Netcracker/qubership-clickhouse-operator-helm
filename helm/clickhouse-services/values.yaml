@@ -29,9 +29,9 @@ clickhouseOperator:
 
 clickhouseCluster:
   users:
-    clickhouseTest:
+    clickhouse:
       profile: default
-      password: clickhouseTest
+      password: clickhouse
       networks/ip: "::/0"
 # Template ServiceMonitor for DR
   serviceMonitor: false
@@ -142,15 +142,15 @@ dbaas:
     # The address of the aggregator where the adapter registers its physical database cluster.
     registrationAddress: "http://dbaas-aggregator.dbaas:8080"
     # Username for database registration.
-    registrationUsername: "cluster-Test"
+    registrationUsername: "cluster-dba"
     # Password for database registration.
-    registrationPassword: "Bnmq5567_Test"
+    registrationPassword: "bNMQ5567_1p"
     # physicalDatabaseIdentifier: "clickhouse"
   labels:
     clusterName: "clickhouse"
   clickhouse:
-    username: "nc_dbaas_Test"
-    password: "paSSwrdTest"
+    username: "nc_dbaas_user"
+    password: "pAssW0RD1"
   adapter:
     username: "dbaas-aggregator"
     password: "dbaas-aggregator"

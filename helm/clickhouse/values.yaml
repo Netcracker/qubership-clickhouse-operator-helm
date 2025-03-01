@@ -341,7 +341,6 @@ clickhouseCluster:
   # Type: string
   # Mandatory: yes
   #
-#  image: yandex/clickhouse-server:21.10.2.15
   image: ghcr.io/netcracker/qubership-clickhouse-233:main
 
   ## Address of zookeeper cluster
@@ -731,8 +730,8 @@ dbaas:
   # Optional flag for Clickhouse DBaaS Adapter deployment
   install: false
   clickhouse:
-    username: "nc_dbaas_userTest"
-    password: "paSSwrdTest"
+    username: "nc_dbaas_user"
+    password: "pAssW0RD1"
 
 tls:
   enabled: false
