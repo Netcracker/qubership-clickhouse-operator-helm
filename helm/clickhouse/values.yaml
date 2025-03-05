@@ -341,7 +341,7 @@ clickhouseCluster:
   # Type: string
   # Mandatory: yes
   #
-  image: ghcr.io/netcracker/qubership-clickhouse-233:main
+  image: ghcr.io/netcracker/qubership-clickhouse-243:main
 
   ## Address of zookeeper cluster
   # Type: string
