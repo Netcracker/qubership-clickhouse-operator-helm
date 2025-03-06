@@ -2,8 +2,6 @@ DOCKER_FILE := build/Dockerfile
 export GOPRIVATE := https://github.com/Netcracker
 export GOSUMDB := off
 
-NAMESPACE := 
-
 ifndef TAG_ENV
 override TAG_ENV = local
 endif
@@ -42,7 +40,3 @@ clean:
 test:
 	git config --global url."https://${GH_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
 	go test -v ./...
-
-replace-image: local
-	$(foreach docker_tag,$(DOCKER_NAMES),kubectl patch deployment qubership-clickhouse-dbaas-adapter -n $(NAMESPACE) --type "json" -p '[{"op":"replace","path":"/spec/template/spec/containers/0/image","value":'$(docker_tag)'},{"op":"replace","path":"/spec/template/spec/containers/0/imagePullPolicy","value":"Always"}, {"op":"replace","path":"/spec/replicas","value":0}]';)
-	$(foreach docker_tag,$(DOCKER_NAMES),kubectl patch deployment qubership-clickhouse-dbaas-adapter -n $(NAMESPACE) --type "json" -p '[{"op":"replace","path":"/spec/replicas","value":1}]';)

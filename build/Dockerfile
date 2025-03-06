@@ -17,7 +17,7 @@ RUN go mod tidy
 ARG TARGETOS TARGETARCH
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /build/_output/bin/qubership-clickhouse-dbaas-adapter -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} ./adapter
 
-FROM alpine:3.20.2
+FROM alpine:3.20
 
 ENV ADAPTER=/usr/local/bin/qubership-clickhouse-dbaas-adapter \
     USER_UID=1001
