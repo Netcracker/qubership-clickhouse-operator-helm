@@ -563,9 +563,9 @@ clickhouseCluster:
     # Type: string
     # Mandatory: no
     #
-    clickhouseTest:
+    clickhouse:
       profile: default
-      password: clickhouseTest
+      password: clickhouse
       networks/ip: "::/0"
 
     # an example of readonly user, that got grants only for prom db
