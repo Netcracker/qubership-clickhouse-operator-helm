@@ -26,6 +26,9 @@ ENV ADAPTER=/usr/local/bin/qubership-clickhouse-dbaas-adapter \
 COPY --from=builder build/_output/bin/qubership-clickhouse-dbaas-adapter ${ADAPTER}
 COPY build/bin /usr/local/bin
 
-USER ${USER_UID}
+# Ensure entrypoint has execute permissions 
+RUN chmod +x /usr/local/bin/entrypoint
 
 ENTRYPOINT ["/usr/local/bin/entrypoint"]
+
+USER ${USER_UID}
