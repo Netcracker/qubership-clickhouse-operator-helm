@@ -5,18 +5,18 @@ export GOSUMDB := off
 NAMESPACE := 
 
 ifndef TAG_ENV
-override TAG_ENV = 1
+override TAG_ENV = local
 endif
 
 ifndef DOCKER_NAMES
-override DOCKER_NAMES = "artifactorycn.netcracker.com:17009/netcracker/qubership-clickhouse-dbaas-adapter:${TAG_ENV}"
+override DOCKER_NAMES = "ghcr.io/netcracker/qubership-clickhouse-dbaas-adapter:${TAG_ENV}"
 endif
 
 sandbox-build: deps docker-build
 
 all: sandbox-build docker-push
 
-local: fmt deps compile docker-build docker-push
+local: fmt deps compile docker-build
 
 deps:
 	go mod tidy
