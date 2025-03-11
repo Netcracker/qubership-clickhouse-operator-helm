@@ -1,0 +1,15 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Values.clickhouseOperator.name }}-metrics
+  labels:
+    app: {{ .Values.clickhouseOperator.name }}
+    clickhouse.altinity.com/app: chop
+    name: {{ .Values.clickhouseOperator.name }}-metrics
+    {{ include "kubernetes.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: {{ .Values.clickhouseOperator.metricsExporterPort }}
+      name: metrics
+  selector:
+    app: {{ .Values.clickhouseOperator.name }}

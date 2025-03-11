@@ -1,0 +1,16 @@
+{{- if .Values.integrationTests.install }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: supplementary-tests-config
+  labels:
+    name: supplementary-tests-config
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    app: clickhouse-integration-tests
+data:
+  {{- if include "supplementary-tests.monitoredImages" . }}
+  dd_images: {{ include "supplementary-tests.monitoredImages" . }}
+  {{ else }}
+  dd_images: ""
+  {{ end }}
+{{- end }}

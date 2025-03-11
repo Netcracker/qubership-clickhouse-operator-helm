@@ -1,0 +1,37 @@
+{{- if and .Values.clickhouseCluster.install }}
+{{- if and .Values.clickhouseCluster.ingressTcp }}
+apiVersion: {{ if .Capabilities.APIVersions.Has "networking.k8s.io/v1" }}"networking.k8s.io/v1"{{ else }}"networking.k8s.io/v1beta1"{{ end }}
+kind: Ingress
+metadata:
+{{- if .Values.clickhouseCluster.ingressTcp.annotations }}
+  annotations:
+{{ .Values.clickhouseCluster.ingressTcp.annotations | toYaml | nindent 4 }}
+{{- end }}
+  labels:
+    name: tcp-route-clickhouse
+    {{ include "kubernetes.labels" . | nindent 4 }}
+{{- if .Values.clickhouseCluster.ingressTcp.labels }}
+{{ .Values.clickhouseCluster.ingressTcp.labels | toYaml | nindent 4 }}
+{{- end }}
+  name: tcp-route-clickhouse
+spec:
+  rules:
+  - host: {{ .Values.clickhouseCluster.ingressTcp.host }}
+    http:
+      paths:
+        - path: "/"
+          {{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1" }}
+          pathType: Prefix
+          backend:
+            service:
+              name: clickhouse-{{ .Values.clickhouseCluster.name }}
+              port:
+                number: 9000
+          {{- else }}
+          backend:
+            serviceName: clickhouse-{{ .Values.clickhouseCluster.name }}
+            servicePort: "tcp"
+          {{- end }}
+  tls: ~
+{{- end }}
+{{- end }}

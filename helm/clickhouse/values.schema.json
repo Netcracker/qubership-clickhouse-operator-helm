@@ -1,0 +1,50 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://example.com/example.json",
+    "type": "object",
+    "title": "The arangodb-operator JSON schema",
+    "description": "JSON Schema for arangodb-operator.",
+    "default": {},
+    "properties": {
+        "clickhouseCluster.resources.requests.cpu": {
+            "$id": "#/properties/arangoDb.agency.resources.requests.cpu",
+            "description": "cpu requests for agency arangodb",
+            "examples": [
+                "0.125", "0.250"
+            ],
+            "internal": true,
+            "title": "The ArangoDB Agency Resources CPU Requests",
+            "type": "string"
+        },
+        "clickhouseCluster.resources.requests.memory": {
+            "$id": "#/properties/arangoDb.agency.resources.requests.memory",
+            "description": "memory requests for agency arangodb",
+            "examples": [
+                "250Mi", "500Mi"
+            ],
+            "internal": true,
+            "title": "The ArangoDB Agency Resources Memory Requests",
+            "type": "string"
+        },
+        "clickhouseCluster.resources.limits.cpu": {
+            "$id": "#/properties/arangoDb.agency.resources.limits.cpu",
+            "description": "cpu limits for agency arangodb",
+            "examples": [
+                "0.125", "0.250"
+            ],
+            "internal": true,
+            "title": "The ArangoDB Agency Resources CPU Limits",
+            "type": "string"
+        },
+        "clickhouseCluster.resources.limits.memory": {
+            "$id": "#/properties/arangoDb.agency.resources.limits.memory",
+            "description": "memory limits for agency arangodb",
+            "examples": [
+                "250Mi", "500Mi"
+            ],
+            "internal": true,
+            "title": "The ArangoDB Agency Resources Memory Limits",
+            "type": "string"
+        }
+    }
+}

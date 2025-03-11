@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "credentials-saver"
+  labels:
+{{- if .Values.podLabels }}
+{{ .Values.podLabels | toYaml | nindent 4 }}
+{{- end }}
+  annotations:
+    "helm.sh/hook": pre-install, pre-upgrade
+    "helm.sh/hook-weight": "2"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      name: "credentials-saver"
+      labels:
+{{- if .Values.podLabels }}
+{{ .Values.podLabels | toYaml | nindent 8 }}
+{{- end }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: hook-sa
+      containers:
+      - name: credentials-saver
+        image: {{ template "clickhouse_pre_hook.image" . }}
+        imagePullPolicy: Always
+        env:
+          - name: IS_HOOK
+            value: "True"
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: SECRET_NAMES
+            value: 
+          {{  include "clickhouse.users" . | indent 4 }}  
+        securityContext:
+            {{- include "clickhouse.globalContainerSecurityContext" . | nindent 12 }}
+            {{- with .Values.clickhouseHook.securityContext.container }}
+            {{- toYaml . | nindent 12 -}}
+            {{- end }}
+        resources:
+          requests:
+            memory: {{ default "256Mi" .Values.clickhouseHook.resources.requests.memory }}
+            cpu: {{ default "200m" .Values.clickhouseHook.resources.requests.cpu }}
+          limits:
+            memory: {{ default "256Mi" .Values.clickhouseHook.resources.limits.memory }}
+            cpu: {{ default "400m" .Values.clickhouseHook.resources.limits.cpu }} 
+      securityContext:
+        {{ (include "clickhouse.globalPodSecurityContext" . | nindent 8) }}
+        {{- with .Values.clickhouseHook.securityContext.pod }}
+        {{- toYaml . | nindent 8 -}}
+        {{- end }}

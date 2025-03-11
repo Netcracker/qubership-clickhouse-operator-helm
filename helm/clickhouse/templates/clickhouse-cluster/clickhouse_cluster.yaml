@@ -1,0 +1,287 @@
+{{- if and .Values.clickhouseCluster.install }}
+{{- if eq .Values.clickhouseCluster.scheme "single" }}
+apiVersion: "clickhouse.altinity.com/v1"
+kind: "ClickHouseInstallation"
+metadata:
+  name: "{{ .Values.clickhouseCluster.name }}"
+  labels:
+    name: "{{ .Values.clickhouseCluster.name }}"
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    deployer.cleanup/allow: "true"
+spec:
+  defaults:
+    distributedDDL:
+      profile: default
+    templates:
+      podTemplate: clickhouse-single
+      replicaServiceTemplate: replica-service-template
+      serviceTemplate: chi-service-template
+  configuration:
+{{- if and .Values.clickhouseCluster.configuration.profiles }}
+    profiles:
+{{ toYaml .Values.clickhouseCluster.configuration.profiles | indent 6 }}
+{{- end }}
+    settings:
+      prometheus/asynchronous_metrics: 'true'
+      prometheus/endpoint: /metrics
+      prometheus/events: 'true'
+      prometheus/metrics: 'true'
+      prometheus/port: '8888'
+      distributed_ddl/path: {{ printf "/clickhouse/cluster_%s/task_queue/ddl" .Release.Namespace }}
+      # default values for data and log dirs
+      path: /var/lib/clickhouse/data
+      logger/log: /var/log/clickhouse-server/log/clickhouse-server.log
+      logger/errorlog: /var/log/clickhouse-server/log/clickhouse-server.err.log
+      #For backward compatibility
+      access_control_improvements/on_cluster_queries_require_cluster_grant: 'false'
+{{- if and .Values.clickhouseCluster.configuration.settings }}
+{{ toYaml .Values.clickhouseCluster.configuration.settings | indent 6 }}
+{{- end }}
+  {{- if .Values.tls.enabled }}
+      enable_ssl: true
+      openSSL/server/certificateFile: "/etc/clickhouse-server/certs/tls.crt"
+      openSSL/server/privateKeyFile: "/etc/clickhouse-server/certs/tls.key"
+      https_port: "8443"
+      tcp_port_secure: "9440"
+  {{- end }}
+  {{- if .Values.tls.zookeeper }}
+      openSSL/client/certificateFile: "/etc/clickhouse-server/certs/tls.crt"
+      openSSL/client/privateKeyFile: "/etc/clickhouse-server/certs/tls.key"
+      openSSL/client/cacheSessions: "true"
+      openSSL/client/disableProtocols: "sslv2,sslv3"
+      openSSL/client/preferServerCiphers: "true"
+      openSSL/client/verificationMode: "none"
+      openSSL/client/invalidCertificateHandler/invalidCertificateHandler: "AcceptCertificateHandler"
+  {{- end }}
+    users:
+{{- $adminPassword := include "clickhouse.adminPassword" . }}
+{{- range $userName, $userSpec := .Values.clickhouseCluster.users }}
+  {{- range $specName, $specValue := $userSpec }}
+      {{- if and (eq $specName "password") (eq $userName "clickhouse") }}
+      {{ $userName }}/password_sha256_hex: {{ $adminPassword | sha256sum | quote -}}
+      {{ else if eq $specName "password" }}
+      {{ $userName }}/password_sha256_hex: {{ $specValue | sha256sum | quote -}}
+      {{ else }}
+      {{ $userName }}/{{ $specName }}: {{ $specValue -}}
+      {{ end -}}
+  {{ end }}
+{{ end }}
+{{- if .Values.dbaas.install }}
+      {{ .Values.dbaas.clickhouse.username }}/password_sha256_hex: {{ .Values.dbaas.clickhouse.password | sha256sum | quote }}
+      {{ .Values.dbaas.clickhouse.username }}/access_management: 1
+      {{ .Values.dbaas.clickhouse.username }}/networks/ip: "::/0"
+{{- end }}
+    zookeeper:
+      nodes:
+        - host: {{ ( include "clickhouse.ZkHost" . ) }}
+  {{- if .Values.tls.zookeeper }}
+    files:
+      config.d/zookeeper_secure.xml: |
+        <clickhouse>
+          <zookeeper>
+            <node>
+              <host>{{ ( include "clickhouse.ZkHost" . ) }}</host>
+              <port>2181</port>
+              <secure>1</secure>
+             </node>
+          </zookeeper>
+        </clickhouse>
+  {{- end }}
+    clusters:
+      - name: replicated
+        layout:
+          shardsCount: {{ .Values.clickhouseCluster.shardsCount }}
+          replicasCount: {{ ( include "clickhouse.replicasCount" . ) }}
+  templates:
+    serviceTemplates:
+      - name: chi-service-template
+        spec: 
+          ports:
+            - name: http
+              port: 8123
+            - name: tcp
+              port: 9000
+{{- if .Values.tls.enabled }}
+            - name: https
+              port: 8443
+            - name: tcp-secure
+              port: 9440
+{{- end }}
+          type: ClusterIP
+      - name: replica-service-template
+        spec:
+          ports:
+            - name: http
+              port: 8123
+            - name: tcp
+              port: 9000
+            - name: interserver
+              port: 9009
+            - name: metrics
+              port: 8888
+            - name: backup
+              port: 7171
+{{ if .Values.tls.enabled }}
+            - name: https
+              port: 8443
+            - name: tcp-secure
+              port: 9440
+{{ end }}
+          type: ClusterIP
+          clusterIP: None
+    volumeClaimTemplates:
+      - name: clickhouse-pvc
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: {{ .Values.clickhouseCluster.pvSize }}
+{{- if ( include "clickhouse.storageClassName" . ) }}
+          storageClassName: {{ ( include "clickhouse.storageClassName" . ) }}
+{{- end }}
+{{- if and .Values.clickhouseCluster.localStorage }}
+          selector:
+            matchLabels:
+{{ if .Values.clickhouseCluster.nodeSelector }}
+{{ toYaml .Values.clickhouseCluster.nodeSelector | indent 14 }}
+{{- end }}
+{{- end }}
+{{ if .Values.backupDaemon.install }}
+{{ if eq (lower .Values.backupDaemon.storage.remote) "nfs" }}
+      - name: clickhouse-backup-pvc
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: {{ .Values.backupDaemon.storage.nfs.pvSize }}
+{{ if hasKey .Values.backupDaemon.storage.nfs "storageClassName" }}
+          storageClassName: {{ .Values.backupDaemon.storage.nfs.storageClassName | quote }}
+{{ end }}
+{{- if hasKey .Values.backupDaemon.storage.nfs "matchLabels" }}
+          selector:
+            matchLabels:
+{{ toYaml .Values.backupDaemon.storage.nfs.matchLabels | indent 14 }}
+{{- end }}
+{{ end }}
+{{ end }}
+    podTemplates:
+      - name: clickhouse-single
+        metadata:
+          labels:
+{{ if .Values.clickhouseCluster.podLabels }}
+{{ .Values.clickhouseCluster.podLabels | toYaml | nindent 12 }}
+{{ else if .Values.podLabels }}
+{{ .Values.podLabels | toYaml | nindent 12 }}
+{{ end }}
+        podDistribution:
+          - type: ClickHouseAntiAffinity
+            scope: ClickHouseInstallation
+        spec:
+          volumes:
+{{- if and .Values.backupDaemon.install }}
+            - name: backup-config
+              configMap:
+                name: clickhouse-backup-config.yaml
+                defaultMode: 420
+{{- end }}
+{{- if or .Values.tls.enabled .Values.tls.zookeeper }}
+            - name: {{ .Values.tls.certificateSecretName }}
+              secret:
+                secretName: {{ .Values.tls.certificateSecretName }}
+                defaultMode: 420
+{{- end }}
+          affinity:
+{{ if .Values.clickhouseCluster.affinity }}
+{{ .Values.clickhouseCluster.affinity | toYaml | indent 12 }}
+{{ else if .Values.affinity }}
+{{ .Values.affinity | toYaml | indent 12 }}
+{{ end }}
+{{ if .Values.clickhouseCluster.nodeSelector }}
+          nodeSelector:
+{{ toYaml .Values.clickhouseCluster.nodeSelector | indent 12 }}
+{{ end }}
+          tolerations:
+{{ if .Values.clickhouseCluster.tolerations }}
+{{ .Values.clickhouseCluster.tolerations | toYaml | indent 12 }}
+{{ else if .Values.tolerations }}
+{{ .Values.affinity | toYaml | indent 12 }}
+{{ end }}
+          securityContext:
+            {{- include "clickhouse.globalPodSecurityContext" . | nindent 12 }}
+            {{- with .Values.clickhouseCluster.securityContext.pod }}
+            {{- toYaml . | nindent 12 -}}
+            {{- end }}
+          {{ if .Values.clickhouseCluster.priorityClassName }}
+          priorityClassName: {{ .Values.clickhouseCluster.priorityClassName }}
+          {{ end }}
+          containers:
+            - name: clickhouse-pod
+              image: {{ template "clickhouse.image" . }}
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: CH_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: "{{ .Values.clickhouseOperator.credentialsToInstances.chCredentialsSecretName }}"
+                      key: "username"
+                - name: CH_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: "{{ .Values.clickhouseOperator.credentialsToInstances.chCredentialsSecretName }}"
+                      key: "password"
+              volumeMounts:
+                - name: clickhouse-pvc
+                  mountPath: /var/lib/clickhouse
+                - name: clickhouse-pvc
+                  mountPath: /var/log/clickhouse-server
+{{- if or .Values.tls.enabled .Values.tls.zookeeper }}
+                - name: {{ .Values.tls.certificateSecretName }}
+                  mountPath: /etc/clickhouse-server/certs/
+{{- end }}
+              securityContext:
+                {{- include "clickhouse.globalContainerSecurityContext" . | nindent 16 }}
+                {{- with .Values.clickhouseCluster.securityContext.container }}
+                {{- toYaml . | nindent 16 -}}
+                {{- end }}
+              ports:
+                - containerPort: 8888
+                  name: metrics
+                  protocol: TCP
+              resources:
+{{ toYaml .Values.clickhouseCluster.resources | indent 16 }}
+{{- if .Values.clickhouseCluster.strictHealthCheck }}
+              livenessProbe:
+                exec:
+                  command:
+                    - /tmp/ping.sh
+                initialDelaySeconds: 60
+                timeoutSeconds: 5
+                periodSeconds: 3
+                successThreshold: 1
+                failureThreshold: 10
+              readinessProbe:
+                exec:
+                  command:
+                    - /tmp/ping.sh
+                initialDelaySeconds: 60
+                timeoutSeconds: 5
+                periodSeconds: 10
+                successThreshold: 1
+                failureThreshold: 3
+{{- else }}
+              readinessProbe:
+                httpGet:
+                  path: /ping
+                  port: http
+                  scheme: HTTP
+{{- end }}                  
+{{- end }}
+{{- end }}
+{{- if and .Values.backupDaemon.install }}
+  {{- include "clickhouse_backup" . | nindent 12 }}
+{{- if eq (lower .Values.backupDaemon.storage.remote) "nfs" }}
+  {{- include "clickhouse_backup_sidecar" . | nindent 12 }}
+{{- end }}
+{{- end }}

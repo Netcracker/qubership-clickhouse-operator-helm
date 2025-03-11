@@ -1,0 +1,28 @@
+{{- if and .Values.clickhouseCluster.install (eq (include "monitoring.install" .) "true") }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    name: clickhouse-tls-status-metric
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    app.kubernetes.io/component: monitoring
+  name: clickhouse-tls-status-metric
+spec:
+  groups:
+    - name: clickhouse-tls-status-metric-group
+      rules:
+        {{- if .Values.tls }}
+        {{- if .Values.tls.enabled }}
+        - expr: '1'
+        {{- else }}
+        - expr: '0'
+        {{- end }}
+        {{- else }}
+        - expr: '0'
+        {{- end }}
+          labels:
+            application: {{ .Chart.Name }}
+            namespace: {{ .Release.Namespace }}
+            service: clickhouse
+          record: service:tls_status:info
+{{ end }}

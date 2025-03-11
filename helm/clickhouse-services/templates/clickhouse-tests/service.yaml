@@ -1,0 +1,19 @@
+{{- if .Values.integrationTests.install }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: clickhouse-integration-tests
+    {{ include "kubernetes.labels" . | nindent 4 }}
+  name: clickhouse-integration-tests
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: web
+  selector:
+    app: clickhouse-integration-tests
+{{- end -}}

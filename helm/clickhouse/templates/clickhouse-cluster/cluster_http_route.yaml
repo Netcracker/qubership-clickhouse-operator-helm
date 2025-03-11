@@ -1,0 +1,29 @@
+{{- if and .Values.clickhouseCluster.install }}
+{{- if and .Values.clickhouseCluster.routeHttp }}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+{{- if .Values.clickhouseCluster.routeHttp.annotations }}
+  annotations:
+{{ .Values.clickhouseCluster.routeHttp.annotations | toYaml | nindent 4 }}
+{{- end }}
+  labels:
+    name: http-route-clickhouse
+    {{ include "kubernetes.labels" . | nindent 4 }}
+{{- if .Values.clickhouseCluster.routeHttp.labels }}
+{{ .Values.clickhouseCluster.routeHttp.labels | toYaml | nindent 4 }}
+{{- end }}
+  name: http-route-clickhouse
+spec:
+  host: {{ .Values.clickhouseCluster.routeHttp.host }}
+  port:
+    targetPort: http
+  to:
+    kind: Service
+    name: clickhouse-{{ .Values.clickhouseCluster.name }}
+    weight: 100
+status:
+  ingress:
+    - routerName: http-route
+{{- end }}
+{{- end }}

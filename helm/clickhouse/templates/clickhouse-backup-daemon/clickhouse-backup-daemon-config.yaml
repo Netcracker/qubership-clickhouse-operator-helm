@@ -1,0 +1,70 @@
+{{- if or (.Values.backupDaemon.install) (.Values.disasterRecovery) }}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: clickhouse-backup-config.yaml
+  labels:
+    name: clickhouse-backup-config.yaml
+    {{ include "kubernetes.labels" . | nindent 4 }}
+data:
+  clickhouse-backup-config.yaml: |
+    general:
+{{ if eq (include "clickhouse.isS3Enabled" .) "true" }}
+      remote_storage: "s3"
+{{ end }}
+      max_file_size: 107374182400    # MAX_FILE_SIZE
+      disable_progress_bar: false    # DISABLE_PROGRESS_BAR
+      backups_to_keep_local: 0       # BACKUPS_TO_KEEP_LOCAL
+      backups_to_keep_remote: 0      # BACKUPS_TO_KEEP_REMOTE
+      log_level: info                # LOG_LEVEL
+      allow_empty_backups: false     # ALLOW_EMPTY_BACKUPS
+      download_concurrency: 1        # DOWNLOAD_CONCURRENCY, max 255
+      upload_concurrency: 1          # UPLOAD_CONCURRENCY, max 255
+      restore_schema_on_cluster: {{ default "replicated" .Values.backupDaemon.cluster }}
+    clickhouse:
+      host: localhost                  # CLICKHOUSE_HOST
+      port: 9000                       # CLICKHOUSE_PORT
+      disk_mapping: {}                 # CLICKHOUSE_DISK_MAPPING
+      skip_tables:                     # CLICKHOUSE_SKIP_TABLES
+      - system.*
+      timeout: 5m                      # CLICKHOUSE_TIMEOUT
+      freeze_by_part: false            # CLICKHOUSE_FREEZE_BY_PART
+      secure: false                    # CLICKHOUSE_SECURE
+      skip_verify: false               # CLICKHOUSE_SKIP_VERIFY
+      sync_replicated_tables: true     # CLICKHOUSE_SYNC_REPLICATED_TABLES
+      log_sql_queries: true            # CLICKHOUSE_LOG_SQL_QUERIES
+      debug: false                     # CLICKHOUSE_DEBUG
+      config_dir:      "/etc/clickhouse-server"              # CLICKHOUSE_CONFIG_DIR
+      restart_command: "systemctl restart clickhouse-server" # CLICKHOUSE_RESTART_COMMAND
+    api:
+      listen: "0.0.0.0:7171"     # API_LISTEN
+      enable_metrics: true         # API_ENABLE_METRICS
+      enable_pprof: false          # API_ENABLE_PPROF
+      username: ""                 # API_USERNAME
+      password: ""                 # API_PASSWORD
+      secure: {{ default "false" .Values.tls.enabled}}        # API_SECURE
+      certificate_file: "/etc/clickhouse-server/certs/tls.crt"         # API_CERTIFICATE_FILE
+      private_key_file: "/etc/clickhouse-server/certs/tls.key"         # API_PRIVATE_KEY_FILE
+      create_integration_tables: false # API_CREATE_INTEGRATION_TABLES
+  {{ if eq (include "clickhouse.isS3Enabled" .) "true" }}
+    s3:
+	{{- range $key, $value := .Values.backupDaemon.storage.s3 }}
+      {{- if or (ne $key "access_key") (ne $key "secret_key") }}
+      {{ $key }}: {{ $value -}}
+      {{ end -}}
+	{{ end }}
+  {{ end }}
+{{ end }}
+
+---
+
+{{- if eq (include "clickhouse.isS3Enabled" .) "true" }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "s3-remote-storage-credentials-ch-backup"
+data:
+  accessKeyId: {{ .Values.backupDaemon.storage.s3.access_key | b64enc }}
+  secretAccessKey: {{ .Values.backupDaemon.storage.s3.secret_key | b64enc }}
+type: Opaque
+{{- end }}

@@ -1,0 +1,219 @@
+# Default values for ClickHouse-services 
+# This is a YAML-formatted file
+# Declare variables to be passed into your templates.
+
+## Set of affinities that will be applied to all of the pods.
+# Type: object
+# Mandatory: no
+#
+affinity: {}
+
+global:
+  cloudIntegrationEnabled: true
+
+## Set of the labels that will be applied to all of the pods.
+# Type: object
+# Mandatory: no
+#
+podLabels: {}
+#  custom: label1
+
+clickhouseOperator:
+
+  ## Provide a name in place of clickhouse-operator for ServiceAccount
+  # Type: string
+  # Mandatory: no
+  #
+  serviceAccountName: clickhouse-operator
+
+
+clickhouseCluster:
+  users:
+    clickhouse:
+      profile: default
+      password: clickhouse
+      networks/ip: "::/0"
+# Template ServiceMonitor for DR
+  serviceMonitor: false
+
+
+backupDaemon:
+  ## Enable clickhouse-cluster installation with specific scheme
+  # Type: string
+  # Mandatory: no
+  install: yes
+  timeout: "10"
+
+  storage:
+    remote: "none"  
+    # nfs:
+    #   imageSidecar: ghcr.io/netcracker/qubership-clickhouse-backup-sidecar:main
+    #   resources:
+    #     limits:
+    #       cpu: 100m
+    #       memory: 256Mi
+    #     requests:
+    #       cpu: 100m
+    #       memory: 256Mi
+    #   pvSize: 5Gi
+    #   storageClassName: local-path
+    #   matchLabels:
+    #     labelkey: label_value
+
+    # s3:
+    #   access_key: minio
+    #   bucket: click-backups
+    #   endpoint: https://minio-service
+    #   secret_key: minio123
+    #   debug: true
+    #   disable_ssl: true
+    #   acl: private
+    #   force_path_style: true
+
+  orchestrator:
+
+    image: ghcr.io/netcracker/qubership-clickhouse-backup-orchestrator:main
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+    ## PVs size for ClickHouse data and logs
+    # Type: string
+    # Mandatory: no
+    #
+    pvSize: 2Gi
+
+    ## A claim can request a particular class by specifying the name of a StorageClass.
+    ## Ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+    # Type: string
+    # Mandatory: no
+    #
+#    storageClassName: local-path
+
+#    volumeName: ""
+    nodeSelector: {}
+#      key: value
+
+    accessModes:
+      - ReadWriteOnce
+
+    envs:
+      STORAGE_EXTERNAL: "/backup-storage-external/"
+      BACKUP_SCHEDULE: "0 * * * *"
+      EVICTION_POLICY: "7d/7d,1y/delete"
+      PUBLISH_CUSTOM_VARS: "false"
+      ENABLE_INCREMENTAL: "true"
+      INC_BACKUP_SCHEDULE: "None"
+      ALLOW_PREFIX: "true"
+
+    securityContext:
+      container: {}
+      pod: {}
+      ## Container level security attributes
+      # Type: object
+      # Mandatory: no
+      #
+#      runAsUser: 101
+
+      ## The GID to run the entrypoint of the container process.
+      # Defaults to group specified in image metadata if unspecified.
+      # Type: integer
+      # Mandatory: no
+#      runAsGroup: 101
+#    backupDaemonApiCredentialsUsername: ""
+#    backupDaemonApiCredentialsPassword: ""
+
+dbaas:
+  # Optional flag for Clickhouse DBaaS Adapter deployment
+  install: false
+  # Docker Image that will be used for Clickhouse DBaaS Adapter container
+  dockerImage: ghcr.io/netcracker/qubership-clickhouse-dbaas-adapter:main
+  podLabels: {}
+  # Clickhouse cluster entry point.
+  #  chHost: clickhouse-cluster
+  # Allows to override database name to be connected by default
+  # dbName: system
+  # DBaaS Aggregator Section
+  aggregator:
+    # The address of the aggregator where the adapter registers its physical database cluster.
+    registrationAddress: "http://dbaas-aggregator.dbaas:8080"
+    # Username for database registration.
+    registrationUsername: "cluster-dba"
+    # Password for database registration.
+    registrationPassword: "bNMQ5567_1p"
+    # physicalDatabaseIdentifier: "clickhouse"
+  labels:
+    clusterName: "clickhouse"
+  clickhouse:
+    username: "nc_dbaas_user"
+    password: "pAssW0RD1"
+  adapter:
+    username: "dbaas-aggregator"
+    password: "dbaas-aggregator"
+#    address: "dbaas-aggregator" http://nc-dbaas-clickhouse-adapter.%s:8080" .Release.Namespace
+  # Resource limits for Clickhouse DBaaS Adapter Pod
+  resources:
+    limits:
+      cpu: 200m
+      memory: 32Mi
+    requests:
+      cpu: 200m
+      memory: 32Mi
+  securityContext:
+    pod: {}
+    container: {}
+#  priorityClassName: "high-priority"
+
+tls:
+  enabled: false
+  zookeeper: false
+  certificates:
+    ca_crt:
+    tls_key:
+    tls_crt:
+  certificateSecretName: ch-cert
+  generateCerts:
+    clusterIssuerName: ""
+    enabled: false
+    duration: 365
+    subjectAlternativeName:
+      additionalDnsNames: [ ]
+      additionalIpAddresses: [ ]
+
+tracing:
+  enabled: false
+  host: "jaeger-collector.tracing.svc:4317"
+  service: "nc-clickhouse-backup-daemon"
+
+integrationTests:
+  install: false
+  image: "ghcr.io/netcracker/qubership-clickhouse-integration-tests:main"
+  tags: "backupORdbaas"
+  clickhouseHost: "clickhouse-cluster"
+  clickhousePort: 8123
+  credentials:
+    clickhouse:
+      user: "clickhouse"
+  clickhouseBackupHost: "clickhouse-backup-orchestrator"
+  clickhouseBackupPort: 8080
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 200m
+    limits:
+      memory: 256Mi
+      cpu: 400m
+  securityContext:
+    pod: { }
+    container: { }
+  timeoutBeforeStart: 30
+
+# STORAGE_RWO_CLASS: "local-path"
+
+# INFRA_CLICKHOUSE_REPLICAS: 1
+# INFRA_CLICKHOUSE_ZK_HOST: "zk-host"
+# INFRA_CLICKHOUSE_FS_GROUP: 100600

@@ -1,0 +1,18 @@
+{{- if and .Values.clickhouseCluster.install (eq (include "monitoring.install" .) "true") }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/component: monitoring
+  name: clickhouse-version-metric
+spec:
+  groups:
+    - name: clickhouse-version-metric-group
+      rules:
+        - expr: 'chi_clickhouse_metric_VersionInteger{namespace="{{ .Release.Namespace }}", service="clickhouse-metrics"}'
+          record: clickhouse_version
+          labels:
+            application: {{ .Chart.Name }}
+            namespace: {{ .Release.Namespace }}
+            service: clickhouse
+{{ end }}

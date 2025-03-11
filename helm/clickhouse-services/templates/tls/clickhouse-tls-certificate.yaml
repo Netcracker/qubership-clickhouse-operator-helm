@@ -1,0 +1,31 @@
+{{- if and ( or .Values.tls.enabled .Values.tls.zookeeper ) .Values.tls.generateCerts.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: clickhouse-services-tls-certificate
+  labels:
+    name: clickhouse-services-tls-certificate
+    {{ include "kubernetes.labels" . | nindent 4 }}
+spec:
+  secretName: {{ include "clickhouse.certServicesSecret" . }}
+  duration: {{ default 365 .Values.tls.generateCerts.duration | mul 24 }}h
+  commonName: clickhouse-ca
+  isCA: true
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  dnsNames:
+{{ ( include "clickhouse.certDnsNames" . | indent 4) }}
+  ipAddresses:
+{{ ( include "clickhouse.certIpAddresses" . | indent 4) }}
+  issuerRef:
+  {{- if .Values.tls.generateCerts.clusterIssuerName }}
+    name: {{ .Values.tls.generateCerts.clusterIssuerName }}
+    kind: ClusterIssuer
+  {{- else }}
+    name: clickhouse-services-tls-issuer
+    kind: Issuer
+  {{- end }}
+    group: cert-manager.io
+{{- end }}
