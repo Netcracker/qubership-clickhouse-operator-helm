@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.28.2
-	github.com/Netcracker/qubership-dbaas-adapter-core v0.9.5
+	github.com/Netcracker/qubership-dbaas-adapter-core v0.9.6
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.9.0
