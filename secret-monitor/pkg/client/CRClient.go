@@ -9,6 +9,7 @@ import (
 	"github.com/Netcracker/qubership-credential-manager/pkg/utils"
 	clickhousev1 "github.com/altinity/clickhouse-operator/pkg/apis/clickhouse.altinity.com/v1"
 	chopClientSet "github.com/altinity/clickhouse-operator/pkg/client/clientset/versioned"
+	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -23,6 +24,11 @@ var (
 	logger    = utils.GetLogger()
 	namespace = utils.GetNamespace()
 )
+
+type UserCreds struct {
+	User     string
+	Password string
+}
 
 const (
 	ClickHouseInstallationCRDResource = "cluster"
@@ -71,24 +77,28 @@ func (c *ClickHouseClient) getClickHouseInstallation(ctx context.Context) (*clic
 
 }
 
-func (c *ClickHouseClient) UpdateClickhouseUser(ctx context.Context, hashedPassword string, clickhouse_user string) (*clickhousev1.ClickHouseInstallation, error) {
-
-	clickhouseResource, err := c.getClickHouseInstallation(context.Background())
+func (c *ClickHouseClient) UpdateClickhouseUser(ctx context.Context, userCreds []UserCreds) error {
+	// Fetch ClickHouse installation resource
+	clickhouseResource, err := c.getClickHouseInstallation(ctx)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to fetch ClickHouse installation: %w", err)
 	}
 
-	passwordKey := userKey(clickhouse_user)
-	updatedUser := clickhousev1.NewSettingScalar(hashedPassword).SetAttribute(passwordKey, hashedPassword)
+	for _, userCred := range userCreds {
+		passwordKey := userKey(userCred.User)
+		updatedUser := clickhousev1.NewSettingScalar(userCred.Password).SetAttribute(passwordKey, userCred.Password)
 
-	clickhouseResource.Spec.Configuration.Users.Ensure().Set(passwordKey, updatedUser)
+		// Ensure the password key is updated in the ClickHouse configuration
+		clickhouseResource.Spec.Configuration.Users.Ensure().Set(passwordKey, updatedUser)
 
-	clickhouseResource, err = c.chopClient.ClickhouseV1().ClickHouseInstallations(namespace).Update(ctx, clickhouseResource, metav1.UpdateOptions{})
-	if err != nil {
-		return nil, err
-	} else {
-		logger.Info("Password updated successfully")
+		logger.Debug("Updating password for user", zap.String("user", userCred.User))
 	}
-	return clickhouseResource, nil
 
+	_, err = c.chopClient.ClickhouseV1().ClickHouseInstallations(namespace).Update(ctx, clickhouseResource, metav1.UpdateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to update ClickHouse resource: %v", err)
+	}
+
+	logger.Info("Password(s) updated successfully")
+	return nil
 }
