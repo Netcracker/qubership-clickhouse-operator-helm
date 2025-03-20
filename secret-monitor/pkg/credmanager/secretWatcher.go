@@ -21,6 +21,10 @@ var (
 	changedUser      = []client.UserCreds{}
 )
 
+const (
+	lockLabel = "locked-for-watcher"
+)
+
 func Reconcile() {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -60,7 +64,9 @@ func changeCredsFunc(newSecret, oldSecret *corev1.Secret) error {
 	changedUser = append(changedUser, client.UserCreds{
 
 		User:     clickhouseUser,
-		Password: hashedPassword},
+		Password: hashedPassword,
+		Secret:   newSecret,
+	},
 	)
 
 	return nil
@@ -73,17 +79,30 @@ func hashPassword(password string) string {
 }
 
 func updateClickhouseCreds(users *[]client.UserCreds) error {
+	defer func() {
+		for _, userCred := range *users {
+			userCred.Secret.Annotations[lockLabel] = "false"
+		}
+
+		// Clear the *users slice after the operation is complete
+		*users = (*users)[:0]
+	}()
+
+	logger.Info("updateClickhouseCreds called ....")
+
 	if len(*users) == 0 {
 		logger.Info("No user credentials to update")
 		return nil
+	}
+
+	for _, userCred := range *users {
+		userCred.Secret.Annotations[lockLabel] = "true"
 	}
 
 	err := clickhouseClient.UpdateClickhouseUser(context.Background(), *users)
 	if err != nil {
 		return fmt.Errorf("failed to update ClickHouse credentials: %v", err)
 	}
-
-	*users = (*users)[:0]
 
 	return nil
 }
