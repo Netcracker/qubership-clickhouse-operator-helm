@@ -29,10 +29,7 @@ jobs:
         component:
           - name: qubership-clickhouse-243
             file: 243/Dockerfile
-            context: "243"
-          - name: qubership-clickhouse-services
-            file: clickhouse-services/Dockerfile
-            context: "clickhouse-services"            
+            context: "243"      
           - name: qubership-clickhouse-integration-tests
             file: integration-tests/Dockerfile
             context: "integration-tests"
