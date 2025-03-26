@@ -15,8 +15,6 @@ jobs:
         component:
           - name: qubership-clickhouse-243
             context: ""
-          - name: qubership-clickhouse-services
-            context: ""
           - name: qubership-clickhouse-integration-tests
             context: ""
           - name: qubership-clickhouse-hook
