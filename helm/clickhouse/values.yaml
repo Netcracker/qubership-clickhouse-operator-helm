@@ -481,30 +481,6 @@ clickhouseCluster:
     #
     # annotations: {}
 
-
-  ## This section describes params of Openshift route to connect to ClickHouse client tcp port
-  # Type: object
-  # Mandatory: no
-  #
-  # routeTcp:
-    ## Host address for Openshift route
-    # Type: string
-    # Mandatory: no
-    # host: clickhouse-client.test.org
-
-    # Set of labels for Route
-    # Default labels can be overwritten
-    # Type: object
-    # Mandatory: no
-    #
-    # labels: {}
-
-    # Set of annotations for Route
-    # Type: object
-    # Mandatory: no
-    #
-    # annotations: {}
-
   ## This section describes params of Kubernetes ingress to connect to ClickHouse http api port
   # Type: object
   # Mandatory: no
@@ -528,31 +504,6 @@ clickhouseCluster:
     # Mandatory: no
     #
 #    annotations: {}
-
-
-  ## This section describes params of Kubernetes route to connect to ClickHouse client tcp port
-  # Type: object
-  # Mandatory: no
-  #
-#  ingressTcp:
-    ## Host address for Openshift route
-    # Type: string
-    # Mandatory: no
-#    host: clickhouse-client.test.org
-
-    # Set of labels for Route
-    # Default labels can be overwritten
-    # Type: object
-    # Mandatory: no
-    #
-    # labels: {}
-
-    # Set of annotations for Route
-    # Type: object
-    # Mandatory: no
-    #
-    # annotations: {}
-
 
   ## ClickHouse user configuration.
   ## Type: object
