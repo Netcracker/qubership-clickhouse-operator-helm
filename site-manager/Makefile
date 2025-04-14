@@ -27,7 +27,7 @@ fmt:
 	gofmt -l -s -w .
 
 compile:
-	CGO_ENABLED=0 go build -o ./build/_output/bin/site-manager \
+	CGO_ENABLED=0 go build -o ./build/_output/bin/clickhouse-site-manager \
 				-gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} ./cmd/main.go
 
 
