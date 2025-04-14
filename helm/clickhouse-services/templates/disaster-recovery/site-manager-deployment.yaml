@@ -1,0 +1,140 @@
+{{- if .Values.disasterRecovery }}
+{{- if .Values.disasterRecovery.siteManager }}
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: site-manager
+  labels:
+    name: site-manager
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    app: site-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: site-manager
+  template:
+    metadata:
+      labels:
+        app: site-manager
+    spec:
+      {{- if .Values.disasterRecovery.siteManager.securityContext }}
+      securityContext:
+        {{- include "clickhouse.globalPodSecurityContext" . | nindent 8 }}
+        {{- if .Values.disasterRecovery.siteManager.securityContext.pod }}
+        {{ .Values.disasterRecovery.siteManager.securityContext.pod | toYaml | nindent 8 }}
+        {{- end }}
+       {{- end }}  
+      {{ if .Values.disasterRecovery.siteManager.priorityClassName }}
+      priorityClassName: {{ .Values.disasterRecovery.siteManager.priorityClassName }}
+      {{ end }}
+      containers:
+        - name: site-manager
+          image: {{ template "docker_ch_site_manager.image" . }}
+          ports:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: CLUSTER
+              value: "replicated"
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: NC_CRON_EXPR
+              value: {{ default "*/10 * * * *" .Values.disasterRecovery.siteManager.downloadSchedule | quote }}
+            - name: TLS_ENABLED
+            {{- if .Values.tls.enabled }}
+              value: "true"
+            {{- else }}
+              value: "false"
+            {{- end }}
+            {{- template "clickhouse.smEnvs" . }}
+          resources:
+            limits:
+              cpu: 50m
+              memory: 64Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+{{- if and .Values.tls.enabled }}
+              port: 8443
+              scheme: HTTPS
+{{- else }}
+              port: 8080
+              scheme: HTTP
+{{- end }}    
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+{{- if and .Values.tls.enabled }}
+              port: 8443
+              scheme: HTTPS
+{{- else }}
+              port: 8080
+              scheme: HTTP
+{{- end }}              
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 10
+          imagePullPolicy: Always
+          {{- if .Values.disasterRecovery.siteManager.securityContext }}
+          securityContext:
+            {{- include "clickhouse.globalContainerSecurityContext" . | nindent 12 }}
+            {{- if .Values.disasterRecovery.siteManager.securityContext.container }}
+            {{- .Values.disasterRecovery.siteManager.securityContext.container | toYaml | nindent 12 }}
+            {{- end }}
+            {{- end }}
+          volumeMounts:
+  {{- if .Values.tls.enabled }}
+            - name: {{ include "clickhouse.certServicesSecret" . }}
+              mountPath: {{ default "/tls/" }}
+  {{- end }}            
+      serviceAccountName: {{ .Values.clickhouseOperator.serviceAccountName }}
+      volumes:
+      {{- if and .Values.tls .Values.tls.enabled }}
+        - name: {{ include "clickhouse.certServicesSecret" . }}
+          secret:
+            secretName: {{ include "clickhouse.certServicesSecret" . }}
+            defaultMode: 416
+      {{- end }}
+  strategy:
+    type: RollingUpdate
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: site-manager
+  labels:
+    app: site-manager
+spec:
+  ports:
+{{- if and .Values.tls.enabled }}
+    - name: web-tls
+      protocol: TCP
+      port: 8443
+      targetPort: 8443
+{{- else }}
+    - name: web
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+{{- end }}
+  selector:
+    app: site-manager
+  type: ClusterIP
+{{ end }}
+{{ end }}

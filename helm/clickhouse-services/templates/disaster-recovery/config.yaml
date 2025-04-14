@@ -1,0 +1,33 @@
+{{- if .Values.disasterRecovery }}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: site-manager-status
+  labels:
+    name: site-manager-status
+    {{ include "kubernetes.labels" . | nindent 4 }}
+data:
+  "mode": "{{ .Values.disasterRecovery.mode }}"
+  "status": "done"
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: pre-configure-site-manager-status
+  labels:
+    name: pre-configure-site-manager-status
+    {{ include "kubernetes.labels" . | nindent 4 }}
+data:
+  "mode": "{{ .Values.disasterRecovery.mode }}"
+  "status": "done"
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: opposite-ch-host
+  labels:
+    name: opposite-ch-host
+    {{ include "kubernetes.labels" . | nindent 4 }}
+data:
+  "host": "{{ .Values.disasterRecovery.oppositeClickhouseHost }}"
+{{ end }}
