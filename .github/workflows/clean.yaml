@@ -22,7 +22,9 @@ jobs:
           - name: qubership-clickhouse-secret-monitor
             context: ""
           - name: qubership-clickhouse-transfer
-            context: ""               
+            context: "" 
+          - name: qubership-clickhouse-site-manager
+            context: ""                          
     steps:
       - name: Prepare Tag
         run: echo "TAG_NAME=$(echo ${TAG_NAME} | sed 's@refs/heads/@@;s@/@_@g')" >> $GITHUB_ENV

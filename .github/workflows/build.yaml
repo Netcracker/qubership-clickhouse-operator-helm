@@ -41,7 +41,10 @@ jobs:
             context: "secret-monitor"
           - name: qubership-clickhouse-transfer
             file: docker-transfer/Dockerfile
-            context: ""                   
+            context: "" 
+          - name: qubership-clickhouse-site-manager
+            file: site-manager/build/Dockerfile
+            context: ""                                 
     runs-on: ubuntu-24.04
     steps:
       - name: Validate
