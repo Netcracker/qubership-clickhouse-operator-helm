@@ -4,14 +4,14 @@ ENV GOSUMDB=off
 
 WORKDIR /workspace
 
-COPY ../go.mod ../go.sum ./
+# Copy the Go Modules manifests
+COPY go.mod go.mod
+COPY go.sum go.sum
 
-# Download Go dependencies
 RUN go mod download
 
-# Copy the cmd and pkg directories from the parent directory
-COPY ../cmd ./cmd
-COPY ../pkg ./pkg
+COPY pkg/ pkg/
+COPY cmd/ cmd/
 
 RUN go mod tidy
 
