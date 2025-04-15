@@ -127,6 +127,38 @@ backupDaemon:
 #    backupDaemonApiCredentialsUsername: ""
 #    backupDaemonApiCredentialsPassword: ""
 
+
+# disasterRecovery:
+#   mode: "active"
+#   oppositeClickhouseHost: "clickhouse-cluster.clickhouse-dc-1"
+#   replicator:
+#     backupSchedule: "*/60 * * * *"
+#     s3:
+#       access_key: minio
+#       bucket: clickhouse
+#       endpoint: https://minio-service
+#       secret_key: minio123
+#     resource:
+#       limits:
+#         cpu: 500m
+#         memory: 512Mi
+#     securityContext:
+#       pod: {}
+#       container: {}
+#       runAsUser: 101
+#     nodeSelector: {}
+#   siteManager:
+#     image: ghcr.io/netcracker/qubership-clickhouse-site-manager:main
+#     downloadSchedule: "*/10 * * * *"
+#     httpAuth:
+#       enabled: true
+#       smNamespace: "site-manager"
+#       smServiceAccountName: "sm-auth-sa"
+#     securityContext:
+#       pod: {}
+#       container: {}
+#     priorityClassName: "high-priority"
+
 dbaas:
   # Optional flag for Clickhouse DBaaS Adapter deployment
   install: false

@@ -38,6 +38,9 @@ fsGroup: 101
 {{- define "docker_ch_dbaas.image" -}}
 {{- end -}}
 
+{{- define "docker_ch_site_manager.image" -}}
+{{- end -}}
+
 {{- define "clickhouseIntegrationTests.image" -}}
 {{- end -}}
 
@@ -92,6 +95,59 @@ fsGroup: 101
 {{- end -}}
 
 {{- define "supplementary-tests.monitoredImages" -}}
+{{- end -}}
+
+{{- define "clickhouse.smServiceAccount" -}}
+  {{- if .Values.disasterRecovery.siteManager.httpAuth.smServiceAccountName -}}
+    {{- .Values.disasterRecovery.siteManager.httpAuth.smServiceAccountName -}}
+  {{- else -}}
+    {{- if .Values.disasterRecovery.siteManager.httpAuth.smSecureAuth -}}
+      {{- "site-manager-sa" -}}
+    {{- else -}}
+      {{- "sm-auth-sa" -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+
+{{- define "clickhouse.smEnvs" }}
+{{- if .Values.disasterRecovery.siteManager }}
+{{- if .Values.disasterRecovery.siteManager.httpAuth.enabled }}
+            - name: NC_SM_NAMESPACE
+              value: {{ .Values.disasterRecovery.siteManager.httpAuth.smNamespace | default "site-manager" }}
+            - name: NC_SM_AUTH_SA
+              value: {{ include "clickhouse.smServiceAccount" . }}
+            - name: NC_SM_HTTP_AUTH
+              value: "true"
+            - name: NC_SM_CUSTOM_AUDIENCE
+              value: {{ .Values.disasterRecovery.siteManager.httpAuth.customAudience | default "sm-services" }}  
+{{ else }}
+            - name: NC_SM_HTTP_AUTH
+              value: "false"
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Protocol for Site Manager
+*/}}
+{{- define "siteManager.protocol" -}}
+{{- if .Values.tls.enabled }}
+  {{- "https" -}}
+{{- else -}}
+  {{- "http" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+DRD Port
+*/}}
+{{- define "siteManager.port" -}}
+  {{- if .Values.tls.enabled }}
+    {{- "8443" -}}
+  {{- else -}}
+    {{- "8080" -}}
+  {{- end -}}
 {{- end -}}
 
 {{/* Kubernetes labels */}}
