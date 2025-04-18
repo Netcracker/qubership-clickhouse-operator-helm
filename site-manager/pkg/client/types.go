@@ -5,6 +5,7 @@ import "github.com/Netcracker/qubership-clickhouse-operator-helm/site-manager/pk
 const (
 	chBackupHost      = "clickhouse-replicator"
 	chBackupPort      = "8080"
+	chBackupTlsPort   = "8443"
 	IncrementalBackup = "incremental"
 	FullBackup        = "full"
 )
@@ -12,8 +13,9 @@ const (
 var logger = util.GetLogger()
 
 type HttpBackupClient struct {
-	Host string
-	Port string
+	Protocol string
+	Host     string
+	Port     string
 }
 
 type BackupIdsList []string

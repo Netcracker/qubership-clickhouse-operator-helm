@@ -49,7 +49,10 @@ func setDefaultRootCA() {
 
 	http.DefaultTransport = &http.Transport{
 		TLSClientConfig: &tls.Config{
-			RootCAs: caCertPool,
+			RootCAs:    caCertPool,
+			MinVersion: tls.VersionTLS12,
+			ClientAuth: tls.VerifyClientCertIfGiven,
+			ClientCAs:  caCertPool,
 		},
 	}
 }

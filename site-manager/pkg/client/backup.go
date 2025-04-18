@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Netcracker/qubership-clickhouse-operator-helm/site-manager/pkg/util"
 	"go.uber.org/zap"
 	"io"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -13,7 +14,14 @@ import (
 )
 
 func GetDefaultBackupClient() *HttpBackupClient {
-	return &HttpBackupClient{Host: chBackupHost, Port: chBackupPort}
+	return &HttpBackupClient{Protocol: util.GetProtocol(), Host: chBackupHost, Port: GetReplicatorPort()}
+}
+
+func GetReplicatorPort() string {
+	if util.IsTlsEnabled() {
+		return chBackupTlsPort
+	}
+	return chBackupPort
 }
 
 func (client *HttpBackupClient) GetRemoteBackups() ([]string, error) {
@@ -42,7 +50,7 @@ func (client *HttpBackupClient) listBackupsByType(backupType string) (BackupIdsL
 		listPath = "incremental/" + listPath
 	}
 
-	res, err := http.Get(fmt.Sprintf("http://%s:%s/%s", client.Host, client.Port, listPath))
+	res, err := http.Get(fmt.Sprintf("%s://%s:%s/%s", client.Protocol, client.Host, client.Port, listPath))
 
 	if err != nil {
 		return nil, err
@@ -68,7 +76,7 @@ func (client *HttpBackupClient) getInfoForBackupByType(backupId string, backupTy
 		listPath = "incremental/" + listPath
 	}
 
-	res, err := http.Get(fmt.Sprintf("http://%s:%s/%s/%s", client.Host, client.Port, listPath, backupId))
+	res, err := http.Get(fmt.Sprintf("%s://%s:%s/%s/%s", client.Protocol, client.Host, client.Port, listPath, backupId))
 	if err != nil {
 		return BackupInfo{}, err
 	}
@@ -128,7 +136,7 @@ func (client *HttpBackupClient) requestBackup(backupType string) (string, error)
 	if IncrementalBackup == backupType {
 		backupPath = "incremental/" + backupPath
 	}
-	res, err := http.Post(fmt.Sprintf("http://%s:%s/%s", client.Host, client.Port, backupPath), "text/plain", nil)
+	res, err := http.Post(fmt.Sprintf("%s://%s:%s/%s", client.Protocol, client.Host, client.Port, backupPath), "text/plain", nil)
 	if err != nil {
 		return "", err
 	}
@@ -207,7 +215,7 @@ func (client *HttpBackupClient) waitTillSuccessfulRestore(trackingId string, bac
 	if IncrementalBackup == backupType {
 		StatusPath = "incremental/" + StatusPath
 	}
-	url := fmt.Sprintf("http://%s:%s/%s/%s", client.Host, client.Port, StatusPath, trackingId)
+	url := fmt.Sprintf("%s://%s:%s/%s/%s", client.Protocol, client.Host, client.Port, StatusPath, trackingId)
 	err := wait.PollImmediate(5*time.Second, 15*time.Minute, func() (done bool, err error) {
 		res, err := http.Get(url)
 		if err != nil {
@@ -238,7 +246,7 @@ func (client *HttpBackupClient) waitTillSuccessfulRestore(trackingId string, bac
 
 // curl -XPOST -H "Content-Type: application/json" -d  '{"vault":"20170913T1114"}' localhost:8080/incremental/restore
 func (client *HttpBackupClient) requestIncrementalRestore(backupId string) (trackingId string, err error) {
-	url := fmt.Sprintf("http://%s:%s/%s", client.Host, client.Port, "incremental/restore")
+	url := fmt.Sprintf("%s://%s:%s/%s", client.Protocol, client.Host, client.Port, "incremental/restore")
 	jsonBody := map[string]string{"vault": backupId}
 	jsonValue, _ := json.Marshal(jsonBody)
 	res, err := http.Post(url, "application/json", bytes.NewBuffer(jsonValue))
@@ -292,7 +300,7 @@ func (client *HttpBackupClient) RequestRestoreOfLatestFullBackup() error {
 }
 
 func (client *HttpBackupClient) requestFullRestore(backupId string) (trackingId string, err error) {
-	url := fmt.Sprintf("http://%s:%s/%s", client.Host, client.Port, "/restore")
+	url := fmt.Sprintf("%s://%s:%s/%s", client.Protocol, client.Host, client.Port, "/restore")
 	jsonBody := map[string]string{"vault": backupId}
 	jsonValue, _ := json.Marshal(jsonBody)
 	res, err := http.Post(url, "application/json", bytes.NewBuffer(jsonValue))
