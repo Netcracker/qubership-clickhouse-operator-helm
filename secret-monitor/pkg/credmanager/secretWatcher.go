@@ -14,26 +14,29 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+const lockLabel = "locked-for-watcher"
+
 var (
 	logger           = utils.GetLogger()
 	mutex            = sync.Mutex{}
 	clickhouseClient *client.ClickHouseClient
-	changedUser      = []client.UserCreds{}
 )
 
-const (
-	lockLabel = "locked-for-watcher"
-)
+// CredentialManager holds the state of changed credentials
+type CredentialManager struct {
+	ChangedUsers []client.UserCreds
+}
 
 func Reconcile() {
 	mutex.Lock()
 	defer mutex.Unlock()
 	time.Sleep(20 * time.Second)
 
-	SecretNames := utils.GetSecretNames()
+	credManager := &CredentialManager{}
+	secretNames := utils.GetSecretNames()
 
-	for _, secretName := range SecretNames {
-		err := manager.ActualizeCreds(secretName, changeCredsFunc)
+	for _, secretName := range secretNames {
+		err := manager.ActualizeCreds(secretName, credManager.changeCredsFunc)
 		if err != nil {
 			logger.Error("cannot update clickhouse creds", zap.Error(err))
 		}
@@ -48,61 +51,58 @@ func Reconcile() {
 		}
 	}
 
-	if len(changedUser) > 0 {
-		if err := updateClickhouseCreds(&changedUser); err != nil {
+	if len(credManager.ChangedUsers) > 0 {
+		updatedUsers, err := credManager.updateClickhouseCreds()
+		if err != nil {
 			logger.Error("Failed to update ClickHouse credentials", zap.Error(err))
 		}
+		credManager.ChangedUsers = updatedUsers
 	}
 }
 
-func changeCredsFunc(newSecret, oldSecret *corev1.Secret) error {
+func (cm *CredentialManager) changeCredsFunc(newSecret, oldSecret *corev1.Secret) error {
 	clickhouseUser := string(newSecret.Data["clickhouse_user"])
 	newPassword := string(newSecret.Data["password"])
-
 	hashedPassword := hashPassword(newPassword)
 
-	changedUser = append(changedUser, client.UserCreds{
-
+	cm.ChangedUsers = append(cm.ChangedUsers, client.UserCreds{
 		User:     clickhouseUser,
 		Password: hashedPassword,
 		Secret:   newSecret,
-	},
-	)
+	})
 
 	return nil
+}
+
+func (cm CredentialManager) updateClickhouseCreds() ([]client.UserCreds, error) {
+
+	defer func() {
+		for i := range cm.ChangedUsers {
+			cm.ChangedUsers[i].Secret.Annotations[lockLabel] = "false"
+		}
+	}()
+
+	logger.Info("updateClickhouseCreds called ....")
+
+	if len(cm.ChangedUsers) == 0 {
+		logger.Info("No user credentials to update")
+		return cm.ChangedUsers, nil
+	}
+
+	for i := range cm.ChangedUsers {
+		cm.ChangedUsers[i].Secret.Annotations[lockLabel] = "true"
+	}
+
+	err := clickhouseClient.UpdateClickhouseUser(context.Background(), cm.ChangedUsers)
+	if err != nil {
+		return cm.ChangedUsers, fmt.Errorf("failed to update ClickHouse credentials: %v", err)
+	}
+
+	return []client.UserCreds{}, nil
 }
 
 func hashPassword(password string) string {
 	hash := sha256.New()
 	hash.Write([]byte(password))
 	return fmt.Sprintf("%x", hash.Sum(nil))
-}
-
-func updateClickhouseCreds(users *[]client.UserCreds) error {
-	defer func() {
-		for _, userCred := range *users {
-			userCred.Secret.Annotations[lockLabel] = "false"
-		}
-
-		// Clear the *users slice after the operation is complete
-		*users = (*users)[:0]
-	}()
-
-	logger.Info("updateClickhouseCreds called ....")
-
-	if len(*users) == 0 {
-		logger.Info("No user credentials to update")
-		return nil
-	}
-
-	for _, userCred := range *users {
-		userCred.Secret.Annotations[lockLabel] = "true"
-	}
-
-	err := clickhouseClient.UpdateClickhouseUser(context.Background(), *users)
-	if err != nil {
-		return fmt.Errorf("failed to update ClickHouse credentials: %v", err)
-	}
-
-	return nil
 }
