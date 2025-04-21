@@ -1,0 +1,24 @@
+{{- if .Values.disasterRecovery }}
+{{- if .Values.disasterRecovery.siteManager }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/name: clickhouse-site-manager-monitor
+    app.kubernetes.io/part-of: platform-monitoring
+    app.kubernetes.io/managed-by: platform-monitoring-operator
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    app.kubernetes.io/technology: "go"
+  name: clickhouse-sm-metrics
+spec:
+  endpoints:
+    - interval: 60s
+      path: /metrics
+      port: web
+  selector:
+    matchLabels:
+      app: site-manager
+{{- end }}
+{{- end }}

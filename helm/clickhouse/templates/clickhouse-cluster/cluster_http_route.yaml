@@ -1,4 +1,4 @@
-{{- if and .Values.clickhouseCluster.install }}
+{{- if and .Values.clickhouseCluster.install (not .Values.tls.enabled) }}
 {{- if and .Values.clickhouseCluster.routeHttp }}
 apiVersion: route.openshift.io/v1
 kind: Route

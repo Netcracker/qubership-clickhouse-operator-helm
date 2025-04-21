@@ -1,0 +1,6 @@
+{{- if .Values.disasterRecovery }}
+  {{- if and (eq (include "monitoring.install" .) "true") }}
+    {{ template "bd_service_monitor_for_name" (dict "ENABLE_INCREMENTAL" "true" "service_name" "clickhouse-replicator" "rel_name" .Release.Name "app_version" .Chart.AppVersion)  }}
+  {{- end }}
+{{- end }}
+

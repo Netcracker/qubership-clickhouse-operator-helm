@@ -1,0 +1,33 @@
+{{- if .Values.disasterRecovery }}
+kind: Service
+apiVersion: v1
+metadata:
+  name: clickhouse-cluster-external
+  labels:
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    name: clickhouse-cluster-external
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8123
+      targetPort: 8123
+    - name: tcp
+      protocol: TCP
+      port: 9000
+      targetPort: 9000
+    - name: interserver
+      protocol: TCP
+      port: 9009
+      targetPort: 9009
+    - name: metrics
+      protocol: TCP
+      port: 8888
+      targetPort: 8888
+    - name: backup
+      protocol: TCP
+      port: 7171
+      targetPort: 7171
+  type: ExternalName
+  externalName: {{ if eq .Values.disasterRecovery.mode "standby" }} {{ .Values.disasterRecovery.oppositeClickhouseHost }} {{ else }} {{ printf "clickhouse-cluster.%s" .Release.Namespace }} {{ end }}
+{{ end }}

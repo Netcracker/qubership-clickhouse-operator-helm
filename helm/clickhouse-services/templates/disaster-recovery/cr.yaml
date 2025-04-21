@@ -1,0 +1,42 @@
+{{- if .Values.disasterRecovery }}
+apiVersion: netcracker.com/v3
+kind: SiteManager
+metadata:
+  name: {{ default (printf "%s-pre-configure-site-manager" .Release.Namespace) }}
+  labels:
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    name: {{ default (printf "%s-pre-configure-site-manager" .Release.Namespace) }}
+spec:
+  sitemanager:
+    module: "stateful"
+    after: []
+    before: []
+    sequence:
+      - standby
+      - active
+    parameters:
+      serviceEndpoint: {{ printf "%s://site-manager.%s.svc.cluster.local:%s/pre-configure" (include "siteManager.protocol" .) .Release.Namespace (include "siteManager.port" .) }}
+      healthzEndpoint: {{ printf "%s://site-manager.%s.svc.cluster.local:%s/health" (include "siteManager.protocol" .) .Release.Namespace (include "siteManager.port" .) }}
+    timeout: 720
+---
+apiVersion: netcracker.com/v3
+kind: SiteManager
+metadata:
+  name: {{ default (printf "%s-site-manager" .Release.Namespace) }}
+  labels:
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    name: {{ default (printf "%s-site-manager" .Release.Namespace) }}
+spec:
+  sitemanager:
+    module: "stateful"
+    after:
+      - {{ default (printf "%s-pre-configure-site-manager.%s" .Release.Namespace .Release.Namespace) }}
+    before: []
+    sequence:
+      - active
+      - standby
+    parameters:
+      serviceEndpoint: {{ printf "%s://site-manager.%s.svc.cluster.local:%s/sitemanager" (include "siteManager.protocol" .) .Release.Namespace (include "siteManager.port" .) }}
+      healthzEndpoint: {{ printf "%s://site-manager.%s.svc.cluster.local:%s/health" (include "siteManager.protocol" .) .Release.Namespace (include "siteManager.port" .) }}
+    timeout: 840
+{{ end }}

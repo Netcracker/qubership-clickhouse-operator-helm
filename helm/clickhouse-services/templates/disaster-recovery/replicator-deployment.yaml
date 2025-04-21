@@ -1,0 +1,161 @@
+{{- if .Values.disasterRecovery }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clickhouse-replicator
+  labels:
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    app.kubernetes.io/technology: "python"
+    name: clickhouse-replicator
+    app: clickhouse-replicator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clickhouse-replicator
+  template:
+    metadata:
+      labels:
+        app: clickhouse-replicator
+    spec:
+      {{- if .Values.disasterRecovery.replicator.affinity }}
+      affinity: {{ .Values.disasterRecovery.replicator.affinity | toJson }}
+      {{- else if .Values.affinity }}
+      affinity: {{ .Values.affinity | toJson }}
+      {{- end }}
+      containers:
+        - name: clickhouse-replicator
+          image: {{ template "docker_ch_backup_orch.image" . }}
+          ports:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: CLUSTER
+              value: {{ default "replicated" .Values.backupDaemon.cluster }}
+            - name: WATCH_NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: MODE
+              value: {{ .Values.disasterRecovery.mode }}
+            - name: S3_ENABLED
+              value: "True"
+            - name: S3_URL
+              value: {{ .Values.disasterRecovery.replicator.s3.endpoint | quote }}
+            - name: S3_BUCKET
+              value: {{ .Values.disasterRecovery.replicator.s3.bucket | quote }}
+            - name: REMOTE_STORAGE
+              value: s3
+            - name: S3_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: s3-replicator-remote-storage-credentials
+                  key: accessKeyId
+            - name: BACKUP_SCHEDULE
+              value: {{ if eq .Values.disasterRecovery.mode "standby" }}"None"{{ else }} {{ default "0 1 * * *" .Values.disasterRecovery.replicator.backupFullSchedule | quote }} {{ end }}
+            - name: ENABLE_INCREMENTAL
+              value: "true"
+            - name: INC_BACKUP_SCHEDULE
+              value: {{ if eq .Values.disasterRecovery.mode "standby" }}"None"{{ else }} {{ default "*/30 * * * *" .Values.disasterRecovery.replicator.backupSchedule | quote }} {{ end }}
+            - name: PUBLISH_CUSTOM_VARS
+              value: "true"
+            - name: EVICTION_POLICY
+              value: "1/delete"
+            - name: REPLICATOR
+              value: "true"
+            - name: S3_KEY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: s3-replicator-remote-storage-credentials
+                  key: secretAccessKey
+            - name: FAKE_INCREMENTAL_BACKUP_SCHEDULE
+              value: {{ default "*/30 * * * *" .Values.disasterRecovery.replicator.backupSchedule | quote }}
+            - name: FAKE_BACKUP_SCHEDULE
+              value: {{ default "0 1 * * *" .Values.disasterRecovery.replicator.backupFullSchedule | quote }}
+            - name: SKIP_LOCK_CHECK
+              value: "true"
+            - name: S3_SSL_VERIFY
+              value: "false"
+            - name: TIMEOUT
+              value: {{ .Values.backupDaemon.timeout | quote }}
+          volumeMounts:
+            - name: backup-storage
+              mountPath: /backup-storage/
+          resources:
+{{ toYaml .Values.disasterRecovery.replicator.resources | indent 12 }}
+          livenessProbe:
+            failureThreshold: 10
+            initialDelaySeconds: 10
+            periodSeconds: 25
+            successThreshold: 1
+            tcpSocket:
+              port: 8080
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 10
+            initialDelaySeconds: 10
+            periodSeconds: 25
+            successThreshold: 1
+            tcpSocket:
+              port: 8080
+            timeoutSeconds: 5
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+          securityContext:
+            {{- include "clickhouse.globalContainerSecurityContext" . | nindent 12 }}
+            {{- with .Values.disasterRecovery.replicator.securityContext.container }}
+            {{- toYaml . | nindent 12 -}}
+            {{- end }}
+      tolerations:
+        {{- range $tKey, $t := .Values.disasterRecovery.replicator.tolerations }}
+        - key: {{ $t.key }}
+          operator: {{ $t.operator }}
+          value: {{ $t.value }}
+          effect: {{ $t.effect }}
+          tolerationSeconds: {{ $t.tolerationSeconds }}
+        {{- end }}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      serviceAccountName: {{ .Values.clickhouseOperator.serviceAccountName }}
+      serviceAccount: {{ .Values.clickhouseOperator.serviceAccountName }}
+      volumes:
+        - name: backup-storage
+          emptyDir: {}
+      nodeSelector:
+{{ toYaml .Values.disasterRecovery.replicator.nodeSelector | indent 8 }}
+      securityContext:
+        {{- include "clickhouse.globalPodSecurityContext" . | nindent 8 }}
+        {{- with .Values.disasterRecovery.replicator.securityContext.pod }}
+        {{- toYaml . | nindent 8 -}}
+        {{- end }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: clickhouse-replicator
+  name: clickhouse-replicator
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: web
+  selector:
+    app: clickhouse-replicator
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "s3-replicator-remote-storage-credentials"
+data:
+  accessKeyId: {{ .Values.disasterRecovery.replicator.s3.access_key | b64enc }}
+  secretAccessKey: {{ .Values.disasterRecovery.replicator.s3.secret_key | b64enc }}
+type: Opaque
+{{ end }}
