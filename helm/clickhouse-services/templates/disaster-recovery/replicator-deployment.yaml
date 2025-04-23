@@ -80,6 +80,10 @@ spec:
           volumeMounts:
             - name: backup-storage
               mountPath: /backup-storage/
+  {{- if .Values.tls.enabled }}
+            - name: {{ include "clickhouse.certServicesSecret" . }}
+              mountPath: {{ default "/tls/" }}
+  {{- end }}  
           resources:
 {{ toYaml .Values.disasterRecovery.replicator.resources | indent 12 }}
           livenessProbe:
@@ -88,7 +92,11 @@ spec:
             periodSeconds: 25
             successThreshold: 1
             tcpSocket:
+{{- if and .Values.tls.enabled }}
+              port: 8443
+{{- else }}
               port: 8080
+{{- end }}
             timeoutSeconds: 5
           readinessProbe:
             failureThreshold: 10
@@ -96,7 +104,11 @@ spec:
             periodSeconds: 25
             successThreshold: 1
             tcpSocket:
+{{- if and .Values.tls.enabled }}
+              port: 8443
+{{- else }}
               port: 8080
+{{- end }}
             timeoutSeconds: 5
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
@@ -121,6 +133,12 @@ spec:
       volumes:
         - name: backup-storage
           emptyDir: {}
+      {{- if and .Values.tls .Values.tls.enabled }}
+        - name: {{ include "clickhouse.certServicesSecret" . }}
+          secret:
+            secretName: {{ include "clickhouse.certServicesSecret" . }}
+            defaultMode: 416
+      {{- end }}
       nodeSelector:
 {{ toYaml .Values.disasterRecovery.replicator.nodeSelector | indent 8 }}
       securityContext:
@@ -141,10 +159,17 @@ metadata:
 spec:
   type: ClusterIP
   ports:
+{{- if and .Values.tls.enabled }}
+    - port: 8443
+      targetPort: 8443
+      protocol: TCP
+      name: web-tls
+{{- else }}
     - port: 8080
       targetPort: 8080
       protocol: TCP
       name: web
+{{- end }}
   selector:
     app: clickhouse-replicator
 
