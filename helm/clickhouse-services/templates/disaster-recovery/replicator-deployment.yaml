@@ -80,7 +80,7 @@ spec:
             - name: SKIP_LOCK_CHECK
               value: "true"
             - name: S3_SSL_VERIFY
-              value: "true"
+              value: "false"
             - name: TIMEOUT
               value: {{ .Values.backupDaemon.timeout | quote }}
 {{- if .Values.tls.enabled }}
