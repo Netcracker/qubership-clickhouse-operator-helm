@@ -27,9 +27,15 @@ spec:
         - name: clickhouse-replicator
           image: {{ template "docker_ch_backup_orch.image" . }}
           ports:
+{{- if .Values.tls.enabled }}
+            - name: web
+              containerPort: 8443
+              protocol: TCP
+{{- else }}
             - name: web
               containerPort: 8080
               protocol: TCP
+{{- end }}
           env:
             - name: CLUSTER
               value: {{ default "replicated" .Values.backupDaemon.cluster }}
@@ -74,16 +80,20 @@ spec:
             - name: SKIP_LOCK_CHECK
               value: "true"
             - name: S3_SSL_VERIFY
-              value: "false"
+              value: "true"
             - name: TIMEOUT
               value: {{ .Values.backupDaemon.timeout | quote }}
+{{- if .Values.tls.enabled }}
+            - name: TLS_ENABLED
+              value: "true"
+{{- end }}
           volumeMounts:
             - name: backup-storage
               mountPath: /backup-storage/
-  {{- if .Values.tls.enabled }}
+{{- if and .Values.tls.enabled }}
             - name: {{ include "clickhouse.certServicesSecret" . }}
               mountPath: {{ default "/tls/" }}
-  {{- end }}  
+{{- end }} 
           resources:
 {{ toYaml .Values.disasterRecovery.replicator.resources | indent 12 }}
           livenessProbe:
@@ -163,7 +173,7 @@ spec:
     - port: 8443
       targetPort: 8443
       protocol: TCP
-      name: web-tls
+      name: web
 {{- else }}
     - port: 8080
       targetPort: 8080
@@ -172,6 +182,7 @@ spec:
 {{- end }}
   selector:
     app: clickhouse-replicator
+
 
 ---
 
