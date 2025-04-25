@@ -70,4 +70,10 @@ rules:
   - update
   - watch
   - delete
+- apiGroups:
+  - clickhouse.altinity.com
+  verbs:
+  - list
+  resources:
+  - clickhouseinstallations
 {{- end }}

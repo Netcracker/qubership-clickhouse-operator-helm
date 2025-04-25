@@ -71,15 +71,9 @@ rules:
   - watch
   - delete
 - apiGroups:
-  - ""
-  resources:
-  - '*'
+  - clickhouse.altinity.com
   verbs:
-  - create
-  - get
   - list
-  - patch
-  - update
-  - watch
-  - delete
+  resources:
+  - clickhouseinstallations
 {{- end }}
