@@ -70,16 +70,4 @@ rules:
   - update
   - watch
   - delete
-- apiGroups:
-  - ""
-  resources:
-  - '*'
-  verbs:
-  - create
-  - get
-  - list
-  - patch
-  - update
-  - watch
-  - delete
 {{- end }}
