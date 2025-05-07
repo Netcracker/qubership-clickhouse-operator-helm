@@ -601,7 +601,7 @@ backupDaemon:
   # Mandatory: yes
   #
   #
-  image: altinity/clickhouse-backup:2.6.5
+  image: altinity/clickhouse-backup:2.6.6
   timeout: "10"
   envs: {}
   storage:
