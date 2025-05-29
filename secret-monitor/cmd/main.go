@@ -15,7 +15,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -26,31 +25,29 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
-	logger = utils.GetLogger()
-)
-
 func main() {
+
+	// Clear pre-deployment job
+	err := os.Setenv("HOOK_NAME", "credentials-saver")
+	if err != nil {
+		log.Fatal("Error setting environment variable for pre-deployment job:", err)
+	}
+
+	_ = hook.ClearHooks()
+
+	// Clear post-deployment job
+	err = os.Setenv("HOOK_NAME", "post-deployment-job")
+	if err != nil {
+		log.Fatal("Error setting environment variable for post-deployment job:", err)
+	}
+
+	_ = hook.ClearHooks()
+
 	secretNames := utils.GetSecretNames()
 	credmanager.Reconcile()
-	err := informer.Watch(secretNames, credmanager.Reconcile)
+	err = informer.Watch(secretNames, credmanager.Reconcile)
 	if err != nil {
 		utils.GetLogger().Error("Failed to watch secret", zap.Error(err))
-	}
-	logger.Info(fmt.Sprintf("ClearHooks calls "))
-
-	err = os.Setenv("HOOK_NAME", "credentials-saver,post-deployed")
-	if err != nil {
-		log.Fatal("Error setting environment variable:", err)
-	}
-
-	fmt.Println("Calling ClearHooks with both 'credentials-saver' and 'post-deployed' jobs")
-
-	err = hook.ClearHooks()
-	if err != nil {
-		fmt.Println("Error during cleanup:", err)
-	} else {
-		fmt.Println("Cleanup completed!")
 	}
 
 	select {}
