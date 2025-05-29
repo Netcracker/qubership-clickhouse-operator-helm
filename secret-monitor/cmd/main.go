@@ -16,6 +16,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/Netcracker/qubership-clickhouse-operator-helm/secret-monitor/pkg/credmanager"
 	"github.com/Netcracker/qubership-credential-manager/pkg/hook"
@@ -36,7 +38,20 @@ func main() {
 		utils.GetLogger().Error("Failed to watch secret", zap.Error(err))
 	}
 	logger.Info(fmt.Sprintf("ClearHooks calls "))
-	_ = hook.ClearHooks()
+
+	err = os.Setenv("HOOK_NAME", "credentials-saver,post-deployed")
+	if err != nil {
+		log.Fatal("Error setting environment variable:", err)
+	}
+
+	fmt.Println("Calling ClearHooks with both 'credentials-saver' and 'post-deployed' jobs")
+
+	err = hook.ClearHooks()
+	if err != nil {
+		fmt.Println("Error during cleanup:", err)
+	} else {
+		fmt.Println("Cleanup completed!")
+	}
 
 	select {}
 }

@@ -105,6 +105,7 @@ rules:
     resources:
       - jobs
     verbs:
+      - get
       - list
       - delete
 {{- end }}
