@@ -187,6 +187,7 @@ DNS names used to generate SSL certificate with "Subject Alternative Name" field
   {{- $dnsNames := list "localhost" "clickhouse-backup-orchestrator" (printf "%s.%s" "clickhouse-backup-orchestrator" .Release.Namespace) (printf "%s.%s.svc" "clickhouse-backup-orchestrator" .Release.Namespace) -}}
   {{- $dnsNames = concat $dnsNames (list (include "clickhouse.adapter.host" .) (printf "%s.svc" (include "clickhouse.adapter.host" .)) (printf "%s.%s" (include "clickhouse.adapter.host" .) .Release.Namespace)  (printf "%s.%s.svc" (include "clickhouse.adapter.host" .) .Release.Namespace)) -}}
   {{- $dnsNames = concat $dnsNames .Values.tls.generateCerts.subjectAlternativeName.additionalDnsNames -}}
+  {{- $dnsNames = concat $dnsNames (list "clickhouse-replicator" (printf "%s.%s" "clickhouse-replicator" .Release.Namespace) (printf "%s.%s.svc" "clickhouse-replicator" .Release.Namespace)) -}}
 {{- end -}}
 {{/*
 IP addresses used to generate SSL certificate with "Subject Alternative Name" field
