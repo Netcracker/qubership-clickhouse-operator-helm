@@ -100,4 +100,11 @@ rules:
       - patch
       - create
       - delete
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+    verbs:
+      - list
+      - delete
 {{- end }}
