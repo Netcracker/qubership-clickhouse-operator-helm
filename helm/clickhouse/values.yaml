@@ -341,7 +341,7 @@ clickhouseCluster:
   # Type: string
   # Mandatory: yes
   #
-  image: ghcr.io/netcracker/qubership-clickhouse-243:main
+  image: ghcr.io/netcracker/qubership-clickhouse-243:release-2025.3-0.35.0
 
   ## Address of zookeeper cluster
   # Type: string
@@ -607,7 +607,7 @@ backupDaemon:
   storage:
     remote: "none"
 #    nfs:
-#      imageSidecar: ghcr.io/netcracker/qubership-clickhouse-backup-sidecar:main
+#      imageSidecar: ghcr.io/netcracker/qubership-clickhouse-backup-sidecar:release-2025.3-0.35.0
 #      resources:
 #        limits:
 #          cpu: 100m
@@ -707,7 +707,7 @@ tracing:
 
 integrationTests:
   install: false
-  image: "ghcr.io/netcracker/qubership-clickhouse-integration-tests:main"
+  image: "ghcr.io/netcracker/qubership-clickhouse-integration-tests:release-2025.3-0.35.0"
   tags: "smoke"
   clickhouseHost: "clickhouse-cluster"
   clickhousePort: 8123
@@ -729,7 +729,7 @@ integrationTests:
 
 clickhouseSecretMonitor:
   install: true
-  dockerImage: ghcr.io/netcracker/qubership-clickhouse-secret-monitor:main
+  dockerImage: ghcr.io/netcracker/qubership-clickhouse-secret-monitor:release-2025.3-0.35.0
   securityContext:
     container: {}
     pod: {}
@@ -739,7 +739,7 @@ clickhouseSecretMonitor:
 
 clickhouseHook:
   install: true
-  dockerImage: ghcr.io/netcracker/qubership-credential-manager:main    
+  dockerImage: ghcr.io/netcracker/qubership-credential-manager:v0.0.6    
   securityContext:
     container: {}
     pod: {}
@@ -749,7 +749,7 @@ clickhouseHook:
 
 postHook:
   install: true
-  dockerImage: "ghcr.io/netcracker/qubership-clickhouse-hook:main"
+  dockerImage: "ghcr.io/netcracker/qubership-clickhouse-hook:release-2025.3-0.35.0"
   securityContext:
     container: {}
     pod: {}
