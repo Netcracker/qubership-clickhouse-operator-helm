@@ -162,7 +162,12 @@ spec:
               mountPath: /tls/
 {{- end }}
           resources:
-{{ toYaml .Values.clickhouseOperator.metricsExporterResources | indent 12 }}
+            requests:
+              memory: {{ default "100Mi" .Values.clickhouseOperator.metricsExporterResources.requests.memory }}
+              cpu: {{ default "100m" .Values.clickhouseOperator.metricsExporterResources.requests.cpu }}
+            limits:
+              memory: {{ default "200Mi" .Values.clickhouseOperator.metricsExporterResources.limits.memory }}
+              cpu: {{ default "200m" .Values.clickhouseOperator.metricsExporterResources.limits.cpu }} 
       nodeSelector:
 {{ toYaml .Values.clickhouseOperator.nodeSelector | indent 8 }}
       tolerations:
