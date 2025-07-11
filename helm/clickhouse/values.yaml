@@ -119,7 +119,10 @@ clickhouseOperator:
   # Type: object
   # Mandatory: no
   #
-  metricsExporterResources: {}
+  metricsExporterResources:
+    limits: {}
+    requests: {}
+  
   # limits:
   #   cpu: 200m
   #   memory: 200Mi
