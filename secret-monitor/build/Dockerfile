@@ -1,5 +1,5 @@
 
-FROM --platform=$BUILDPLATFORM golang:1.23-alpine3.20 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.24.5-alpine3.22 AS builder
 
 ENV GOSUMDB=off
 
@@ -20,7 +20,7 @@ RUN go mod tidy
 ARG TARGETOS TARGETARCH
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /build/_output/bin/clickhouse-secret-monitor -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} ./cmd/main.go
 
-FROM alpine:3.20
+FROM alpine:3.22.0
 COPY --from=builder build/_output/bin/clickhouse-secret-monitor /usr/local/bin
 
 USER 1001

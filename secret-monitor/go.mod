@@ -1,8 +1,6 @@
 module github.com/Netcracker/qubership-clickhouse-operator-helm/secret-monitor
 
-go 1.23
-
-toolchain go1.23.3
+go 1.24.5
 
 require (
 	github.com/Netcracker/qubership-credential-manager v0.0.2
