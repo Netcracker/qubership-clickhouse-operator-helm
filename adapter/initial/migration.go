@@ -17,6 +17,7 @@ package initial
 import (
 	// "context"
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Netcracker/qubership-clickhouse-dbaas-adapter/adapter/basic"
@@ -134,7 +135,7 @@ func getUserByRole(conn cluster.Conn, database, role string) (string, error) {
 	if len(username) == 0 {
 		errMsg := fmt.Sprintf("cannot find user with role %s for database %s", role, database)
 		log.Error(errMsg)
-		return "", fmt.Errorf(errMsg)
+		return "", errors.New(errMsg)
 	}
 
 	return username, nil

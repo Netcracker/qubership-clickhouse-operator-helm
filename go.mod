@@ -1,6 +1,6 @@
 module github.com/Netcracker/qubership-clickhouse-dbaas-adapter
 
-go 1.23.0
+go 1.24.5
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.28.2

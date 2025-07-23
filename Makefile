@@ -1,6 +1,5 @@
 DOCKER_FILE := build/Dockerfile
 export GOPRIVATE := https://github.com/Netcracker
-export GOSUMDB := off
 
 ifndef TAG_ENV
 override TAG_ENV = local
