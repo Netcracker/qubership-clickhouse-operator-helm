@@ -1,8 +1,6 @@
 module github.com/Netcracker/qubership-clickhouse-operator-helm/site-manager
 
-go 1.22.0
-
-toolchain go1.22.5
+go 1.24.5
 
 require (
 	github.com/go-co-op/gocron v1.37.0
