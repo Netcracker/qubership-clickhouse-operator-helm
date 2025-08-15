@@ -35,6 +35,7 @@ clickhouseCluster:
       networks/ip: "::/0"
 # Template ServiceMonitor for DR
   serviceMonitor: false
+  shardsCount: 1
 
 
 backupDaemon:

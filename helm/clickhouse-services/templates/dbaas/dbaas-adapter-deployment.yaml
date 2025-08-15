@@ -49,7 +49,7 @@ spec:
             secretName: {{ .Values.tls.certificateSecretName }}
             defaultMode: 416
         {{- end }}
-{{- if .Values.dbaas.migrateRoles }}
+{{- if or .Values.dbaas.migrateRoles (gt (int .Values.clickhouseCluster.shardsCount) 1) }}
       initContainers:
         - name: nc-dbaas-clickhouse-adapter-init
           image: {{ template "docker_ch_dbaas.image" . }}
@@ -72,6 +72,14 @@ spec:
                 secretKeyRef:
                   name: nc-dbaas-user-credentials
                   key: password
+            {{- if gt (int .Values.clickhouseCluster.shardsCount) 1 }}   
+            - name: REPLICATED_USER_STORAGE
+              value: "true"
+            {{- end }}
+            {{- if .Values.dbaas.migrateRoles }}
+            - name: ROLES_ADDITIONAL_GRANT
+              value: "true"
+            {{- end }}
             - name: CLICKHOUSE_SSL
             {{- if .Values.tls.enabled }}
               value: "true"
@@ -160,6 +168,10 @@ spec:
                   key: password
             - name: DBAAS_AGGREGATOR_PHYSICAL_DATABASE_IDENTIFIER
               value: {{ .Values.dbaas.aggregator.physicalDatabaseIdentifier | default (printf "%s:%s" .Release.Namespace "clickhouse")}}
+            {{- if gt (int .Values.clickhouseCluster.shardsCount) 1 }}   
+            - name: REPLICATED_USER_STORAGE
+              value: "true"
+            {{- end }}
             - name: CLOUD_NAMESPACE
               value: {{ .Release.Namespace }}
             - name: CLICKHOUSE_SSL

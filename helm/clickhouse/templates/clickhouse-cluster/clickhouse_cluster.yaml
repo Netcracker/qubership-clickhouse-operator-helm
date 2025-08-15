@@ -74,8 +74,9 @@ spec:
     zookeeper:
       nodes:
         - host: {{ ( include "clickhouse.ZkHost" . ) }}
-  {{- if .Values.tls.zookeeper }}
+  {{- if or .Values.tls.zookeeper (gt (int .Values.clickhouseCluster.shardsCount) 1) }}
     files:
+  {{- if .Values.tls.zookeeper }}
       config.d/zookeeper_secure.xml: |
         <clickhouse>
           <zookeeper>
@@ -86,6 +87,23 @@ spec:
              </node>
           </zookeeper>
         </clickhouse>
+  {{- end }}
+  {{- if gt (int .Values.clickhouseCluster.shardsCount) 1 }}
+      config.d/replicated_user_directories.xml: |
+        <clickhouse>
+          <user_directories replace="replace">
+            <users_xml>
+              <path>users.xml</path>
+            </users_xml>
+            <local_directory>
+               <path>/var/lib/clickhouse/access/</path>
+            </local_directory>
+            <replicated>
+              <zookeeper_path>/clickhouse/{{ .Release.Namespace }}/access</zookeeper_path>
+            </replicated>
+          </user_directories>
+        </clickhouse>
+  {{- end }}
   {{- end }}
     clusters:
       - name: replicated
