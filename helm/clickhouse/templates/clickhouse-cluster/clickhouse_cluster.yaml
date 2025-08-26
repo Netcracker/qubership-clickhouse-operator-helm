@@ -193,9 +193,14 @@ spec:
 {{ else if .Values.podLabels }}
 {{ .Values.podLabels | toYaml | nindent 12 }}
 {{ end }}
+{{- if .Values.clickhouseCluster.podDistribution }}
+        podDistribution: 
+{{ toYaml .Values.clickhouseCluster.podDistribution | indent 10 }}
+{{- else }}
         podDistribution:
           - type: ClickHouseAntiAffinity
             scope: ClickHouseInstallation
+{{- end }}
         spec:
           volumes:
 {{- if and .Values.backupDaemon.install }}
@@ -224,7 +229,7 @@ spec:
 {{ if .Values.clickhouseCluster.tolerations }}
 {{ .Values.clickhouseCluster.tolerations | toYaml | indent 12 }}
 {{ else if .Values.tolerations }}
-{{ .Values.affinity | toYaml | indent 12 }}
+{{ .Values.tolerations | toYaml | indent 12 }}
 {{ end }}
           securityContext:
             {{- include "clickhouse.globalPodSecurityContext" . | nindent 12 }}

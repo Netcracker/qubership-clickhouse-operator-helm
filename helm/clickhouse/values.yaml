@@ -582,6 +582,23 @@ clickhouseCluster:
 #      operator: Exists
 #      effect: NoSchedule
 
+## Rules for distributing ClickHouse pods to improve availability and fault tolerance.
+  # This controls how shards and replicas are scheduled across nodes.
+  # 
+  # Example:
+  # podDistribution:
+  #   - type: ShardAntiAffinity
+  #     scope: ClickHouseInstallation
+  #
+  # Available types:
+  #   - ShardAntiAffinity
+  #   - ReplicaAntiAffinity
+  #   - MaxNumberPerNode
+  #   - ClickHouseAntiAffinity (default fallback if none specified)
+  #    
+  # 
+  podDistribution: []
+    # - type: ShardAntiAffinity
 
   ## Set of the labels that will be applied to clickhouse pods.
   # Type: object
