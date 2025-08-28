@@ -1,0 +1,15 @@
+{{- if .Values.clickhouseCluster.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cluster-replicated
+  namespace: {{ .Release.Namespace }}
+spec:
+  maxUnavailable: {{ default 1 .Values.clickhouseCluster.pdb.maxUnavailable }}
+  selector:
+    matchLabels:
+      clickhouse.altinity.com/app: chop
+      clickhouse.altinity.com/chi: {{ .Values.clickhouseCluster.name }}
+      clickhouse.altinity.com/cluster: replicated
+      clickhouse.altinity.com/namespace: {{ .Release.Namespace }}
+{{- end }}

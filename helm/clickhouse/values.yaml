@@ -600,6 +600,14 @@ clickhouseCluster:
   podDistribution: []
     # - type: ShardAntiAffinity
 
+  ## maxUnavailable defines how many pods can be evicted simultaneously during voluntary disruptions
+  # (e.g., node maintenance or rolling updates).
+  # Recommended value: 50% of total pods (shardsCount × replicasCount), rounded down.
+  # If left empty ({}), a default value may be computed in the template.
+  pdb:
+    enabled: false
+    maxUnavailable: {}
+
   ## Set of the labels that will be applied to clickhouse pods.
   # Type: object
   # Mandatory: no
