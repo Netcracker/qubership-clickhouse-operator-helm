@@ -42,7 +42,7 @@ clickhouseOperator:
   # Type: string
   # Mandatory: yes
   #
-  image: altinity/clickhouse-operator:0.21.3
+  image: altinity/clickhouse-operator:0.25.3
 
   ## The resources describes the compute resource requests and limits for single Pod(operator).
   ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -600,14 +600,19 @@ clickhouseCluster:
   podDistribution: []
     # - type: ShardAntiAffinity
 
-  ## maxUnavailable defines how many pods can be evicted simultaneously during voluntary disruptions
-  # (e.g., node maintenance or rolling updates).
-  # Recommended value: 50% of total pods (shardsCount × replicasCount), rounded down.
-  # If left empty ({}), a default value may be computed in the template.
+## Enables Pod Disruption Budget management to ensure availability during disruptions
+  # TypeStringBool by default true
+  #
+  # Specifies the maximum number of pods that can be unavailable during voluntary disruptions
+  # type: integer
+  # pdb:
+  #   pdbManaged: "true"          
+  #   maxUnavailable: 
+  #     value: 1
   pdb:
-    enabled: false
+    pdbManaged: ""          
     maxUnavailable: {}
-
+    
   ## Set of the labels that will be applied to clickhouse pods.
   # Type: object
   # Mandatory: no
