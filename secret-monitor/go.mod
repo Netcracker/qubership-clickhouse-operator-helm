@@ -5,13 +5,12 @@ go 1.23
 toolchain go1.23.3
 
 require (
-	github.com/Netcracker/qubership-credential-manager v0.0.1
+	github.com/Netcracker/qubership-credential-manager v0.0.2
 	github.com/altinity/clickhouse-operator v0.0.0-20241206144415-d7e1125b52a2
 	go.uber.org/zap v1.27.0
 	k8s.io/api v0.27.2
 	k8s.io/apimachinery v0.27.2
 	k8s.io/client-go v0.27.2
-
 )
 
 replace github.com/imdario/mergo => github.com/sunsingerus/mergo v0.0.0-20230507185449-fc6fffa94450
