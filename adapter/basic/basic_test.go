@@ -174,7 +174,7 @@ func TestDropResource_Database(t *testing.T) {
 	}
 
 	conn.On("Exec", dropDatabaseQuery(database)).Return(result, nil)
-	sa := NewServiceAdapter(ca, apiVersion, roles, features)
+	sa := NewServiceAdapter(ca, apiVersion, roles, features, false)
 	dbResource := sa.DropResources(ctx, resource)
 	fmt.Printf("dropResource : %v\n", dbResource)
 	assert.Equal(t, dao.DELETED, dbResource[0].Status)
@@ -197,7 +197,7 @@ func TestDropResource_User(t *testing.T) {
 	}
 
 	conn.On("Exec", dropUserQuery(user)).Return(result, nil)
-	sa := NewServiceAdapter(ca, apiVersion, roles, features)
+	sa := NewServiceAdapter(ca, apiVersion, roles, features, false)
 	dbResource := sa.DropResources(ctx, resource)
 	fmt.Printf("dropResource : %v\n", dbResource)
 	assert.Equal(t, dao.DELETED, dbResource[0].Status)
@@ -219,7 +219,7 @@ func TestDropResource_UserFailed(t *testing.T) {
 	}
 	expectedErrorC := errors.New("error while execute drop user")
 	conn.On("Exec", dropUserQuery(user)).Return(result, expectedErrorC)
-	sa := NewServiceAdapter(ca, apiVersion, roles, features)
+	sa := NewServiceAdapter(ca, apiVersion, roles, features, false)
 	dbResource := sa.DropResources(ctx, resource)
 	fmt.Printf("dropResource : %v\n", dbResource)
 	assert.Equal(t, dao.DELETE_FAILED, dbResource[0].Status)
@@ -243,7 +243,7 @@ func TestDropResource_DatabaseFailed(t *testing.T) {
 	}
 	expectedErrorC := errors.New("error while execute drop database")
 	conn.On("Exec", dropDatabaseQuery(database)).Return(result, expectedErrorC)
-	sa := NewServiceAdapter(ca, apiVersion, roles, features)
+	sa := NewServiceAdapter(ca, apiVersion, roles, features, false)
 	dbResource := sa.DropResources(ctx, resource)
 	fmt.Printf("dropResource : %v\n", dbResource)
 	assert.Equal(t, dao.DELETE_FAILED, dbResource[0].Status)
@@ -275,14 +275,14 @@ func TestCreateUser_UserExist(t *testing.T) {
 	conn.On("Exec", GrantDictionaryReloadQuery(user)).Return(result, nil)
 	conn.On("Exec", GrantAdminRemoteQuery(user)).Return(result, nil)
 	conn.On("Exec", grantAdminQuery(database, user)).Return(result, nil)
-	conn.On("Exec", createUserQuery(user, password)).Return(result, nil)
+	conn.On("Exec", createUserQuery(user, password, false)).Return(result, nil)
 	conn.On("Exec", changeUserPassword(user, password)).Return(result, nil)
 	rows.On("Next").Return(true).Times(3)
 	rows.On("Close").Return(nil)
 	rows.On("Scan", mock.Anything).Return(nil)
 	rows.On("Next").Return(false).Times(6)
 
-	sa := NewServiceAdapter(ca, apiVersion, roles, features)
+	sa := NewServiceAdapter(ca, apiVersion, roles, features, false)
 	createdUser, err := sa.CreateUser(ctx, user, userCreateRequest)
 	assert.Empty(t, err)
 	fmt.Printf("CreateUser user name: %v\n", createdUser.Name)
@@ -324,14 +324,14 @@ func TestCreateUser_MultiusersTrue(t *testing.T) {
 	conn.On("Exec", GrantDictionaryReloadQuery(user)).Return(result, nil)
 	//ROQuery
 	conn.On("Exec", grantROQuery(database, user)).Return(result, nil)
-	conn.On("Exec", createUserQuery(user, password)).Return(result, nil)
+	conn.On("Exec", createUserQuery(user, password, false)).Return(result, nil)
 	conn.On("Exec", changeUserPassword(user, password)).Return(result, nil)
 	rows.On("Next").Return(true).Times(3)
 	rows.On("Close").Return(nil)
 	rows.On("Scan", mock.Anything).Return(nil)
 	rows.On("Next").Return(false).Times(6)
 
-	mu := NewServiceAdapter(ca, apiVersion, roles, map[string]bool{FeatureMultiUsers: true})
+	mu := NewServiceAdapter(ca, apiVersion, roles, map[string]bool{FeatureMultiUsers: true}, false)
 	// userCreateRequest = dao.UserCreateRequest{DbName: database, Role: RORole, Password: password}
 	createdUser, err := mu.CreateUser(ctx, user, userCreateRequest)
 	assert.Empty(t, err)
@@ -368,14 +368,14 @@ func TestCreateUser_MultiusersTrue(t *testing.T) {
 	conn.On("Exec", GrantDictionaryReloadQuery(user)).Return(result, nil)
 	//RWQuery
 	conn.On("Exec", grantRWQuery(database, user)).Return(result, nil)
-	conn.On("Exec", createUserQuery(user, password)).Return(result, nil)
+	conn.On("Exec", createUserQuery(user, password, false)).Return(result, nil)
 	conn.On("Exec", changeUserPassword(user, password)).Return(result, nil)
 	rows.On("Next").Return(true).Times(3)
 	rows.On("Close").Return(nil)
 	rows.On("Scan", mock.Anything).Return(nil)
 	rows.On("Next").Return(false).Times(6)
 
-	mu = NewServiceAdapter(ca, apiVersion, roles, map[string]bool{FeatureMultiUsers: true})
+	mu = NewServiceAdapter(ca, apiVersion, roles, map[string]bool{FeatureMultiUsers: true}, false)
 	// userCreateRequest = dao.UserCreateRequest{DbName: database, Role: "rw", Password: password}
 	createdUser, err = mu.CreateUser(ctx, user, userCreateRequest)
 	assert.Empty(t, err)
@@ -420,7 +420,7 @@ func Test_GetDatabases(t *testing.T) {
 		}).Once()
 	}
 
-	sa := NewServiceAdapter(ca, apiVersion, roles, features)
+	sa := NewServiceAdapter(ca, apiVersion, roles, features, false)
 	databases := sa.GetDatabases(ctx)
 	assert.ElementsMatch(t, expectedDBNames, databases)
 }
@@ -429,7 +429,7 @@ func TestGetDefaultCreateRequest(t *testing.T) {
 	ca := new(ClickhouseServiceAdapterMock)
 	//conn := new(ClickHouseConnMock)
 
-	sa := NewServiceAdapter(ca, apiVersion, roles, features)
+	sa := NewServiceAdapter(ca, apiVersion, roles, features, false)
 	request := sa.GetDefaultCreateRequest()
 	assert.Equal(t, dao.DbCreateRequest{}, request)
 
@@ -439,7 +439,7 @@ func TestDescribeDatabases(t *testing.T) {
 	ctx := context.TODO()
 
 	ca := new(ClickhouseServiceAdapterMock)
-	sa := NewServiceAdapter(ca, apiVersion, roles, features)
+	sa := NewServiceAdapter(ca, apiVersion, roles, features, false)
 	databaseDesc := sa.DescribeDatabases(ctx, []string{database}, false, false)
 	fmt.Printf("databaseDesc: %v\n", databaseDesc)
 	assert.NotNil(t, databaseDesc)
@@ -509,7 +509,7 @@ func TestCreateDatabaseNilPrefix(t *testing.T) {
 		return queryArr[0] == emptyQueryArr[0] && strings.Contains(queryArr[1], genDBNameWithoutTS)
 	})).Return(result, nil)
 
-	ac.On("Exec", createUserQuery(userName, userPassword)).Return(result, nil)
+	ac.On("Exec", createUserQuery(userName, userPassword, false)).Return(result, nil)
 
 	ac.On("Exec", mock.MatchedBy(func(query string) bool {
 		genEmpty := grantAdminQuery("", userName)
@@ -522,7 +522,7 @@ func TestCreateDatabaseNilPrefix(t *testing.T) {
 	ac.On("Exec", createMetadataQuery()).Return(result, nil)
 	ac.On("Exec", insertMetadataQuery(string(metadataJson))).Return(result, nil)
 
-	sa := NewServiceAdapter(ca, apiVersion, roles, features)
+	sa := NewServiceAdapter(ca, apiVersion, roles, features, false)
 	sa.Generator = generator
 
 	dbNameresult, dbDesc, err := sa.CreateDatabase(ctx, request)
@@ -609,7 +609,7 @@ func TestCreateDatabaseMultiuser(t *testing.T) {
 
 		userName, password := fmt.Sprintf("dbaas_user%d", i), fmt.Sprintf("password%d", i)
 
-		ac.On("Exec", createUserQuery(userName, password)).Return(result, nil)
+		ac.On("Exec", createUserQuery(userName, password, false)).Return(result, nil)
 
 		ac.On("Exec", mock.MatchedBy(func(query string) bool {
 			genEmpty := grantAdminQuery("", userName)
@@ -638,7 +638,7 @@ func TestCreateDatabaseMultiuser(t *testing.T) {
 		ac.On("Exec", createMetadataQuery()).Return(result, nil)
 		ac.On("Exec", insertMetadataQuery(string(metadataJson))).Return(result, nil)
 	}
-	sa := NewServiceAdapter(ca, apiVersion, roles, map[string]bool{FeatureMultiUsers: true})
+	sa := NewServiceAdapter(ca, apiVersion, roles, map[string]bool{FeatureMultiUsers: true}, false)
 	sa.Generator = generator
 
 	dbNameresult, dbDesc, err := sa.CreateDatabase(ctx, request)
@@ -678,7 +678,7 @@ func TestUpdateMetadata(t *testing.T) {
 	ca.On("GetConnectionToDb", database).Return(conn, nil)
 	conn.On("Close").Return(nil)
 
-	sa := NewServiceAdapter(ca, apiVersion, roles, features)
+	sa := NewServiceAdapter(ca, apiVersion, roles, features, false)
 	result := new(MockResult)
 	metadata := map[string]interface{}{"test": "data"}
 	conn.On("Exec", createMetadataQuery()).Return(new(MockResult), nil).Once()
@@ -699,7 +699,7 @@ func TestUpdateMetadata_PanicOnError(t *testing.T) {
 	ca.On("GetConnectionToDb", database).Return(conn, nil)
 	conn.On("Close").Return(nil)
 
-	sa := NewServiceAdapter(ca, apiVersion, roles, features)
+	sa := NewServiceAdapter(ca, apiVersion, roles, features, false)
 	result := new(MockResult)
 	metadata := map[string]interface{}{"test": "data"}
 
@@ -749,7 +749,7 @@ func Test_GetMetadataInternal(t *testing.T) {
 
 	rows.On("Next").Return(false).Times(1)
 
-	sa := NewServiceAdapter(ca, apiVersion, roles, features)
+	sa := NewServiceAdapter(ca, apiVersion, roles, features, false)
 
 	data, err := sa.GetMetadataInternal(ctx, database)
 	assert.NoError(t, err)

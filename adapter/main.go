@@ -49,13 +49,15 @@ var (
 
 	apiVersion = "v1"
 
-	chHost              = flag.String("ch_host", coreUtils.GetEnv("CLICKHOUSE_HOST", "chi-cluster-replicated-0-0.click-aliv.svc"), "Host of clickhouse cluster, env: CLICKHOUSE_HOST")
-	chPort              = flag.Int("ch_port", coreUtils.GetEnvAsInt("CLICKHOUSE_PORT", 9000), "Port of clickhouse cluster, env: CLICKHOUSE_PORT")
-	chUser              = flag.String("ch_user", coreUtils.GetEnv("CLICKHOUSE_USERNAME", "clickhouse_operator"), "Username of dbaas user in clickhouse, env: CLICKHOUSE_USERNAME")
-	chPass              = flag.String("ch_pass", coreUtils.GetEnv("CLICKHOUSE_PASSWORD", "clickhouse_operator_password"), "Password of dbaas user in clickhouse, env: CLICKHOUSE_PASSWORD")
-	chSsl               = flag.Bool("ch_ssl", coreUtils.GetEnvAsBool("CLICKHOUSE_SSL", false), "Enable ssl connection to clickhouse, env: CLICKHOUSE_SSL")
-	isMultiUsersEnabled = flag.Bool("multi_users_enabled", coreUtils.GetEnvAsBool("MULTI_USERS_ENABLED", false), "Is multi Users functionality enabled, env: MULTI_USERS_ENABLED")
-	chDatabase          = flag.String("ch_database", coreUtils.GetEnv("CLICKHOUSE_DATABASE", "system"), "Clickhouse database, env: CLICKHOUSE_DATABASE")
+	chHost                  = flag.String("ch_host", coreUtils.GetEnv("CLICKHOUSE_HOST", "chi-cluster-replicated-0-0.click-aliv.svc"), "Host of clickhouse cluster, env: CLICKHOUSE_HOST")
+	chPort                  = flag.Int("ch_port", coreUtils.GetEnvAsInt("CLICKHOUSE_PORT", 9000), "Port of clickhouse cluster, env: CLICKHOUSE_PORT")
+	chUser                  = flag.String("ch_user", coreUtils.GetEnv("CLICKHOUSE_USERNAME", "clickhouse_operator"), "Username of dbaas user in clickhouse, env: CLICKHOUSE_USERNAME")
+	chPass                  = flag.String("ch_pass", coreUtils.GetEnv("CLICKHOUSE_PASSWORD", "clickhouse_operator_password"), "Password of dbaas user in clickhouse, env: CLICKHOUSE_PASSWORD")
+	chSsl                   = flag.Bool("ch_ssl", coreUtils.GetEnvAsBool("CLICKHOUSE_SSL", false), "Enable ssl connection to clickhouse, env: CLICKHOUSE_SSL")
+	isMultiUsersEnabled     = flag.Bool("multi_users_enabled", coreUtils.GetEnvAsBool("MULTI_USERS_ENABLED", false), "Is multi Users functionality enabled, env: MULTI_USERS_ENABLED")
+	isReplicatedUserStorage = flag.Bool("replicated_user_storage", coreUtils.GetEnvAsBool("REPLICATED_USER_STORAGE", false), "Is replicated storage used for users, env: REPLICATED_USER_STORAGE")
+	rolesAdditionalGrant    = flag.Bool("roles_additional_grant", coreUtils.GetEnvAsBool("ROLES_ADDITIONAL_GRANT", false), "Is additional grant for roles required, env: ROLES_ADDITIONAL_GRANT")
+	chDatabase              = flag.String("ch_database", coreUtils.GetEnv("CLICKHOUSE_DATABASE", "system"), "Clickhouse database, env: CLICKHOUSE_DATABASE")
 
 	backupAddress       = flag.String("backup_address", coreUtils.GetEnv("BACKUP_DAEMON_ADDRESS", "http://clickhouse-backup-orchestrator:8080"), "Address of clickhouse backup orchestrator, env: BACKUP_DAEMON_ADDRESS")
 	backupDaemonApiUser = flag.String("backup_daemon_api_user", coreUtils.GetEnv("BACKUP_DAEMON_API_CREDENTIALS_USERNAME", ""), "Username of api clickhouse backup orchestrator, env: BACKUP_DAEMON_API_CREDENTIALS_USERNAME")
@@ -165,7 +167,7 @@ func main() {
 	}
 	logger.Info(fmt.Sprintf("API version obtained: %s", apiVersion))
 
-	var dbAdminImpl = basic.NewServiceAdapter(clusterAdapter, dao.ApiVersion(apiVersion), getRoles(), getFeatures())
+	var dbAdminImpl = basic.NewServiceAdapter(clusterAdapter, dao.ApiVersion(apiVersion), getRoles(), getFeatures(), *isReplicatedUserStorage)
 	// Backup Daemon Administration
 	сlient := &http.Client{}
 	if *chSsl {
@@ -186,7 +188,9 @@ func main() {
 	)
 
 	if checkInitMode() {
-		initial.MigrateRoles(dbAdminImpl)
+		// Cluster adapter for first clickhouse pod for moving users to replicated storage
+		c := cluster.NewAdapter("chi-cluster-replicated-0-0", *chPort, *chUser, *chPass, *chDatabase, *chSsl)
+		initial.MigrateRoles(*dbAdminImpl, c, *rolesAdditionalGrant, *isReplicatedUserStorage)
 		return
 	}
 

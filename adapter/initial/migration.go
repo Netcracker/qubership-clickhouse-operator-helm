@@ -31,9 +31,19 @@ var (
 	log = utils.GetLogger(false)
 )
 
-func MigrateRoles(adAdministration service.DbAdministration) {
+func MigrateRoles(adAdministration service.DbAdministration, adapterForStorage cluster.ClusterAdapter, rolesAdditionalGrant, isReplicatedUserStorage bool) {
 	log.Info("Migration started")
 	a := adAdministration.(basic.ClickhouseServiceAdapter)
+
+	if isReplicatedUserStorage {
+		moveUsersToReplicatedStorage(adapterForStorage)
+	}
+
+	log.Info(fmt.Sprintf("Roles additional grant: %v", rolesAdditionalGrant))
+	if !rolesAdditionalGrant {
+		return
+	}
+
 	databases := a.GetDatabases(context.TODO())
 
 	for _, d := range databases {
@@ -43,6 +53,62 @@ func MigrateRoles(adAdministration service.DbAdministration) {
 		grantUsersForDatabase(a, d)
 	}
 	log.Info("Migration finished")
+}
+
+func moveUsersToReplicatedStorage(a cluster.ClusterAdapter) {
+	log.Info("Moving users to replicated storage")
+	users := getUsersForReplicatedStorage(a)
+	for _, user := range users {
+		moveUserToReplicatedStorage(a, user)
+	}
+	log.Info("Users moved to replicated storage")
+}
+
+func getUsersForReplicatedStorage(a cluster.ClusterAdapter) []string {
+	conn, err := a.GetConnection()
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close()
+
+	query := "SELECT name FROM system.users WHERE storage = 'local_directory'"
+
+	rows, err := conn.Query(query)
+	if err != nil {
+		log.Error("cannot get users for replicated storage", zap.Error(err))
+		panic(err)
+	}
+	defer rows.Close()
+
+	users := []string{}
+	for rows.Next() {
+		var user string
+		err = rows.Scan(&user)
+		if err != nil {
+			log.Error("cannot scan user for replicated storage", zap.Error(err))
+			panic(err)
+		}
+		users = append(users, user)
+	}
+	return users
+}
+
+func moveUserToReplicatedStorage(a cluster.ClusterAdapter, user string) {
+	conn, err := a.GetConnection()
+	if err != nil {
+		log.Error(fmt.Sprintf("cannot get connection to move user %s to replicated storage", user), zap.Error(err))
+		return
+	}
+	defer conn.Close()
+
+	query := fmt.Sprintf("MOVE USER \"%s\" TO replicated", user)
+
+	_, err = conn.Exec(query)
+	if err != nil {
+		log.Error(fmt.Sprintf("cannot move user %s to replicated storage", user), zap.Error(err))
+		return
+	}
+	log.Info(fmt.Sprintf("User %s moved to replicated storage", user))
 }
 
 func grantUsersForDatabase(a basic.ClickhouseServiceAdapter, database string) {

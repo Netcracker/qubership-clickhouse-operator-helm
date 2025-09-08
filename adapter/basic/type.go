@@ -30,4 +30,5 @@ type ClickhouseServiceAdapter struct {
 	features map[string]bool
 	Mutex    *sync.Mutex
 	Generator
+	IsReplicatedUserStorage bool
 }

@@ -44,8 +44,13 @@ func createDatabaseQuery(dbName string) string {
 	return fmt.Sprintf("create database \"%s\" on cluster '{cluster}'", escapeString(dbName))
 }
 
-func createUserQuery(username, password string) string {
-	return fmt.Sprintf("CREATE USER \"%s\" ON CLUSTER '{cluster}' IDENTIFIED WITH sha256_password BY '%s'", escapeString(username), escapeString(password))
+func createUserQuery(username, password string, isReplicatedUserStorage bool) string {
+	result := fmt.Sprintf("CREATE USER IF NOT EXISTS \"%s\" ON CLUSTER '{cluster}' IDENTIFIED WITH sha256_password BY '%s' ", escapeString(username), escapeString(password))
+
+	if isReplicatedUserStorage {
+		result = fmt.Sprintf("%s IN replicated", result)
+	}
+	return result
 }
 
 func grantAdminQuery(dbName, user string) string {

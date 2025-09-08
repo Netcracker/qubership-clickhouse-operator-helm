@@ -58,15 +58,16 @@ type Generator interface {
 
 type UUIDGenerator struct{}
 
-func NewServiceAdapter(adapter cluster.ClusterAdapter, version dao.ApiVersion, roles []string, features map[string]bool) *ClickhouseServiceAdapter {
+func NewServiceAdapter(adapter cluster.ClusterAdapter, version dao.ApiVersion, roles []string, features map[string]bool, isReplicatedUserStorage bool) *ClickhouseServiceAdapter {
 	return &ClickhouseServiceAdapter{
-		Ctx:            context.Background(),
-		ClusterAdapter: adapter,
-		Mutex:          &sync.Mutex{},
-		ApiVersion:     version,
-		roles:          roles,
-		features:       features,
-		Generator:      UUIDGenerator{},
+		Ctx:                     context.Background(),
+		ClusterAdapter:          adapter,
+		Mutex:                   &sync.Mutex{},
+		ApiVersion:              version,
+		roles:                   roles,
+		features:                features,
+		Generator:               UUIDGenerator{},
+		IsReplicatedUserStorage: isReplicatedUserStorage,
 	}
 }
 
@@ -120,7 +121,7 @@ func (c ClickhouseServiceAdapter) CreateDatabase(ctx context.Context, requestOnC
 	for _, role := range c.GetSupportedRoles() {
 		username := fmt.Sprintf("%s_%s", usernamePrefix, c.Generate())
 		password := c.Generate()
-		if _, err = conn.Exec(createUserQuery(username, password)); err != nil {
+		if _, err = conn.Exec(createUserQuery(username, password, c.IsReplicatedUserStorage)); err != nil {
 			log.Error(fmt.Sprintf("cannot create user %s with role %s", username, role), zap.Error(err))
 			_ = c.dropDatabase(ctx, conn, dbName)
 			c.dropUsers(ctx, conn, users)
@@ -372,7 +373,7 @@ func (c ClickhouseServiceAdapter) CreateUser(ctx context.Context, userName strin
 	isUserExist := rows.Next()
 
 	if !isUserExist {
-		_, err = conn.Exec(createUserQuery(userName, password))
+		_, err = conn.Exec(createUserQuery(userName, password, c.IsReplicatedUserStorage))
 		if err != nil {
 			log.Error(fmt.Sprintf("Couldn't create user %s", userName), zap.Error(err))
 			panic(err)

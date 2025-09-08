@@ -30,7 +30,7 @@ func Test_SupportedRoles(t *testing.T) {
 
 	// check multiusers
 	feature := map[string]bool{FeatureMultiUsers: true}
-	sa := NewServiceAdapter(cl, apiVersion, roles, feature)
+	sa := NewServiceAdapter(cl, apiVersion, roles, feature, false)
 
 	expectedRoles := roles
 	supportedRoles := sa.GetSupportedRoles()
@@ -39,7 +39,7 @@ func Test_SupportedRoles(t *testing.T) {
 
 	// check singleuser
 	features := map[string]bool{FeatureMultiUsers: false}
-	sa = NewServiceAdapter(cl, apiVersion, roles, features)
+	sa = NewServiceAdapter(cl, apiVersion, roles, features, false)
 
 	expectedRoles = []string{"admin"}
 	supportedRoles = sa.GetSupportedRoles()
@@ -52,7 +52,7 @@ func Test_GetVersion(t *testing.T) {
 
 	// check multiusers
 	feature := map[string]bool{FeatureMultiUsers: true}
-	sa := NewServiceAdapter(cl, apiVersion, roles, feature)
+	sa := NewServiceAdapter(cl, apiVersion, roles, feature, false)
 
 	expectedversion := dao.ApiVersion("v2")
 	version := sa.GetVersion()
@@ -66,7 +66,7 @@ func Test_GetFeatures(t *testing.T) {
 
 	// check multiusers
 	features := map[string]bool{FeatureMultiUsers: true}
-	sa := NewServiceAdapter(cl, apiVersion, roles, features)
+	sa := NewServiceAdapter(cl, apiVersion, roles, features, false)
 
 	expectedFeatures := features
 	supportedFeatures := sa.GetFeatures()
@@ -102,7 +102,7 @@ func TestCreateRoles(t *testing.T) {
 	conn.On("Exec", grantAdminQuery(database, userex)).Return(result, nil)
 	conn.On("Exec", changeUserPassword(userex, passwordex)).Return(result, nil)
 
-	sa := NewServiceAdapter(ca, apiVersion, roles, map[string]bool{FeatureMultiUsers: true})
+	sa := NewServiceAdapter(ca, apiVersion, roles, map[string]bool{FeatureMultiUsers: true}, false)
 	sa.Generator = generator
 	rolesReq := []dao.AdditionalRole{{Id: "123", DbName: database, ConnectionProperties: []dao.ConnectionProperties{{
 		"name":     database,
@@ -150,7 +150,7 @@ func Test_CreateRoles_Failed(t *testing.T) {
 	conn.On("Exec", grantAdminQuery(database, userex)).Return(result, expectedErrorC)
 	conn.On("Exec", changeUserPassword(userex, passwordex)).Return(result, nil)
 
-	sa := NewServiceAdapter(ca, apiVersion, roles, map[string]bool{FeatureMultiUsers: true})
+	sa := NewServiceAdapter(ca, apiVersion, roles, map[string]bool{FeatureMultiUsers: true}, false)
 	sa.Generator = generator
 	rolesReq := []dao.AdditionalRole{{Id: "123", DbName: database, ConnectionProperties: []dao.ConnectionProperties{{
 		"name":     database,
