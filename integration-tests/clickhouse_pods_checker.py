@@ -19,6 +19,19 @@ import time
 sys.path.append('./tests/shared/lib')
 from PlatformLibrary import PlatformLibrary
 
+
+# Helper class to recursively convert dict to object with attribute access
+class DictToObject:
+    def __init__(self, d):
+        for k, v in d.items():
+            if isinstance(v, dict):
+                setattr(self, k, DictToObject(v))
+            elif isinstance(v, list):
+                setattr(self, k, [DictToObject(i) if isinstance(i, dict) else i for i in v])
+            else:
+                setattr(self, k, v)
+
+
 environ = os.environ
 namespace = environ.get("NAMESPACE")
 timeout = 500
@@ -33,8 +46,12 @@ if __name__ == '__main__':
         exit(1)
     timeout_start = time.time()
     clickhouse_cr = k8s_library.get_custom_resource('clickhouse.altinity.com/v1', 'ClickHouseInstallation', namespace, 'cluster')
-    clickhouse_replicas = clickhouse_cr.spec.configuration.clusters[0].layout.replicasCount
-    clickhouse_shards = clickhouse_cr.spec.configuration.clusters[0].layout.shardsCount
+
+    # Convert dict to object for attribute access
+    clickhouse_cr_obj = DictToObject(clickhouse_cr)
+
+    clickhouse_replicas = clickhouse_cr_obj.spec.configuration.clusters[0].layout.replicasCount
+    clickhouse_shards = clickhouse_cr_obj.spec.configuration.clusters[0].layout.shardsCount
     if clickhouse_shards is None:
         print('Shards count is not set. Defaulting to 1')
         clickhouse_shards = 1
