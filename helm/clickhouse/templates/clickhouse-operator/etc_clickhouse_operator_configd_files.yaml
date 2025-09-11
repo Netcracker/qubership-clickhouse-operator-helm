@@ -103,3 +103,14 @@ data:
           <ttl>event_date + INTERVAL {{ default "1 DAY" .Values.clickhouseCluster.configuration.custom.text_log_ttl }} DELETE</ttl>
       </text_log>
     </yandex>
+
+
+  11-clickhouse-processors_profile_log.xml: |
+    <yandex>
+      <processors_profile_log>
+          <database>system</database>
+          <table>processors_profile_log</table>
+          <partition_by>toMonday(event_date)</partition_by>
+          <ttl>event_date + INTERVAL {{ default "1 DAY" .Values.clickhouseCluster.configuration.custom.processors_profile_log_ttl }} DELETE</ttl>
+      </processors_profile_log>
+    </yandex>
