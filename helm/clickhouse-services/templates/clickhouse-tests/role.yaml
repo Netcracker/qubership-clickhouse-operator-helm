@@ -41,6 +41,7 @@ rules:
       - clickhouse.altinity.com
     verbs:
       - list
+      - get
     resources:
       - clickhouseinstallations
 {{- end }}
