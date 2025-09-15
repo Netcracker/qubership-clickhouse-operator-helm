@@ -40,7 +40,7 @@ Create Database By Dbaas Adapter
     Dictionary Should Contain Key  ${resp.json()}  name
     ${resp_name}=  Get From Dictionary  ${resp.json()}  name
     Should Contain  str(${resp.content})  ${resp_name}
-    [Return]  ${resp_name}
+    RETURN  ${resp_name}
 
 Check Database Existence By Dbaas Adapter
     [Arguments]  ${db_name}

@@ -56,7 +56,7 @@ Insert Test Record
     ${record}=  Create List  ${RID}  ${RSTRING}
     Check Test Record Exists  ${db_name}  ${table_name}  ${record}
     Log  Test records found on ${CLICKHOUSE_HOST}
-    [Return]  ${RID}  ${RSTRING}
+    RETURN  ${RID}  ${RSTRING}
 
 Update Test Record
     [Arguments]  ${db_name}  ${table_name}  ${RID}
@@ -109,14 +109,14 @@ Full Backup
     ${resp}=  Post On Session  clickhouse-backup-orchestrator  /backup
     Wait Until Keyword Succeeds  ${RETRY_TIME}  ${RETRY_INTERVAL}  Check Job Status  ${resp}
     Check Backup Status  ${resp.content}
-    [Return]  ${resp.content}
+    RETURN  ${resp.content}
 
 Granular Backup
     [Arguments]  ${data}
     ${resp}=  Post On Session  clickhouse-backup-orchestrator  /backup  data=${data}  headers=${headers}
     Wait Until Keyword Succeeds  ${RETRY_TIME}  ${RETRY_INTERVAL}  Check Job Status  ${resp}
     Check Backup Status  ${resp.content}
-    [Return]  ${resp.content}
+    RETURN  ${resp.content}
 
 Restore
     [Arguments]  ${restore_data}
@@ -136,7 +136,7 @@ Check Status Of Pods
        Should Be True  ${state}
        ...  Error! Following pod ${pod.metadata.name} has Failed status! Please, recheck pod status
     END
-    [Return]  ${state}
+    RETURN  ${state}
 
 Backup session with tls
     [Arguments]  ${auths}
