@@ -167,7 +167,7 @@ func main() {
 	}
 	logger.Info(fmt.Sprintf("API version obtained: %s", apiVersion))
 
-	var dbAdminImpl = basic.NewServiceAdapter(clusterAdapter, dao.ApiVersion(apiVersion), getRoles(), getFeatures(), *isReplicatedUserStorage)
+	var dbAdminImpl service.DbAdministration = basic.NewServiceAdapter(clusterAdapter, dao.ApiVersion(apiVersion), getRoles(), getFeatures(), *isReplicatedUserStorage)
 	// Backup Daemon Administration
 	сlient := &http.Client{}
 	if *chSsl {
@@ -190,7 +190,7 @@ func main() {
 	if checkInitMode() {
 		// Cluster adapter for first clickhouse pod for moving users to replicated storage
 		c := cluster.NewAdapter("chi-cluster-replicated-0-0", *chPort, *chUser, *chPass, *chDatabase, *chSsl)
-		initial.MigrateRoles(*dbAdminImpl, c, *rolesAdditionalGrant, *isReplicatedUserStorage)
+		initial.MigrateRoles(dbAdminImpl, c, *rolesAdditionalGrant, *isReplicatedUserStorage)
 		return
 	}
 

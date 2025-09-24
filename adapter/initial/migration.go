@@ -33,7 +33,7 @@ var (
 
 func MigrateRoles(adAdministration service.DbAdministration, adapterForStorage cluster.ClusterAdapter, rolesAdditionalGrant, isReplicatedUserStorage bool) {
 	log.Info("Migration started")
-	a := adAdministration.(basic.ClickhouseServiceAdapter)
+	a := adAdministration.(*basic.ClickhouseServiceAdapter)
 
 	if isReplicatedUserStorage {
 		moveUsersToReplicatedStorage(adapterForStorage)
@@ -50,7 +50,7 @@ func MigrateRoles(adAdministration service.DbAdministration, adapterForStorage c
 		if d == "information_schema" || d == "default" || d == "system" || d == "INFORMATION_SCHEMA" {
 			continue
 		}
-		grantUsersForDatabase(a, d)
+		grantUsersForDatabase(*a, d)
 	}
 	log.Info("Migration finished")
 }
