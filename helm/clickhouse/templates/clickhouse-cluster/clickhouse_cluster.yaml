@@ -32,6 +32,7 @@ spec:
       path: /var/lib/clickhouse/data
       logger/log: /var/log/clickhouse-server/log/clickhouse-server.log
       logger/errorlog: /var/log/clickhouse-server/log/clickhouse-server.err.log
+      logger/count: {{ .Values.clickhouseOperator.logparam.logcount }}
       #For backward compatibility
       access_control_improvements/on_cluster_queries_require_cluster_grant: 'false'
 {{- if and .Values.clickhouseCluster.configuration.settings }}

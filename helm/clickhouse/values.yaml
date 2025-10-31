@@ -288,6 +288,9 @@ clickhouseOperator:
     # Mandatory: no
     #
     loglevel: warning
+
+    logcount: 10
+
   ## Allow to disable deploy role and rolebinding
   # Type: object
   # Mandatory: no
