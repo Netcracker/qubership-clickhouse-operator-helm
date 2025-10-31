@@ -22,7 +22,7 @@ data:
             <log>/var/log/clickhouse-server/clickhouse-server.log</log>
             <errorlog>/var/log/clickhouse-server/clickhouse-server.err.log</errorlog>
             <size>100M</size>
-            <count>>{{ .Values.clickhouseOperator.logParams.logcount }}</count>
+            <count>{{ .Values.clickhouseOperator.logParams.logcount }}</count>
             <!-- Default behavior is autodetection (log to console if not daemon mode and is tty) -->
             <console>1</console>
         </logger>
