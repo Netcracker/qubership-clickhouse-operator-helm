@@ -107,7 +107,7 @@ data:
 
   11-clickhouse-processors_profile_log.xml: |
     <yandex>
-      <processors_profile_log>
+      <processors_profile_log replace="1">
           <database>system</database>
           <table>processors_profile_log</table>
           <partition_by>toMonday(event_date)</partition_by>
