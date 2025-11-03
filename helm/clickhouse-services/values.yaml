@@ -244,6 +244,7 @@ integrationTests:
     pod: { }
     container: { }
   timeoutBeforeStart: 30
+  affinity: {}
 
 # STORAGE_RWO_CLASS: "local-path"
 

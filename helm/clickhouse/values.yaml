@@ -747,6 +747,7 @@ integrationTests:
   securityContext:
     pod: { }
     container: { }
+  affinity: {}  
 
 clickhouseSecretMonitor:
   install: true
@@ -757,6 +758,7 @@ clickhouseSecretMonitor:
   resources: 
     limits: {}
     requests: {}
+  affinity: {}
 
 clickhouseHook:
   install: true

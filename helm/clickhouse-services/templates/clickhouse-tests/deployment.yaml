@@ -18,6 +18,11 @@ spec:
       labels:
         app: clickhouse-integration-tests
     spec:
+      {{- if .Values.integrationTests.affinity }}
+      affinity: {{ .Values.integrationTests.affinity | toJson }}
+      {{- else if .Values.affinity }}
+      affinity: {{ .Values.affinity | toJson }}
+      {{- end }}
       containers:
         - name: clickhouse-integration-tests
           image: {{ template "clickhouseIntegrationTests.image" . }}
