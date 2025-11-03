@@ -21,6 +21,11 @@ spec:
     spec:
       restartPolicy: Never
       serviceAccountName: post-hook-sa
+      {{- if .Values.postHook.affinity }}
+      affinity: {{ .Values.postHook.affinity | toJson }}
+      {{- else if .Values.affinity }}
+      affinity: {{ .Values.affinity | toJson }}    
+      {{- end }}
       containers:
       - name: post-deployment-job
         image: {{ template "clickhouse_post_hook.image" . }}

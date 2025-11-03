@@ -21,6 +21,11 @@ spec:
     spec:
       restartPolicy: Never
       serviceAccountName: hook-sa
+      {{- if .Values.clickhouseHook.affinity }}
+      affinity: {{ .Values.clickhouseHook.affinity | toJson }}
+      {{- else if .Values.affinity }}
+      affinity: {{ .Values.affinity | toJson }}    
+      {{- end }}
       containers:
       - name: credentials-saver
         image: {{ template "clickhouse_pre_hook.image" . }}

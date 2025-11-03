@@ -786,6 +786,7 @@ clickhouseHook:
   resources: 
     limits: {}
     requests: {}
+  affinity: {}
 
 postHook:
   install: true
@@ -796,6 +797,7 @@ postHook:
   resources: 
     limits: {}
     requests: {}
+  affinity: {}
   
 
 # STORAGE_RWO_CLASS: "local-path"
