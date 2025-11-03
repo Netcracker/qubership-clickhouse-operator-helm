@@ -747,6 +747,7 @@ integrationTests:
   securityContext:
     pod: { }
     container: { }
+  affinity: {}  
 
 clickhouseSecretMonitor:
   install: true
@@ -757,6 +758,24 @@ clickhouseSecretMonitor:
   resources: 
     limits: {}
     requests: {}
+  ## affinity: {}  Node scheduling rules
+  # Example affinity configuration:
+  # affinity:
+  #   nodeAffinity:
+  #     requiredDuringSchedulingIgnoredDuringExecution:
+  #       nodeSelectorTerms:
+  #         - matchExpressions:
+  #             - key: kubernetes.io/hostname
+  #               operator: In
+  #               values:
+  #                 - worker3
+  #
+  # - This forces the Pod to run only on the node whose hostname is "worker3".
+  # - "requiredDuringSchedulingIgnoredDuringExecution" means:
+  #     * Required when scheduling the Pod
+  #     * Ignored if labels change while Pod is already running
+  #
+  affinity: {}
 
 clickhouseHook:
   install: true
@@ -767,6 +786,7 @@ clickhouseHook:
   resources: 
     limits: {}
     requests: {}
+  affinity: {}
 
 postHook:
   install: true
@@ -777,6 +797,7 @@ postHook:
   resources: 
     limits: {}
     requests: {}
+  affinity: {}
   
 
 # STORAGE_RWO_CLASS: "local-path"

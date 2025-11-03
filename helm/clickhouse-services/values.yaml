@@ -244,6 +244,24 @@ integrationTests:
     pod: { }
     container: { }
   timeoutBeforeStart: 30
+  ## affinity: {}  Node scheduling rules
+  # Example affinity configuration:
+  # affinity:
+  #   nodeAffinity:
+  #     requiredDuringSchedulingIgnoredDuringExecution:
+  #       nodeSelectorTerms:
+  #         - matchExpressions:
+  #             - key: kubernetes.io/hostname
+  #               operator: In
+  #               values:
+  #                 - worker3
+  #
+  # - This forces the Pod to run only on the node whose hostname is "worker3".
+  # - "requiredDuringSchedulingIgnoredDuringExecution" means:
+  #     * Required when scheduling the Pod
+  #     * Ignored if labels change while Pod is already running
+  #
+  affinity: {}
 
 # STORAGE_RWO_CLASS: "local-path"
 
