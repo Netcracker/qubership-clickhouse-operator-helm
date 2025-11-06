@@ -1,6 +1,6 @@
 module github.com/Netcracker/qubership-clickhouse-backup-sidecar
 
-go 1.25.1
+go 1.25.4
 
 require go.uber.org/zap v1.27.0
 
