@@ -271,8 +271,8 @@ Whether clickhouse certificates are specified
 app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-app.kubernetes.io/component: "clickhouse-operator"
-app.kubernetes.io/part-of: "clickhouse-operator"
+app.kubernetes.io/component: "operator"
+app.kubernetes.io/part-of: "clickhouse"
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/technology: "go"
 {{- end -}}
