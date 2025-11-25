@@ -75,6 +75,22 @@ spec:
         - name: clickhouse-operator
           image: {{ template "clickhouse-operator.image" . }}
           imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 25
+            successThreshold: 1
+            exec:
+              command: ["sh", "-c", "kill -0 1"]
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 25
+            successThreshold: 1
+            exec:
+              command: ["sh", "-c", "kill -0 1"]
+            timeoutSeconds: 5           
           volumeMounts:
             - name: etc-clickhouse-operator-folder
               mountPath: /etc/clickhouse-operator
