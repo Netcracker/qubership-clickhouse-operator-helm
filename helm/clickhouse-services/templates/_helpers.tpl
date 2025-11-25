@@ -155,7 +155,7 @@ DRD Port
 app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/name: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-app.kubernetes.io/component: "operator"
+app.kubernetes.io/component: "backend"
 app.kubernetes.io/part-of: "clickhouse-services"
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
