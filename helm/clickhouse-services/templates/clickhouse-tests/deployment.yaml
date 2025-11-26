@@ -82,6 +82,22 @@ spec:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 25
+            successThreshold: 1
+            exec:
+              command: ["pgrep", "-f", "docker-entrypoint.sh"]
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 25
+            successThreshold: 1
+            exec:
+              command: ["pgrep", "-f", "docker-entrypoint.sh"]
+            timeoutSeconds: 5            
           securityContext:
             {{- include "clickhouse.globalContainerSecurityContext" . | nindent 12 }}
             {{- with .Values.integrationTests.securityContext.container }}
