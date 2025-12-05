@@ -49,6 +49,7 @@ func (backup *Backup) GetExternalBackupPath() string {
 }
 
 func (backup *Backup) PerformBackup() error {
+
 	hosts, err := backup.Helper.GetClickhouseServices()
 	if err != nil {
 		return err
@@ -66,6 +67,7 @@ func (backup *Backup) PerformBackup() error {
 		if err := backup.createBackupForHost(host, tables); err != nil {
 			return err
 		}
+
 		if err = backup.uploadBackupToRemoteStorage(host); err != nil {
 			return err
 		}
@@ -111,7 +113,7 @@ func (backup *Backup) createBackupForHost(hostname string, tables string) error 
 
 func (backup *Backup) uploadBackupToRemoteStorage(hostname string) error {
 
-	if !utils.IsS3Remote() && !utils.IsExternal(backup.BackupPath) {
+	if !utils.IsS3Remote() && !utils.IsnfsRemote() {
 		return nil
 	}
 
@@ -131,7 +133,7 @@ func (backup *Backup) uploadBackupToRemoteStorage(hostname string) error {
 }
 
 func (backup *Backup) uploadBackupForHost(hostname string) error {
-	//_, remoteType := utils.RemoteStorage()
+	// _, remoteType := utils.RemoteStorage()
 	backup.Log.Info(fmt.Sprintf("Start to upload backup: %s to remote host", backup.BackupId(hostname)))
 	backupAction := fmt.Sprintf("backup/upload/%s", backup.BackupId(hostname))
 	port := constants.CHBackupPort

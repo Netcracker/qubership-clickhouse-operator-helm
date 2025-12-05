@@ -244,6 +244,15 @@ func IsS3Remote() bool {
 	}
 }
 
+func IsnfsRemote() bool {
+	remoteStorage, ok := os.LookupEnv("REMOTE_STORAGE")
+	if !ok {
+		return false
+	} else {
+		return remoteStorage == "nfs"
+	}
+}
+
 func KeepLocalBackups() bool {
 	keepLocalBackups, ok := os.LookupEnv("KEEP_LOCAL_BACKUPS")
 	if !ok {

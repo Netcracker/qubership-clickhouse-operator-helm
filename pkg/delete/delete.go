@@ -138,7 +138,7 @@ func (delete *Delete) deleteLocalBackupForHost(hostname string) error {
 
 func (delete *Delete) deleteRemoteBackupForHost(hostname string) error {
 
-	if !utils.IsS3Remote() && !utils.IsExternal(delete.BackupPath) {
+	if !utils.IsS3Remote() && !utils.IsnfsRemote() {
 		return nil
 	}
 	delete.Log.Info(fmt.Sprintf("Start to delete remote backup: %s", delete.BackupId(hostname)))

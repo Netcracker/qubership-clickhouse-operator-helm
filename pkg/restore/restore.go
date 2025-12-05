@@ -82,6 +82,7 @@ func (restore *Restore) PerformRestore() error {
 	if err := restore.downloadBackupFromRemoteStorage(host); err != nil {
 		return err
 	}
+
 	if err := restore.restoreSchema(host, dbs, dbMapStr); err != nil {
 		return err
 	}
@@ -159,6 +160,9 @@ func (restore *Restore) isBackupFailed() bool {
 }
 
 func (restore *Restore) downloadBackupFromRemoteStorage(hostname string) error {
+	if !utils.IsS3Remote() && !utils.IsnfsRemote() {
+		return nil
+	}
 	if utils.IsS3Remote() {
 		downloadBackupAction := fmt.Sprintf("backup/download/%s", restore.BackupId(hostname))
 		port := constants.CHBackupPort
@@ -202,7 +206,7 @@ func (restore *Restore) restoreData(hostname string, dbs string, dbMapStr string
 
 func (restore *Restore) deleteLocalBackup(hostname string) error {
 
-	if !utils.IsS3Remote() && !utils.IsExternal(restore.BackupPath) {
+	if !utils.IsS3Remote() && !utils.IsnfsRemote() {
 		return nil
 	}
 	port := constants.CHBackupPort
