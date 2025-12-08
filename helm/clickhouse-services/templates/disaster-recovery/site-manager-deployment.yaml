@@ -120,6 +120,8 @@ metadata:
   name: site-manager
   labels:
     app: site-manager
+    name: site-manager
+    {{ include "kubernetes.labels" . | nindent 4 }}
 spec:
   ports:
 {{- if and .Values.tls.enabled }}

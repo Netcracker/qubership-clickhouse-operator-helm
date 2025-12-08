@@ -6,6 +6,7 @@ metadata:
 {{- if .Values.podLabels }}
 {{ .Values.podLabels | toYaml | nindent 4 }}
 {{- end }}
+{{ include "kubernetes.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": post-install, post-upgrade
     "helm.sh/hook-weight": "2"

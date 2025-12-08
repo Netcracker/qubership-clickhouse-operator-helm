@@ -192,9 +192,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: clickhouse-backup-orchestrator
   labels:
     app: clickhouse-backup-orchestrator
-  name: clickhouse-backup-orchestrator
+    name: clickhouse-backup-orchestrator
+    {{ include "kubernetes.labels" . | nindent 4 }}
   annotations:
 spec:
   type: ClusterIP
