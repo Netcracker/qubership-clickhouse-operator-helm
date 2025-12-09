@@ -603,6 +603,10 @@ clickhouseCluster:
   podDistribution: []
     # - type: ShardAntiAffinity
 
+  pdb:
+    pdbManaged: ""          
+    maxUnavailable: {}
+
   ## Set of the labels that will be applied to clickhouse pods.
   # Type: object
   # Mandatory: no

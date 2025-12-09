@@ -110,6 +110,8 @@ spec:
         layout:
           shardsCount: {{ .Values.clickhouseCluster.shardsCount }}
           replicasCount: {{ ( include "clickhouse.replicasCount" . ) }}
+        pdbManaged: "{{ default "true" .Values.clickhouseCluster.pdb.pdbManaged }}"  
+        pdbMaxUnavailable: {{ default 1 .Values.clickhouseCluster.pdb.maxUnavailable.value }}       
   templates:
     serviceTemplates:
       - name: chi-service-template
