@@ -60,8 +60,6 @@ fsGroup: 101
     value: {{ .Values.backupDaemon.storage.s3.endpoint | quote }}
   - name: S3_BUCKET
     value: {{ .Values.backupDaemon.storage.s3.bucket | quote }}
-  - name: REMOTE_STORAGE
-    value: s3
   - name: S3_KEY_ID
     valueFrom:
       secretKeyRef:
