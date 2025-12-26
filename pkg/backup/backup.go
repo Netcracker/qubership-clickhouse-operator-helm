@@ -111,7 +111,7 @@ func (backup *Backup) createBackupForHost(hostname string, tables string) error 
 
 func (backup *Backup) uploadBackupToRemoteStorage(hostname string) error {
 
-	if !utils.IsS3Remote() && !utils.IsExternal(backup.BackupPath) {
+	if !utils.IsS3Remote() && !utils.IsnfsRemote() {
 		return nil
 	}
 
