@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.25.5-alpine3.22 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.25.5-alpine3.23 AS builder
 
 ENV GOSUMDB=off
 
@@ -19,7 +19,7 @@ RUN go mod tidy
 ARG TARGETOS TARGETARCH
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /build/_output/bin/clickhouse-site-manager -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} ./cmd/main.go
 
-FROM alpine:3.22.0
+FROM alpine:3.23
 
 # Set environment variables for the operator binary
 ENV OPERATOR=/usr/local/bin/clickhouse-site-manager \
