@@ -46,7 +46,7 @@ spec:
         {{- if .Values.tls.enabled }}
         - name: tls-cert
           secret:
-            secretName: {{ .Values.tls.certificateSecretName }}
+            secretName: {{ include "clickhouse.certServicesSecret" . }}
             defaultMode: 416
         {{- end }}
 {{- if or .Values.dbaas.migrateRoles (gt (int .Values.clickhouseCluster.shardsCount) 1) }}

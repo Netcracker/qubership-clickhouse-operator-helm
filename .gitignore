@@ -8,5 +8,5 @@ target/
 
 ### Operator rules
 # Temporary Build Files
-build/_output
+_output
 build/_test
