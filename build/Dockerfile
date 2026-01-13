@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.25.4-alpine3.22 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.25.5-alpine3.23 AS builder
 
 WORKDIR /workspace
 
@@ -17,7 +17,7 @@ RUN go mod tidy
 ARG TARGETOS TARGETARCH
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /build/_output/bin/qubership-clickhouse-dbaas-adapter -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} ./adapter
 
-FROM alpine:3.22.0
+FROM alpine:3.23
 
 ENV ADAPTER=/usr/local/bin/qubership-clickhouse-dbaas-adapter \
     USER_UID=1001
