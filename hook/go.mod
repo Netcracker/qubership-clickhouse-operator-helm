@@ -3,7 +3,7 @@ module github.com/Netcracker/qubership-clickhouse-operator-helm/hook
 go 1.25.5
 
 require (
-	github.com/Netcracker/qubership-credential-manager v0.0.11
+	github.com/Netcracker/qubership-credential-manager v0.0.12
 	go.uber.org/zap v1.27.1
 	k8s.io/api v0.35.0
 	k8s.io/apimachinery v0.35.0

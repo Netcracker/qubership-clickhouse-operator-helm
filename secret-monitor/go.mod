@@ -3,7 +3,7 @@ module github.com/Netcracker/qubership-clickhouse-operator-helm/secret-monitor
 go 1.25.5
 
 require (
-	github.com/Netcracker/qubership-credential-manager v0.0.11
+	github.com/Netcracker/qubership-credential-manager v0.0.12
 	github.com/altinity/clickhouse-operator v0.0.0-20251027195202-a581555ebf89
 	go.uber.org/zap v1.27.0
 	k8s.io/api v0.34.1
