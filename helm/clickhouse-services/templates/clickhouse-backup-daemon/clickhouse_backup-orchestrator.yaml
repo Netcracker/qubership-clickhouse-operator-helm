@@ -74,6 +74,10 @@ spec:
             - name: TLS_ENABLED
               value: "true"
 {{- end }}
+{{- if (gt (int .Values.clickhouseCluster.shardsCount) 1) }}
+            - name: IS_SHARDED
+              value: "true" 
+{{- end }}
 {{- if .Values.tracing.enabled }}
             - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
               value: {{ .Values.tracing.host }}
