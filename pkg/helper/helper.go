@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/Netcracker/qubership-clickhouse-backup-orchestrator/pkg/utils"
 	"go.uber.org/zap"
@@ -81,4 +82,16 @@ func (h *Helper) GetClickhouseClusterServiceSelectors() map[string]string {
 		"clickhouse.altinity.com/ready":     "yes",
 	}
 	return selectors
+}
+
+func GetForHostForEachShard(hosts []string) []string {
+	shards := make([]string, 0)
+	activeShard := 0
+	for _, host := range hosts {
+		if strings.Contains(host, fmt.Sprintf("chi-cluster-replicated-%d", activeShard)) {
+			shards = append(shards, host)
+			activeShard++
+		}
+	}
+	return shards
 }

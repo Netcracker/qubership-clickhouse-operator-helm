@@ -293,6 +293,7 @@ func GetEnvBool(key string, def bool) bool {
 }
 
 func PostActionAndWait(client http.Client, httpMethod string, hostname string, port string, action string) error {
+	logger := log.With(zap.String("hostname", hostname))
 	var (
 		res *http.Response
 		err error
@@ -306,24 +307,25 @@ func PostActionAndWait(client http.Client, httpMethod string, hostname string, p
 	pollErr := wait.PollImmediate(5*time.Second, timeout*time.Minute, func() (done bool, err error) {
 
 		if strings.ToLower(httpMethod) == "get" {
-			log.Info("Method: GET URL: " + url)
+			logger.Info("Method: GET URL: " + url)
 			res, err = client.Get(url)
 		} else {
-			log.Info("Method: POST: " + url)
+			logger.Info("Method: POST: " + url)
 			res, err = client.Post(url, "text/plain", nil)
 		}
 		if err != nil {
 			return false, err
 		}
 		status := res.StatusCode
-		if status == http.StatusLocked {
-			log.Info(fmt.Sprintf("status is Locked, status code is: %d, retrying....", status))
+		switch status {
+		case http.StatusLocked:
+			logger.Info(fmt.Sprintf("status is Locked, status code is: %d, retrying....", status))
 			return false, nil
-		} else if status == http.StatusOK {
-			log.Info(fmt.Sprintf("status is OK, status code is: %d ", status))
+		case http.StatusOK:
+			logger.Info(fmt.Sprintf("status is OK, status code is: %d ", status))
 			return true, nil
-		} else if status == http.StatusCreated {
-			log.Info(fmt.Sprintf("status is Created, status code is: %d ", status))
+		case http.StatusCreated:
+			logger.Info(fmt.Sprintf("status is Created, status code is: %d ", status))
 			return true, nil
 		}
 
@@ -331,9 +333,9 @@ func PostActionAndWait(client http.Client, httpMethod string, hostname string, p
 		// Read the response body and log the error details.
 		bodyBytes, readErr := io.ReadAll(res.Body)
 		if readErr != nil {
-			log.Error("there is an error during body read", zap.Error(readErr))
+			logger.Error("there is an error during body read", zap.Error(readErr))
 		}
-		return false, errors.New(fmt.Sprintf("failed to do the actions: %s. status code was %d", string(bodyBytes), status))
+		return false, fmt.Errorf("failed to do the actions: %s. status code was %d", string(bodyBytes), status)
 	})
 	if pollErr != nil {
 		return pollErr
@@ -342,29 +344,29 @@ func PostActionAndWait(client http.Client, httpMethod string, hostname string, p
 		return err
 	}
 	if port == constants.CHBackupPort {
-		if err = waitTillActionCompletedForHost(client, hostname); err != nil {
+		if err = waitTillActionCompletedForHost(client, hostname, logger); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func waitTillActionCompletedForHost(client http.Client, host string) error {
+func waitTillActionCompletedForHost(client http.Client, host string, logger *zap.Logger) error {
 	timeout := time.Duration(getTimeOut())
 	err := wait.PollImmediate(5*time.Second, timeout*time.Minute, func() (done bool, err error) {
 		var actionRow types.ActionRow
-		log.Info("waiting until action will success")
+		logger.Info("waiting until action will success")
 		if actionRow, err = GetLastActionStatusForHost(client, host); err != nil {
-			log.Error("Error occurred", zap.Error(err))
+			logger.Error("Error occurred", zap.Error(err))
 			return false, err
 		}
-		log.Info(fmt.Sprintf("action found: %s", actionRow))
+		logger.Info(fmt.Sprintf("action found: %s", actionRow))
 		switch actionRow.Status {
 		case "success":
-			log.Info("action status is success")
+			logger.Info("action status is success")
 			return true, nil
 		case "in progress":
-			log.Info("action in progress, waiting...")
+			logger.Info("action in progress, waiting...")
 			return false, nil
 		case "error":
 			if actionRow.Error == "backup is already exists" {
@@ -372,7 +374,7 @@ func waitTillActionCompletedForHost(client http.Client, host string) error {
 			}
 			return false, errors.New(fmt.Sprintf("desired action ends with error: %s. exiting", actionRow.Error))
 		case "cancel":
-			log.Info("action was canceled")
+			logger.Info("action was canceled")
 			return true, nil
 		}
 		return false, nil
@@ -424,4 +426,9 @@ func GetPort() string {
 		return "8443"
 	}
 	return "8080"
+}
+
+func IsSharded() bool {
+	isSharded := GetEnvBool("IS_SHARDED", false)
+	return isSharded
 }
