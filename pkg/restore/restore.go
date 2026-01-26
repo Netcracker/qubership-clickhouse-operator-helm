@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Netcracker/qubership-clickhouse-backup-orchestrator/pkg/constants"
@@ -14,6 +15,8 @@ import (
 	"github.com/Netcracker/qubership-clickhouse-backup-orchestrator/pkg/utils"
 	"go.uber.org/zap"
 )
+
+var wg sync.WaitGroup
 
 type Restore struct {
 	Helper     *helper.Helper
@@ -74,22 +77,34 @@ func (restore *Restore) PerformRestore() error {
 		return err
 	}
 
-	host := hosts[0]
-	if len(dbMapStr) > 0 && strings.ToLower(restore.DropSrcDb) == "true" {
-		restore.Log.Info(fmt.Sprintf("Databases %s will be deleted!", dbList))
-		driver.DropDatabases(hosts, dbList)
-	}
-	if err := restore.downloadBackupFromRemoteStorage(host); err != nil {
-		return err
+	mainHost := hosts[0]
+	restoreHosts := []string{mainHost}
+
+	if utils.IsSharded() {
+		restoreHosts = helper.GetForHostForEachShard(hosts)
 	}
 
-	if err := restore.restoreSchema(host, dbs, dbMapStr); err != nil {
-		return err
+	if len(dbMapStr) > 0 && strings.ToLower(restore.DropSrcDb) == "true" {
+		restore.Log.Info(fmt.Sprintf("Databases %s will be deleted!", dbList))
+		driver.DropDatabases(mainHost, dbList)
 	}
-	restore.Log.Info("data is not restored yet, trying to restore")
-	if err := restore.restoreData(host, dbs, dbMapStr); err != nil {
-		return err
+
+	errChan := make(chan error, len(restoreHosts))
+	var schemaOnce sync.Once
+	var schemaErr error
+	for _, host := range restoreHosts {
+		wg.Add(1)
+		go restore.restoreCluster(host, dbs, dbMapStr, errChan, &schemaOnce, &schemaErr)
 	}
+	wg.Wait()
+	close(errChan)
+
+	for err := range errChan {
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, chHost := range hosts {
 		restore.Log.Info(fmt.Sprintf("data is restored, waiting till there is no q on: %s", chHost))
 		if err := restore.waitForZeroQueue(chHost, willBeRestored); err != nil {
@@ -99,9 +114,13 @@ func (restore *Restore) PerformRestore() error {
 			_ = driver.DropMarkCache(chHost)
 		}
 	}
-	if err := restore.deleteLocalBackup(host); err != nil {
-		return err
+
+	for _, host := range restoreHosts {
+		if err := restore.deleteLocalBackup(host); err != nil {
+			return err
+		}
 	}
+
 	service, err = restore.Helper.GetClickhouseClusterService()
 	if err != nil {
 		return err
@@ -111,6 +130,36 @@ func (restore *Restore) PerformRestore() error {
 		return err
 	}
 	return nil
+}
+
+func (restore *Restore) restoreCluster(host string, dbs string, dbMapStr string, errChan chan<- error, schemaOnce *sync.Once, schemaErr *error) {
+	defer wg.Done()
+	var err error
+	defer func() {
+		if err != nil {
+			restore.Log.Info(fmt.Sprintf("Restore failed for host %s", host))
+			errChan <- fmt.Errorf("Restore failed for host %s: %w", host, err)
+		}
+	}()
+
+	if err = restore.downloadBackupFromRemoteStorage(host); err != nil {
+		return
+	}
+
+	schemaOnce.Do(func() {
+		if schemaRestoreErr := restore.restoreSchema(host, dbs, dbMapStr); schemaRestoreErr != nil {
+			*schemaErr = schemaRestoreErr
+			err = schemaRestoreErr
+		}
+	})
+	if *schemaErr != nil {
+		return
+	}
+
+	if err = restore.restoreData(host, dbs, dbMapStr); err != nil {
+		return
+
+	}
 }
 
 func (restore *Restore) decideWhatToRestore() (string, string, []string, []string, error) {
@@ -181,9 +230,10 @@ func (restore *Restore) downloadBackupFromRemoteStorage(hostname string) error {
 }
 
 func (restore *Restore) restoreSchema(hostname string, dbs string, dbMapStr string) error {
-	restore.Log.Info(fmt.Sprintf("Start to restore backup: %s scheme on %s", restore.BackupId(hostname), hostname))
+	logger := restore.Log.With(zap.String("hostname", hostname))
+	logger.Info(fmt.Sprintf("Start to restore backup: %s scheme on %s", restore.BackupId(hostname), hostname))
 	if len(dbMapStr) > 0 {
-		restore.Log.Info(fmt.Sprintf("Restore database mapping: %s", dbMapStr))
+		logger.Info(fmt.Sprintf("Restore database mapping: %s", dbMapStr))
 	}
 	restoreSchemaAction := fmt.Sprintf("backup/restore/%s?schema=true&rm=true&%s&%s", restore.BackupId(hostname), dbs, dbMapStr)
 	if err := utils.PostActionAndWait(restore.Helper.HttpClient, "post", hostname, constants.CHBackupPort, restoreSchemaAction); err != nil {
@@ -193,9 +243,10 @@ func (restore *Restore) restoreSchema(hostname string, dbs string, dbMapStr stri
 }
 
 func (restore *Restore) restoreData(hostname string, dbs string, dbMapStr string) error {
-	restore.Log.Info(fmt.Sprintf("Start to restore backup: %s data on %s", restore.BackupId(hostname), hostname))
+	logger := restore.Log.With(zap.String("hostname", hostname))
+	logger.Info(fmt.Sprintf("Start to restore backup: %s data on %s", restore.BackupId(hostname), hostname))
 	if len(dbMapStr) > 0 {
-		restore.Log.Info(fmt.Sprintf("Restore database mapping: %s", dbMapStr))
+		logger.Info(fmt.Sprintf("Restore database mapping: %s", dbMapStr))
 	}
 	restoreDataAction := fmt.Sprintf("backup/restore/%s?data=true&%s&%s", restore.BackupId(hostname), dbs, dbMapStr)
 	if err := utils.PostActionAndWait(restore.Helper.HttpClient, "post", hostname, constants.CHBackupPort, restoreDataAction); err != nil {

@@ -18,12 +18,12 @@ var (
 
 func GetDatabaseList(chHosts []string) ([]string, error) {
 	var (
-		table string
-		dbC   *sql.DB
-		err   error
+		database string
+		dbC      *sql.DB
+		err      error
 	)
 
-	tables := make([]string, 0)
+	databases := make([]string, 0)
 
 	for _, chHost := range chHosts {
 		dbC, err = getChDb(chHost, constants.DefaultDb)
@@ -34,7 +34,7 @@ func GetDatabaseList(chHosts []string) ([]string, error) {
 	}
 	defer dbC.Close()
 
-	rows, err := dbC.Query(fmt.Sprintf(`SELECT name FROM system.databases where name not like 'default' and name not like 'system';`))
+	rows, err := dbC.Query(`SELECT name FROM system.databases where name not like 'default' and name not like 'system';`)
 	if err != nil {
 		log.Error("Can't perform query: SHOW DATABASES NOT LIKE 'system'", zap.Error(err))
 		return nil, err
@@ -43,31 +43,28 @@ func GetDatabaseList(chHosts []string) ([]string, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		if err = rows.Scan(&table); err != nil {
+		if err = rows.Scan(&database); err != nil {
 			log.Error("Can't get response from rows", zap.Error(err))
 			return nil, err
 		}
-		if strings.ToLower(table) != "information_schema" {
-			tables = append(tables, table)
+		if strings.ToLower(database) != "information_schema" {
+			databases = append(databases, database)
 		}
 	}
 
-	return tables, nil
+	return databases, nil
 }
 
-func DropDatabases(chHosts []string, databases []string) error {
+func DropDatabases(chHost string, databases []string) error {
 	var (
 		rows *sql.Rows
 		dbC  *sql.DB
 		err  error
 	)
 
-	for _, chHost := range chHosts {
-		dbC, err = getChDb(chHost, constants.DefaultDb)
-		if err != nil {
-			return err
-		}
-		break
+	dbC, err = getChDb(chHost, constants.DefaultDb)
+	if err != nil {
+		return err
 	}
 	defer dbC.Close()
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/Netcracker/qubership-clickhouse-backup-orchestrator/pkg/constants"
 	"github.com/Netcracker/qubership-clickhouse-backup-orchestrator/pkg/driver"
@@ -12,6 +13,8 @@ import (
 	"github.com/Netcracker/qubership-clickhouse-backup-orchestrator/pkg/utils"
 	"go.uber.org/zap"
 )
+
+var wg sync.WaitGroup
 
 type Backup struct {
 	Helper     *helper.Helper
@@ -54,23 +57,49 @@ func (backup *Backup) PerformBackup() error {
 		return err
 	}
 
-	backup.Log.Info(fmt.Sprintf("list of services for backup request %s", hosts))
-
 	tables, err := backup.decideWhatToBackup(hosts)
 	if err != nil {
 		return err
 	}
 
-	for _, host := range hosts {
+	return backup.backupCluster(hosts, tables)
+}
 
-		if err := backup.createBackupForHost(host, tables); err != nil {
-			return err
-		}
-		if err = backup.uploadBackupToRemoteStorage(host); err != nil {
-			return err
-		}
+func (backup *Backup) backupCluster(hosts []string, tables string) error {
+	// if utils.IsSharded() {
+	// 	hosts = helper.GetForHostForEachShard(hosts)
+	// }
+
+	backup.Log.Info(fmt.Sprintf("list of hosts for backup request %s", hosts))
+
+	errChan := make(chan error, len(hosts))
+	for _, host := range hosts {
+		wg.Add(1)
+		go backup.backupHost(host, tables, errChan)
 	}
-	return nil
+	wg.Wait()
+	close(errChan)
+
+	return <-errChan
+}
+
+func (backup *Backup) backupHost(host, tables string, errChan chan<- error) {
+	defer wg.Done()
+	var err error
+	defer func() {
+		if err == nil {
+			backup.Log.Info(fmt.Sprintf("Backup successfull for host %s", host))
+		} else {
+			backup.Log.Info(fmt.Sprintf("Backup failed for host %s", host))
+			errChan <- fmt.Errorf("Backup failed for host %s: %w", host, err)
+		}
+	}()
+	if err = backup.createBackupForHost(host, tables); err != nil {
+		return
+	}
+	if err = backup.uploadBackupToRemoteStorage(host); err != nil {
+		return
+	}
 }
 
 func (backup *Backup) decideWhatToBackup(chServices []string) (string, error) {
@@ -100,7 +129,7 @@ func (backup *Backup) decideWhatToBackup(chServices []string) (string, error) {
 }
 
 func (backup *Backup) createBackupForHost(hostname string, tables string) error {
-	backup.Log.Info(fmt.Sprintf("Start to backup: %s scheme on %s", backup.BackupId(hostname), tables))
+	backup.Log.Info(fmt.Sprintf("Start to backup: %s scheme on %s", backup.BackupId(hostname), hostname))
 	backupAction := fmt.Sprintf("backup/create?name=%s&%s", backup.BackupId(hostname), tables)
 	port := constants.CHBackupPort
 	if err := utils.PostActionAndWait(backup.Helper.HttpClient, "post", hostname, port, backupAction); err != nil {
