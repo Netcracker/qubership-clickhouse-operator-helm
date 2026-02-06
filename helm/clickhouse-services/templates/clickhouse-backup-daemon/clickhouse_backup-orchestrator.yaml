@@ -34,9 +34,9 @@ spec:
           emptyDir: {}
       {{ end }}
 {{- if .Values.tls.enabled }}
-        - name: {{ include "clickhouse.certServicesSecret" . }}
+        - name: tls-cert
           secret:
-            secretName: {{ include "clickhouse.certServicesSecret" . }}
+            secretName: {{ .Values.tls.certificateSecretName }}
             defaultMode: 420
 {{- end }}
       {{ if .Values.backupDaemon.priorityClassName }}
@@ -109,7 +109,7 @@ spec:
               mountPath: /backup-storage-external
 {{ end }}
 {{- if and .Values.tls.enabled }}
-            - name: {{ include "clickhouse.certServicesSecret" . }}
+            - name: tls-cert
               mountPath: {{ default "/tls/" }}
 {{- end }}
           livenessProbe:
