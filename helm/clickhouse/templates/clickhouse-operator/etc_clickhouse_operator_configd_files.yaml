@@ -114,3 +114,13 @@ data:
           <ttl>event_date + INTERVAL {{ default "1 DAY" .Values.clickhouseCluster.configuration.custom.processors_profile_log_ttl }} DELETE</ttl>
       </processors_profile_log>
     </yandex>
+
+  12-clickhouse-query_views_log.xml: |
+    <yandex>
+      <query_views_log>
+          <database>system</database>
+          <table>query_views_log</table>
+          <partition_by>toMonday(event_date)</partition_by>
+          <ttl>event_date + INTERVAL {{ default "1 DAY" .Values.clickhouseCluster.configuration.custom.query_views_log_ttl }} DELETE</ttl>
+      </query_views_log>
+    </yandex>
