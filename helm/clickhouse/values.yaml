@@ -704,6 +704,12 @@ backupDaemon:
   #
   serviceAccountName: clickhouse-operator
 
+  ## Enable pprof API endpoint for profiling
+  # Type: boolean
+  # Mandatory: no
+  #
+  enablePprof: false
+
 dbaas:
   # Optional flag for Clickhouse DBaaS Adapter deployment
   install: false

@@ -39,7 +39,7 @@ data:
     api:
       listen: "0.0.0.0:7171"     # API_LISTEN
       enable_metrics: true         # API_ENABLE_METRICS
-      enable_pprof: false          # API_ENABLE_PPROF
+      enable_pprof: {{ .Values.backupDaemon.enablePprof | default false }}          # API_ENABLE_PPROF
       username: ""                 # API_USERNAME
       password: ""                 # API_PASSWORD
       secure: {{ default "false" .Values.tls.enabled}}        # API_SECURE
