@@ -106,6 +106,7 @@ Check Backup Status
     Should Be Equal As Strings  ${status}  False
 
 Full Backup
+    [Arguments]  ${data}
     ${resp}=  Post On Session  clickhouse-backup-orchestrator  /backup  data=${data}  headers=${headers}
     Wait Until Keyword Succeeds  ${RETRY_TIME}  ${RETRY_INTERVAL}  Check Job Status  ${resp}
     Check Backup Status  ${resp.content}

@@ -28,7 +28,7 @@ Granular Backup And Restore
     [Tags]  backup  clickhouse
     ${record}=  Insert Test Record  ${DATABASE}  ${TABLE}
     Check Test Record Exists  ${DATABASE}  ${TABLE}  ${record}
-    ${data}=  Set Variable  {"dbs": ["${DATABASE}"], "allow_eviction": "false"}
+    ${data}=  Set Variable  {"dbs":["${DATABASE}"], "allow_eviction": "false"}
     ${backup_id}=  Granular Backup  ${data}
     Delete Test Record  ${DATABASE}  ${TABLE}  ${record}[0]
     Restore  {"vault":"${backup_id}","dbs":["${DATABASE}"]}
