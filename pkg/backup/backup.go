@@ -17,10 +17,11 @@ import (
 var wg sync.WaitGroup
 
 type Backup struct {
-	Helper     *helper.Helper
-	Log        *zap.Logger
-	RawDbs     string
-	BackupPath string
+	Helper        *helper.Helper
+	Log           *zap.Logger
+	RawDbs        string
+	BackupPath    string
+	AllowEviction string
 }
 
 type DbList struct {
@@ -130,7 +131,7 @@ func (backup *Backup) decideWhatToBackup(chServices []string) (string, error) {
 
 func (backup *Backup) createBackupForHost(hostname string, tables string) error {
 	backup.Log.Info(fmt.Sprintf("Start to backup: %s scheme on %s", backup.BackupId(hostname), hostname))
-	backupAction := fmt.Sprintf("backup/create?name=%s&%s", backup.BackupId(hostname), tables)
+	backupAction := fmt.Sprintf("backup/create?name=%s&%s&allow_eviction=%s", backup.BackupId(hostname), tables, backup.AllowEviction)
 	port := constants.CHBackupPort
 	if err := utils.PostActionAndWait(backup.Helper.HttpClient, "post", hostname, port, backupAction); err != nil {
 		return err
