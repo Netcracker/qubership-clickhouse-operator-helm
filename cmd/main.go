@@ -23,11 +23,12 @@ var (
 )
 
 type Config struct {
-	Action     string
-	BackupPath string
-	Dbs        string
-	DbMap      string
-	DropSrcDb  string
+	Action        string
+	BackupPath    string
+	Dbs           string
+	DbMap         string
+	DropSrcDb     string
+	AllowEviction string
 }
 
 func init() {
@@ -36,6 +37,7 @@ func init() {
 	flagset.StringVar(&cfg.Dbs, "d", "", "List of Databases")
 	flagset.StringVar(&cfg.DbMap, "m", "", "Mapping of  databases")
 	flagset.StringVar(&cfg.DropSrcDb, "dropsrcdb", "", "Delete the source database when mapping")
+	flagset.StringVar(&cfg.AllowEviction, "allowEviction", "false", "Allow eviction during backup")
 }
 
 func main() {
@@ -63,10 +65,11 @@ func main() {
 	case "backup":
 		Log.Info("backup is called")
 		backupProcedure := &backup.Backup{
-			Helper:     helper,
-			Log:        Log,
-			RawDbs:     cfg.Dbs,
-			BackupPath: cfg.BackupPath,
+			Helper:        helper,
+			Log:           Log,
+			RawDbs:        cfg.Dbs,
+			BackupPath:    cfg.BackupPath,
+			AllowEviction: cfg.AllowEviction,
 		}
 
 		if err := backupProcedure.PerformBackup(); err != nil {
