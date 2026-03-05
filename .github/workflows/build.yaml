@@ -27,6 +27,9 @@ jobs:
       fail-fast: false
       matrix:
         component:
+          - name: qubership-clickhouse-258
+            file: 258/Dockerfile
+            context: "258"          
           - name: qubership-clickhouse-243
             file: 243/Dockerfile
             context: "243"      
