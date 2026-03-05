@@ -1,3 +1,4 @@
+#!/bin/bash
 set -e
 
 CONN_FILE=/tmp/connection
