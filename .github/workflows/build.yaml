@@ -27,25 +27,25 @@ jobs:
       fail-fast: false
       matrix:
         component:
-          - name: qubership-clickhouse-258
+          - name: qubership-clickhouse-258+
             file: 258/Dockerfile
             context: "258"          
-          - name: qubership-clickhouse-243
+          - name: qubership-clickhouse-243+
             file: 243/Dockerfile
             context: "243"      
-          - name: qubership-clickhouse-integration-tests
+          - name: qubership-clickhouse-integration-tests+
             file: integration-tests/Dockerfile
             context: "integration-tests"
           - name: qubership-clickhouse-hook
             file: hook/build/Dockerfile
             context: "hook"
-          - name: qubership-clickhouse-secret-monitor
+          - name: qubership-clickhouse-secret-monitor+
             file: secret-monitor/build/Dockerfile
             context: "secret-monitor"
-          - name: qubership-clickhouse-transfer
+          - name: qubership-clickhouse-transfer+
             file: docker-transfer/Dockerfile
             context: "" 
-          - name: qubership-clickhouse-site-manager
+          - name: qubership-clickhouse-site-manager+
             file: site-manager/build/Dockerfile
             context: "site-manager"                                 
     runs-on: ubuntu-24.04
