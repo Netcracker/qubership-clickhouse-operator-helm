@@ -169,9 +169,9 @@ func main() {
 
 	var dbAdminImpl service.DbAdministration = basic.NewServiceAdapter(clusterAdapter, dao.ApiVersion(apiVersion), getRoles(), getFeatures(), *isReplicatedUserStorage)
 	// Backup Daemon Administration
-	сlient := &http.Client{}
+	httpClient := &http.Client{}
 	if *chSsl {
-		сlient.Transport = &http.Transport{
+		httpClient.Transport = &http.Transport{
 			TLSClientConfig: setTLSConfig(),
 		}
 	}
@@ -182,7 +182,7 @@ func main() {
 		*backupDaemonApiUser,
 		*backupDaemonApiPass,
 		false,
-		сlient,
+		httpClient,
 		basic.DbNameMaxLength,
 		basic.GetSpecialSymbols(),
 	)
