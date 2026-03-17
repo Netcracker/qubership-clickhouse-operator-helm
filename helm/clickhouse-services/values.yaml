@@ -48,7 +48,7 @@ backupDaemon:
   storage:
     remote: "none"  
     # nfs:
-    #   imageSidecar: ghcr.io/netcracker/qubership-clickhouse-backup-sidecar:main
+    #   imageSidecar: ghcr.io/netcracker/qubership-docker-clickhouse-backup-sidecar:main
     #   resources:
     #     limits:
     #       cpu: 100m
@@ -73,7 +73,7 @@ backupDaemon:
 
   orchestrator:
 
-    image: ghcr.io/netcracker/qubership-clickhouse-backup-orchestrator:main
+    image: ghcr.io/netcracker/qubership-docker-clickhouse-backup-orchestrator:main
     resources:
       limits:
         cpu: 500m
@@ -164,7 +164,7 @@ dbaas:
   # Optional flag for Clickhouse DBaaS Adapter deployment
   install: false
   # Docker Image that will be used for Clickhouse DBaaS Adapter container
-  dockerImage: ghcr.io/netcracker/qubership-clickhouse-dbaas-adapter:main
+  dockerImage: ghcr.io/netcracker/qubership-docker-clickhouse-dbaas-adapter:main
   podLabels: {}
   # Clickhouse cluster entry point.
   #  chHost: clickhouse-cluster

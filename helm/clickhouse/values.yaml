@@ -634,7 +634,7 @@ backupDaemon:
   storage:
     remote: "none"
 #    nfs:
-#      imageSidecar: ghcr.io/netcracker/qubership-clickhouse-backup-sidecar:main
+#      imageSidecar: ghcr.io/netcracker/qubership-docker-clickhouse-backup-sidecar:main
 #      resources:
 #        limits:
 #          cpu: 100m
