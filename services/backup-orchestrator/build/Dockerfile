@@ -19,7 +19,9 @@ RUN go mod tidy
 ARG TARGETOS TARGETARCH
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /build/_output/bin/qubership-clickhouse-backup-orchestrator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} ./cmd/main.go
 
-FROM ghcr.io/netcracker/qubership-backup-daemon-go:fix-granular-restore
+FROM ghcr.io/netcracker/qubership-backup-daemon-go:feat_api_backward_compatibility
+
+COPY build/backup-daemon.conf /etc/backup-daemon.conf
 
 ENV ORCHESTRATOR=/usr/local/bin/clickhouse-backup-orchestrator \
     USER_UID=1001
