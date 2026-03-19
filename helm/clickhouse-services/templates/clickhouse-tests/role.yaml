@@ -13,8 +13,11 @@ rules:
     resources:
       - pods
     verbs:
+      - get
+      - create
       - delete
       - list
+      - watch
   - apiGroups:
       - ""
     resources:
@@ -34,14 +37,19 @@ rules:
     verbs:
       - get
       - list
-      - delete
-      - update
-      - patch
   - apiGroups:
       - clickhouse.altinity.com
-    verbs:
-      - list
-      - get
     resources:
       - clickhouseinstallations
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
 {{- end }}

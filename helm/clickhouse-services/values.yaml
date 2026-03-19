@@ -224,7 +224,12 @@ tracing:
 
 integrationTests:
   install: false
+  # Image for the actual Robot Framework test container (created as a one-shot Pod by the controller)
   image: "ghcr.io/netcracker/qubership-clickhouse-integration-tests:main"
+  # Image for the tests-runner controller (always-running Deployment that watches CHI and manages test pods)
+  testsRunnerImage: "ghcr.io/netcracker/qubership-clickhouse-tests-runner:main"
+  # Name of the ClickHouseInstallation CR to watch
+  chiName: "cluster"
   tags: "backupORdbaas"
   clickhouseHost: "clickhouse-cluster"
   clickhousePort: 8123
@@ -233,6 +238,7 @@ integrationTests:
       user: "clickhouse"
   clickhouseBackupHost: "clickhouse-backup-orchestrator"
   clickhouseBackupPort: 8080
+  # Resources for the test Pod (one-shot, created by the controller)
   resources:
     requests:
       memory: 256Mi
@@ -240,6 +246,14 @@ integrationTests:
     limits:
       memory: 256Mi
       cpu: 400m
+  # Resources for the tests-runner controller Deployment
+  runnerResources:
+    requests:
+      memory: 64Mi
+      cpu: 50m
+    limits:
+      memory: 128Mi
+      cpu: 100m
   securityContext:
     pod: { }
     container: { }

@@ -1,19 +1,16 @@
-FROM ghcr.io/netcracker/qubership-docker-integration-tests:0.3.7
+FROM ghcr.io/netcracker/qubership-docker-integration-tests:0.3.9
 ENV ROBOT_OUTPUT=${ROBOT_HOME}/output \
-    DISTR_DIR=/tmp/deps \
-    SERVICE_CHECKER_SCRIPT=${ROBOT_HOME}/clickhouse_pods_checker.py
+    DISTR_DIR=/tmp/deps
 
 ENV STATUS_WRITING_ENABLED=true
-ENV STATUS_CUSTOM_RESOURCE_GROUP=apps
+ENV STATUS_CUSTOM_RESOURCE_GROUP=clickhouse.altinity.com
 ENV STATUS_CUSTOM_RESOURCE_VERSION=v1
-ENV STATUS_CUSTOM_RESOURCE_PLURAL=deployments
-ENV STATUS_CUSTOM_RESOURCE_NAME=clickhouse-integration-tests
+ENV STATUS_CUSTOM_RESOURCE_PLURAL=clickhouseinstallations
 
 RUN mkdir -p ${ROBOT_HOME} && mkdir -p ${ROBOT_OUTPUT}
 
 COPY docker/pip.conf /etc/pip.conf
 COPY docker/requirements.txt ${ROBOT_HOME}/requirements.txt
-COPY clickhouse_pods_checker.py ${ROBOT_HOME}/clickhouse_pods_checker.py
 
 # Upgrade all tools to avoid vulnerabilities 
 RUN set -x && apk upgrade --no-cache --available \

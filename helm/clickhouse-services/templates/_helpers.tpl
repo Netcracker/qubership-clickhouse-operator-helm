@@ -44,6 +44,9 @@ fsGroup: 101
 {{- define "clickhouseIntegrationTests.image" -}}
 {{- end -}}
 
+{{- define "clickhouseTestsRunner.image" -}}
+{{- end -}}
+
 {{- define "clickhouse_backup.envs" -}}
 {{- range $key, $val := .Values.backupDaemon.orchestrator.envs }}
   - name: {{ $key }}
@@ -118,7 +121,7 @@ fsGroup: 101
             - name: NC_SM_HTTP_AUTH
               value: "true"
             - name: NC_SM_CUSTOM_AUDIENCE
-              value: {{ .Values.disasterRecovery.siteManager.httpAuth.customAudience | default "sm-services" }}  
+              value: {{ .Values.disasterRecovery.siteManager.httpAuth.customAudience | default "sm-services" }}
 {{ else }}
             - name: NC_SM_HTTP_AUTH
               value: "false"

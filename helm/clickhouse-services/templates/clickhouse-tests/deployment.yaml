@@ -2,102 +2,78 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: clickhouse-integration-tests
+  name: clickhouse-tests-runner
   labels:
-    app: clickhouse-integration-tests
-    name: clickhouse-integration-tests
+    app: clickhouse-tests-runner
+    name: clickhouse-tests-runner
     {{ include "kubernetes.labels" . | nindent 4 }}
-    app.kubernetes.io/technology: "python"
+    app.kubernetes.io/technology: "go"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: clickhouse-integration-tests
+      app: clickhouse-tests-runner
   template:
     metadata:
       labels:
-        app: clickhouse-integration-tests
+        app: clickhouse-tests-runner
     spec:
       {{- if .Values.integrationTests.affinity }}
       affinity: {{ .Values.integrationTests.affinity | toJson }}
       {{- else if .Values.affinity }}
       affinity: {{ .Values.affinity | toJson }}
       {{- end }}
+      serviceAccountName: clickhouse-integration-tests
       containers:
-        - name: clickhouse-integration-tests
-          image: {{ template "clickhouseIntegrationTests.image" . }}
-          ports:
-            - name: web
-              containerPort: 8080
-              protocol: TCP
+        - name: clickhouse-tests-runner
+          image: {{ template "clickhouseTestsRunner.image" . }}
+          imagePullPolicy: Always
           env:
-            - name: NAMESPACE
+            - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: CHI_NAME
+              value: {{ .Values.integrationTests.chiName | default "cluster" | quote }}
+            - name: TEST_IMAGE
+              value: {{ .Values.integrationTests.image | quote }}
+            - name: TAGS
+              value: {{ .Values.integrationTests.tags | quote }}
             - name: CLICKHOUSE_HOST
-              value: {{ .Values.integrationTests.clickhouseHost }}
+              value: {{ .Values.integrationTests.clickhouseHost | quote }}
             - name: CLICKHOUSE_PORT
               value: {{ .Values.integrationTests.clickhousePort | quote }}
-            - name: CLICKHOUSE_USER
-              valueFrom:
-                secretKeyRef:
-                  name: clickhouse-integration-tests-secret
-                  key: clickhouse_user
-            - name: CLICKHOUSE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: clickhouse-integration-tests-secret
-                  key: clickhouse_password
             - name: CLICKHOUSE_BACKUP_HOST
-              value: {{ .Values.integrationTests.clickhouseBackupHost }}
+              value: {{ .Values.integrationTests.clickhouseBackupHost | quote }}
             - name: CLICKHOUSE_BACKUP_PORT
               value: {{ .Values.integrationTests.clickhouseBackupPort | quote }}
-            - name: TAGS
-              value: {{ .Values.integrationTests.tags }}
-            - name: STATUS_CUSTOM_RESOURCE_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
+            - name: SERVICE_ACCOUNT_NAME
+              value: "clickhouse-integration-tests"
             - name: TLS_ENABLED
             {{- if .Values.tls.enabled }}
               value: "true"
             {{- else }}
               value: "false"
             {{- end }}
-            - name: TIMEOUT_BEFORE_START
-              value: {{ .Values.integrationTests.timeoutBeforeStart | default 30 | quote }}
-            - name: RANDOM_RUN_TRIGGER
-              value: {{ randAlphaNum 10 | quote }}
           resources:
             requests:
-              memory: {{ default "256Mi" .Values.integrationTests.resources.requests.memory }}
-              cpu: {{ default "200m" .Values.integrationTests.resources.requests.cpu }}
+              memory: {{ default "64Mi" .Values.integrationTests.runnerResources.requests.memory }}
+              cpu: {{ default "50m" .Values.integrationTests.runnerResources.requests.cpu }}
             limits:
-              memory: {{ default "256Mi" .Values.integrationTests.resources.limits.memory }}
-              cpu: {{ default "400m" .Values.integrationTests.resources.limits.cpu }}
-          volumeMounts:
-            - name: output
-              mountPath: /opt/robot/output
-          terminationMessagePath: /dev/termination-log
-          terminationMessagePolicy: File
-          imagePullPolicy: Always
+              memory: {{ default "128Mi" .Values.integrationTests.runnerResources.limits.memory }}
+              cpu: {{ default "100m" .Values.integrationTests.runnerResources.limits.cpu }}
           livenessProbe:
-            failureThreshold: 3
-            initialDelaySeconds: 1200
-            periodSeconds: 25
-            successThreshold: 1
-            tcpSocket:
-              port: 8080
-            timeoutSeconds: 5
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
           readinessProbe:
-            failureThreshold: 3
-            initialDelaySeconds: 1200
-            periodSeconds: 25
-            successThreshold: 1
-            tcpSocket:
-              port: 8080
-            timeoutSeconds: 5           
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
           securityContext:
             {{- include "clickhouse.globalContainerSecurityContext" . | nindent 12 }}
             {{- with .Values.integrationTests.securityContext.container }}
@@ -105,10 +81,6 @@ spec:
             {{- end }}
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
-      serviceAccountName: clickhouse-integration-tests
-      volumes:
-        - name: output
-          emptyDir: { }
       securityContext:
         {{- include "clickhouse.globalPodSecurityContext" . | nindent 8 }}
         {{- with .Values.integrationTests.securityContext.pod }}
