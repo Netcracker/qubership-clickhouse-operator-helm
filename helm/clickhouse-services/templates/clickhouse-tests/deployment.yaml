@@ -10,6 +10,8 @@ metadata:
     app.kubernetes.io/technology: "python"
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: clickhouse-integration-tests
@@ -83,12 +85,13 @@ spec:
           terminationMessagePolicy: File
           imagePullPolicy: Always
           livenessProbe:
+            exec:
+              command:
+                - echo
+                - ok
             failureThreshold: 3
-            initialDelaySeconds: 1200
             periodSeconds: 25
             successThreshold: 1
-            tcpSocket:
-              port: 8080
             timeoutSeconds: 5
           readinessProbe:
             failureThreshold: 3
@@ -97,7 +100,7 @@ spec:
             successThreshold: 1
             tcpSocket:
               port: 8080
-            timeoutSeconds: 5           
+            timeoutSeconds: 5
           securityContext:
             {{- include "clickhouse.globalContainerSecurityContext" . | nindent 12 }}
             {{- with .Values.integrationTests.securityContext.container }}

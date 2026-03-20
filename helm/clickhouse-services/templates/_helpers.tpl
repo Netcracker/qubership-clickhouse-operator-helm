@@ -118,7 +118,7 @@ fsGroup: 101
             - name: NC_SM_HTTP_AUTH
               value: "true"
             - name: NC_SM_CUSTOM_AUDIENCE
-              value: {{ .Values.disasterRecovery.siteManager.httpAuth.customAudience | default "sm-services" }}  
+              value: {{ .Values.disasterRecovery.siteManager.httpAuth.customAudience | default "sm-services" }}
 {{ else }}
             - name: NC_SM_HTTP_AUTH
               value: "false"
