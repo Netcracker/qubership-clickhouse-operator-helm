@@ -14,8 +14,8 @@ data:
 {{ end }}
       max_file_size: 107374182400    # MAX_FILE_SIZE
       disable_progress_bar: false    # DISABLE_PROGRESS_BAR
-      backups_to_keep_local: 0       # BACKUPS_TO_KEEP_LOCAL
-      backups_to_keep_remote: 0      # BACKUPS_TO_KEEP_REMOTE
+      backups_to_keep_local: {{ .Values.backupDaemon.retention.local | default 0 }}       # BACKUPS_TO_KEEP_LOCAL
+      backups_to_keep_remote: {{ .Values.backupDaemon.retention.remote | default 0 }}      # BACKUPS_TO_KEEP_REMOTE
       log_level: info                # LOG_LEVEL
       allow_empty_backups: false     # ALLOW_EMPTY_BACKUPS
       download_concurrency: 1        # DOWNLOAD_CONCURRENCY, max 255
