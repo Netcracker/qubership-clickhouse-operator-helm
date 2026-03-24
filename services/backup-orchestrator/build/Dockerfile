@@ -21,6 +21,8 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /build/_output/b
 
 FROM ghcr.io/netcracker/qubership-backup-daemon-go:0.1.7
 
+COPY build/backup-daemon.conf /etc/backup-daemon.conf
+
 ENV ORCHESTRATOR=/usr/local/bin/clickhouse-backup-orchestrator \
     USER_UID=1001
 
