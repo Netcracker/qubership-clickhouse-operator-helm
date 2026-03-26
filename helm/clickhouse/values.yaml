@@ -709,6 +709,9 @@ backupDaemon:
   # Mandatory: no
   #
   enablePprof: false
+  retention:
+    local: 0     # number of local backups to keep BACKUPS_TO_KEEP_LOCAL
+    remote: 0       # number of remote backups to keep BACKUPS_TO_KEEP_REMOTE
 
 dbaas:
   # Optional flag for Clickhouse DBaaS Adapter deployment
