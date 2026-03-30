@@ -721,7 +721,7 @@
           "interval": "",
           "intervalFactor": 2,
           "query": "$rate(count() c)\nFROM cluster('all-sharded',$table)\nWHERE  type IN($type)\n    AND initial_user IN ($user)\n    AND ('$query_type' = 'all' OR (positionCaseInsensitive(query,  '$query_type') = 1))",
-          "rawQuery": "SELECT arrayJoin(arrayMap((cnt,diff,ts) -> (ts, if(diff=0,0,cnt/diff)), counts, diffs, timestamps)) AS tuple_t_cRate FROM (SELECT groupArray(c) AS counts, groupArray(t) AS timestamps, arrayDifference(arrayMap(x -> x/1000, groupArray(t))) AS diffs FROM (SELECT (intDiv(toUInt32(event_time),120)*120)*1000 AS t, count() AS c FROM cluster('all-sharded',$table) WHERE type IN($type) AND initial_user IN ($user) AND ('$query_type'='all' OR positionCaseInsensitive(query,'$query_type')=1) GROUP BY t ORDER BY t))",
+          "rawQuery": "SELECT arrayJoin(arrayMap((cnt,diff,ts) -> (ts, if(diff=0,0,cnt/diff)), counts, diffs, timestamps)) AS tuple_t_cRate FROM (SELECT groupArray(c) AS counts, groupArray(t) AS timestamps, arrayDifference(arrayMap(x -> x/1000, groupArray(t))) AS diffs FROM (SELECT (intDiv(toUInt32(event_time),120)*120)*1000 AS t, count() AS c FROM cluster('all-sharded',system.query_log) WHERE event_date >= toDate(1586192459) AND event_time >= toDateTime(1586192459) AND type IN (1,2,3,4) AND initial_user IN ('default') AND ('all' = 'all' OR positionCaseInsensitive(query,'all')=1) GROUP BY t ORDER BY t))",
           "refId": "A",
           "resultFormat": "time_series",
           "round": "0s",
