@@ -1,5 +1,5 @@
 
-FROM --platform=$BUILDPLATFORM golang:1.25.5-alpine3.23 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26.1-alpine3.23 AS builder
 
 ENV GOSUMDB=off
 

@@ -42,7 +42,7 @@ clickhouseOperator:
   # Type: string
   # Mandatory: yes
   #
-  image: altinity/clickhouse-operator:0.25.6
+  image: altinity/clickhouse-operator:0.27.0
 
   ## The resources describes the compute resource requests and limits for single Pod(operator).
   ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
