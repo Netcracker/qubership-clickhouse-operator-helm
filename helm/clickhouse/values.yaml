@@ -509,6 +509,32 @@ clickhouseCluster:
     #
 #    annotations: {}
 
+  ## This section describes params of Kubernetes Gateway API HTTPRoute to connect to ClickHouse http api port.
+  ## Requires gateway.networking.k8s.io/v1 CRDs to be installed in the cluster.
+  # Type: object
+  # Mandatory: no
+  #
+  # httpRoute:
+    ## Host address for HTTPRoute
+    # Type: string
+    # Mandatory: yes (when httpRoute is set)
+    #
+    # host: clickhouse-rest.test.org
+
+    ## Name of the Gateway resource to attach to
+    # Type: string
+    # Default: default-external-gateway
+    # Mandatory: no
+    #
+    # gatewayName: default-external-gateway
+
+    ## Namespace of the Gateway resource
+    # Type: string
+    # Default: gateway-system
+    # Mandatory: no
+    #
+    # gatewayNamespace: gateway-system
+
   ## ClickHouse user configuration.
   ## Type: object
   # Mandatory: no
