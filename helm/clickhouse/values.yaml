@@ -519,7 +519,7 @@ clickhouseCluster:
     # Type: string
     # Mandatory: yes (when httpRoute is set)
     #
-    # host: clickhouse-rest.test.org
+    # host: <name>.eg.ci-master.openshift.sdntest.netcracker.com
 
     ## Name of the Gateway resource to attach to
     # Type: string
