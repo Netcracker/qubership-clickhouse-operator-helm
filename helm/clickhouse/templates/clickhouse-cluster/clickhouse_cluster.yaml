@@ -74,8 +74,14 @@ spec:
     zookeeper:
       nodes:
         - host: {{ ( include "clickhouse.ZkHost" . ) }}
-  {{- if or .Values.tls.zookeeper (gt (int .Values.clickhouseCluster.shardsCount) 1) }}
+  {{- if or .Values.clickhouseCluster.skipBinaryChecksumChecks .Values.tls.zookeeper (gt (int .Values.clickhouseCluster.shardsCount) 1) }}
     files:
+  {{- if .Values.clickhouseCluster.skipBinaryChecksumChecks }}
+      config.d/skip-binary-checksum-checks.xml: |
+        <clickhouse>
+          <skip_binary_checksum_checks>1</skip_binary_checksum_checks>
+        </clickhouse>
+  {{- end }}
   {{- if .Values.tls.zookeeper }}
       config.d/zookeeper_secure.xml: |
         <clickhouse>

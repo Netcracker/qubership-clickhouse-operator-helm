@@ -643,6 +643,14 @@ clickhouseCluster:
   strictHealthCheck: true
 #  priorityClassName: "high-priority"
 
+  ## Disables the checksum of the clickhouse-server binary when performing integrity checks.
+  # Not recommended in production environments, but there may be legitimate use-cases, such as
+  # when instrumenting ClickHouse via eBPF probes.
+  # Type: boolean
+  # Mandatory: no
+  #
+  skipBinaryChecksumChecks: false
+
 backupDaemon:
   ## Enable clickhouse-cluster installation with specific scheme
   # Type: string
