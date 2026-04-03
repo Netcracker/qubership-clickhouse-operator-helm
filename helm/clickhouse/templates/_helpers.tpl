@@ -1,7 +1,25 @@
 {{/* vim: set filetype=mustache: */}}
 
+{{/* Return name for gateway */}}
+{{- define "clickhouse.gateway.name" -}}
+{{- if and .Values.GATEWAY_SYSTEM_NAME .Values.global.cloudIntegrationEnabled }}
+{{- .Values.GATEWAY_SYSTEM_NAME }}
+{{- else }}
+{{- default "default-external-gateway" .Values.clickhouseCluster.httpRoute.gatewayName }}
+{{- end -}}
+{{- end -}}
+
+{{/* Return namespace for gateway */}}
+{{- define "clickhouse.gateway.namespace" -}}
+{{- if and .Values.GATEWAY_SYSTEM_NAMESPACE .Values.global.cloudIntegrationEnabled }}
+{{- .Values.GATEWAY_SYSTEM_NAMESPACE }}
+{{- else }}
+{{- default "envoy-gateway" .Values.clickhouseCluster.httpRoute.gatewayNamespace }}
+{{- end -}}
+{{- end -}}
+
 {{- define "clickhouse.image" -}}
- {{- end -}}
+{{- end -}}
 
 
 {{- define "clickhouse-operator.image" -}}
@@ -289,10 +307,10 @@ app.kubernetes.io/technology: "go"
 
 {{- define "clickhouse.users" -}}
   {{- $len := len .Values.clickhouseCluster.users -}}
-  {{- $counter := 0 -}}  
+  {{- $counter := 0 -}}
   {{- range $userName, $userSpec := .Values.clickhouseCluster.users -}}
     {{- printf "%s-credentials" $userName -}}
-    {{- $counter = add $counter 1 }}  
-    {{- if ne $counter $len }},{{- end }} 
+    {{- $counter = add $counter 1 }}
+    {{- if ne $counter $len }},{{- end }}
   {{- end -}}
 {{- end -}}

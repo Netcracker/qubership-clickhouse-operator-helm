@@ -1,0 +1,23 @@
+{{- if and (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1") .Values.clickhouseCluster.install .Values.clickhouseCluster.httpRoute }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: http-gateway-clickhouse
+  labels:
+    name: http-gateway-clickhouse
+    {{ include "kubernetes.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+  - name: {{ include "clickhouse.gateway.name" . }}
+    namespace: {{ include "clickhouse.gateway.namespace" . }}
+    port: {{ if .Values.tls.enabled }}443{{ else }}80{{ end }}
+  hostnames: [{{ .Values.clickhouseCluster.httpRoute.host | quote }}]
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: clickhouse-{{ .Values.clickhouseCluster.name }}
+      port: {{ if .Values.tls.enabled }}8443{{ else }}8123{{ end }}
+{{- end }}

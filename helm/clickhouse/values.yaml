@@ -122,7 +122,7 @@ clickhouseOperator:
   metricsExporterResources:
     limits: {}
     requests: {}
-  
+
   # limits:
   #   cpu: 200m
   #   memory: 200Mi
@@ -509,6 +509,32 @@ clickhouseCluster:
     #
 #    annotations: {}
 
+  ## This section describes params of Kubernetes Gateway API HTTPRoute to connect to ClickHouse http api port.
+  ## Requires gateway.networking.k8s.io/v1 CRDs to be installed in the cluster.
+  # Type: object
+  # Mandatory: no
+  #
+  # httpRoute:
+    ## Host address for HTTPRoute
+    # Type: string
+    # Mandatory: yes (when httpRoute is set)
+    #
+    # host: <name>.eg.ci-master.openshift.sdntest.netcracker.com
+
+    ## Name of the Gateway resource to attach to
+    # Type: string
+    # Default: default-external-gateway
+    # Mandatory: no
+    #
+    # gatewayName: default-external-gateway
+
+    ## Namespace of the Gateway resource
+    # Type: string
+    # Default: envoy-gateway
+    # Mandatory: no
+    #
+    # gatewayNamespace: envoy-gateway
+
   ## ClickHouse user configuration.
   ## Type: object
   # Mandatory: no
@@ -587,7 +613,7 @@ clickhouseCluster:
 
 ## Rules for distributing ClickHouse pods to improve availability and fault tolerance.
   # This controls how shards and replicas are scheduled across nodes.
-  # 
+  #
   # Example:
   # podDistribution:
   #   - type: ShardAntiAffinity
@@ -598,13 +624,13 @@ clickhouseCluster:
   #   - ReplicaAntiAffinity
   #   - MaxNumberPerNode
   #   - ClickHouseAntiAffinity (default fallback if none specified)
-  #    
-  # 
+  #
+  #
   podDistribution: []
     # - type: ShardAntiAffinity
 
   pdb:
-    pdbManaged: ""          
+    pdbManaged: ""
     maxUnavailable: {}
 
   ## Set of the labels that will be applied to clickhouse pods.
@@ -762,7 +788,7 @@ integrationTests:
   securityContext:
     pod: { }
     container: { }
-  affinity: {}  
+  affinity: {}
 
 clickhouseSecretMonitor:
   install: true
@@ -770,7 +796,7 @@ clickhouseSecretMonitor:
   securityContext:
     container: {}
     pod: {}
-  resources: 
+  resources:
     limits: {}
     requests: {}
   ## affinity: {}  Node scheduling rules
@@ -794,11 +820,11 @@ clickhouseSecretMonitor:
 
 clickhouseHook:
   install: true
-  dockerImage: ghcr.io/netcracker/qubership-credential-manager:main    
+  dockerImage: ghcr.io/netcracker/qubership-credential-manager:main
   securityContext:
     container: {}
     pod: {}
-  resources: 
+  resources:
     limits: {}
     requests: {}
   affinity: {}
@@ -809,11 +835,11 @@ postHook:
   securityContext:
     container: {}
     pod: {}
-  resources: 
+  resources:
     limits: {}
     requests: {}
   affinity: {}
-  
+
 
 # STORAGE_RWO_CLASS: "local-path"
 
