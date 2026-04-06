@@ -3,7 +3,7 @@ module github.com/Netcracker/qubership-clickhouse-operator-helm/secret-monitor
 go 1.26.1
 
 require (
-	github.com/Netcracker/qubership-credential-manager v0.0.14
+	github.com/Netcracker/qubership-credential-manager v0.0.15
 	github.com/altinity/clickhouse-operator v0.0.0-20260324184709-a5bdabc601e6
 	go.uber.org/zap v1.27.1
 	k8s.io/api v0.35.3
@@ -36,7 +36,6 @@ require (
 	github.com/go-openapi/swag/stringutils v0.25.5 // indirect
 	github.com/go-openapi/swag/typeutils v0.25.5 // indirect
 	github.com/go-openapi/swag/yamlutils v0.25.5 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v1.2.5 // indirect
 	github.com/google/gnostic-models v0.7.1 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
