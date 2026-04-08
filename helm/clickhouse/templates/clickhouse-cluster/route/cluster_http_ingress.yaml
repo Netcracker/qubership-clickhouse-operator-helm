@@ -1,10 +1,10 @@
-{{- if and (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1") (eq .Values.PAAS_PLATFORM "KUBERNETES") -}}
 {{- if and .Values.clickhouseCluster.install .Values.clickhouseCluster.ingressHttp -}}
 apiVersion: {{ if .Capabilities.APIVersions.Has "networking.k8s.io/v1" }}"networking.k8s.io/v1"{{ else }}"networking.k8s.io/v1beta1"{{ end }}
 kind: Ingress
 metadata:
-  {{- if or .Values.clickhouseCluster.ingressHttp.annotations .Values.tls.enabled }}
   annotations:
+    gateway-api-converter.netcracker.com/ignore: "true"
+    {{- if or .Values.clickhouseCluster.ingressHttp.annotations .Values.tls.enabled }}
     {{- if .Values.clickhouseCluster.ingressHttp.annotations }}
     {{- .Values.clickhouseCluster.ingressHttp.annotations | toYaml | nindent 4 }}
     {{- end }}
@@ -14,7 +14,7 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-ssl-name: '{{ printf "clickhouse-cluster.%s" .Release.Namespace }}'
     nginx.ingress.kubernetes.io/proxy-ssl-secret: '{{ printf "%s/%s" .Release.Namespace .Values.tls.certificateSecretName }}'
     {{- end }}
-  {{- end }}
+    {{- end }}
   labels:
     name: http-route-clickhouse
     {{ include "kubernetes.labels" . | nindent 4 }}
@@ -49,5 +49,4 @@ spec:
             serviceName: clickhouse-{{ .Values.clickhouseCluster.name }}
             servicePort: "http"
           {{- end }}
-{{- end }}
 {{- end }}
