@@ -5,7 +5,7 @@
 {{- if and .Values.GATEWAY_SYSTEM_NAME .Values.global.cloudIntegrationEnabled }}
 {{- .Values.GATEWAY_SYSTEM_NAME }}
 {{- else }}
-{{- default "default-external-gateway" .Values.clickhouseCluster.httpRoute.gatewayName }}
+{{- default "default-external-gateway" .Values.clickhouseCluster.ingressHttp.gatewayName }}
 {{- end -}}
 {{- end -}}
 
@@ -14,7 +14,7 @@
 {{- if and .Values.GATEWAY_SYSTEM_NAMESPACE .Values.global.cloudIntegrationEnabled }}
 {{- .Values.GATEWAY_SYSTEM_NAMESPACE }}
 {{- else }}
-{{- default "envoy-gateway" .Values.clickhouseCluster.httpRoute.gatewayNamespace }}
+{{- default "envoy-gateway" .Values.clickhouseCluster.ingressHttp.gatewayNamespace }}
 {{- end -}}
 {{- end -}}
 

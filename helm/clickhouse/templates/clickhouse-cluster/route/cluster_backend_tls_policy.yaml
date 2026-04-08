@@ -1,4 +1,5 @@
-{{- if and (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1") .Values.clickhouseCluster.install .Values.tls.enabled .Values.clickhouseCluster.httpRoute }}
+{{- if and (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1") (eq .Values.PAAS_PLATFORM "KUBERNETES") -}}
+{{- if and .Values.clickhouseCluster.install .Values.tls.enabled .Values.clickhouseCluster.ingressHttp -}}
 apiVersion: gateway.networking.k8s.io/v1
 kind: BackendTLSPolicy
 metadata:
@@ -17,4 +18,5 @@ spec:
     - group: ""
       kind: Secret
       name: {{ .Values.tls.certificateSecretName }}
+{{- end }}
 {{- end }}
