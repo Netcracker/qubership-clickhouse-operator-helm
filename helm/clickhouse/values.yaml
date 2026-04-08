@@ -496,6 +496,20 @@ clickhouseCluster:
     #
 #    host: clickhouse-rest.test.org
 
+    ## Name of the Gateway resource to attach to
+    # Type: string
+    # Default: default-external-gateway
+    # Mandatory: no
+    #
+#    gatewayName: default-external-gateway
+
+    ## Namespace of the Gateway resource
+    # Type: string
+    # Default: envoy-gateway
+    # Mandatory: no
+    #
+#    gatewayNamespace: envoy-gateway
+
     # Set of labels for Route
     # Default labels can be overwritten
     # Type: object
@@ -508,32 +522,6 @@ clickhouseCluster:
     # Mandatory: no
     #
 #    annotations: {}
-
-  ## This section describes params of Kubernetes Gateway API HTTPRoute to connect to ClickHouse http api port.
-  ## Requires gateway.networking.k8s.io/v1 CRDs to be installed in the cluster.
-  # Type: object
-  # Mandatory: no
-  #
-  # httpRoute:
-    ## Host address for HTTPRoute
-    # Type: string
-    # Mandatory: yes (when httpRoute is set)
-    #
-    # host: <name>.eg.ci-master.openshift.sdntest.netcracker.com
-
-    ## Name of the Gateway resource to attach to
-    # Type: string
-    # Default: default-external-gateway
-    # Mandatory: no
-    #
-    # gatewayName: default-external-gateway
-
-    ## Namespace of the Gateway resource
-    # Type: string
-    # Default: envoy-gateway
-    # Mandatory: no
-    #
-    # gatewayNamespace: envoy-gateway
 
   ## ClickHouse user configuration.
   ## Type: object

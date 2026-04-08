@@ -1,4 +1,5 @@
-{{- if and (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1") .Values.clickhouseCluster.install .Values.tls.enabled .Values.clickhouseCluster.httpRoute }}
+{{- if and (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1") (eq .Values.PAAS_PLATFORM "KUBERNETES") -}}
+{{- if and .Values.clickhouseCluster.install .Values.tls.enabled .Values.clickhouseCluster.ingressHttp -}}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -11,11 +12,12 @@ spec:
   - name: {{ include "clickhouse.gateway.name" . }}
     namespace: {{ include "clickhouse.gateway.namespace" . }}
     port: 80
-  hostnames: [{{ .Values.clickhouseCluster.httpRoute.host | quote }}]
+  hostnames: [{{ .Values.clickhouseCluster.ingressHttp.host | quote }}]
   rules:
   - filters:
     - type: RequestRedirect
       requestRedirect:
         scheme: https
         statusCode: 301
+{{- end }}
 {{- end }}
