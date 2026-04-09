@@ -14,7 +14,7 @@
 {{- if and .Values.GATEWAY_SYSTEM_NAMESPACE .Values.global.cloudIntegrationEnabled }}
 {{- .Values.GATEWAY_SYSTEM_NAMESPACE }}
 {{- else }}
-{{- default "envoy-gateway" .Values.clickhouseCluster.ingressHttp.gatewayNamespace }}
+{{- default "gateway-system" .Values.clickhouseCluster.ingressHttp.gatewayNamespace }}
 {{- end -}}
 {{- end -}}
 
