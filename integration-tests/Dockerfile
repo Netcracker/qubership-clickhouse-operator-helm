@@ -1,4 +1,4 @@
-FROM ghcr.io/netcracker/qubership-docker-integration-tests:0.4.1
+FROM ghcr.io/netcracker/qubership-docker-integration-tests:0.4.2
 ENV ROBOT_OUTPUT=${ROBOT_HOME}/output \
     DISTR_DIR=/tmp/deps \
     SERVICE_CHECKER_SCRIPT=${ROBOT_HOME}/clickhouse_pods_checker.py
