@@ -10,6 +10,8 @@ metadata:
 spec:
   parentRefs:
   - name: {{ include "clickhouse.gateway.name" . }}
+    group: gateway.networking.k8s.io
+    kind: Gateway
     namespace: {{ include "clickhouse.gateway.namespace" . }}
     port: {{ if .Values.tls.enabled }}443{{ else }}80{{ end }}
   hostnames: [{{ .Values.clickhouseCluster.ingressHttp.host | quote }}]
@@ -20,6 +22,8 @@ spec:
         value: /
     backendRefs:
     - name: clickhouse-{{ .Values.clickhouseCluster.name }}
+      group: ""
+      kind: Service
       port: {{ if .Values.tls.enabled }}8443{{ else }}8123{{ end }}
 {{- end }}
 {{- end }}
