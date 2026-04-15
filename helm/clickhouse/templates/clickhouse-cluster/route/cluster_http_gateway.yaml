@@ -25,5 +25,6 @@ spec:
       group: ""
       kind: Service
       port: {{ if .Values.tls.enabled }}8443{{ else }}8123{{ end }}
+      weight: 1
 {{- end }}
 {{- end }}
