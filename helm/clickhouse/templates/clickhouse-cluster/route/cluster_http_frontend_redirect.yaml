@@ -10,6 +10,8 @@ metadata:
 spec:
   parentRefs:
   - name: {{ include "clickhouse.gateway.name" . }}
+    group: gateway.networking.k8s.io
+    kind: Gateway
     namespace: {{ include "clickhouse.gateway.namespace" . }}
     port: 80
   hostnames: [{{ .Values.clickhouseCluster.ingressHttp.host | quote }}]
