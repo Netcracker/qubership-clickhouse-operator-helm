@@ -139,7 +139,7 @@ jobs:
           file: ${{ matrix.component.file }}
           platforms: ${{ needs.prepare.outputs.platforms }}
           push: ${{ env.PUSH }}
-          build-args: PG_VERSION=${{ matrix.component.pg_version }}
+          build-args: CLICKHOUSE_VERSION=${{ matrix.component.clickhouse_version }}
           tags: ghcr.io/netcracker/${{ matrix.component.name }}:${{ env.TAG_NAME }}
           provenance: false
       - uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5.0.0
