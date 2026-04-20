@@ -135,7 +135,7 @@ jobs:
           dry-run: false
           component: ${{ toJson(matrix.component) }}
           platforms: ${{ needs.load-docker-build-components.outputs.platforms }}
-          build-args: PG_VERSION=${{ matrix.component.pg_version }}
+          build-args: CLICKHOUSE_VERSION=${{ matrix.component.clickhouse_version }}
           tags: "${{ env.IMAGE_VERSION }},latest"
         env:
           GITHUB_TOKEN: ${{ github.token }}
