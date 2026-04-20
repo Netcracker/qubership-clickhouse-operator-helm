@@ -1,0 +1,28 @@
+---
+
+# Charts release configuration file example
+# This file is used to update the version of the helm charts and images in the values.yaml file
+# It is used in the helm-charts-release action
+# ${release} is replaced with the release version provided in the workflow
+
+charts:
+  - name: clickhouse
+    chart_file: helm/clickhouse/Chart.yaml
+    values_file: helm/clickhouse/values.yaml
+    image:
+      - ghcr.io/netcracker/qubership-clickhouse-243:${release}
+      - ghcr.io/netcracker/qubership-clickhouse-258:${release}
+      - ghcr.io/netcracker/qubership-docker-clickhouse-backup-sidecar:${release}
+      - ghcr.io/netcracker/qubership-clickhouse-hook:${release}
+      - ghcr.io/netcracker/qubership-clickhouse-secret-monitor:${release}
+      - ghcr.io/netcracker/qubership-clickhouse-transfer:${release}
+  - name: clickhouse-services
+    chart_file: helm/clickhouse-services/Chart.yaml
+    values_file: helm/clickhouse-services/values.yaml
+    image:
+      - ghcr.io/netcracker/qubership-docker-clickhouse-backup-orchestrator:${release}
+      - ghcr.io/netcracker/qubership-docker-clickhouse-dbaas-adapter:${release}
+      - ghcr.io/netcracker/qubership-clickhouse-integration-tests:${release}
+      - ghcr.io/netcracker/qubership-clickhouse-site-manager:${release}
+      - ghcr.io/netcracker/qubership-clickhouse-transfer:${release}
+      
