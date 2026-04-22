@@ -87,7 +87,6 @@ jobs:
           dry-run: true
           component: ${{ toJson(matrix.component) }}
           platforms: ${{ needs.load-docker-build-components.outputs.platforms }}
-          build-args: CLICKHOUSE_VERSION=${{ matrix.component.clickhouse_version }}
           tags: "${{ env.IMAGE_VERSION }}"
         env:
           GITHUB_TOKEN: ${{ github.token }}
