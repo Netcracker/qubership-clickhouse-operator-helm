@@ -1,23 +1,5 @@
 {{/* vim: set filetype=mustache: */}}
 
-{{/* Return name for gateway */}}
-{{- define "clickhouse.gateway.name" -}}
-{{- if and .Values.GATEWAY_SYSTEM_NAME .Values.global.cloudIntegrationEnabled }}
-{{- .Values.GATEWAY_SYSTEM_NAME }}
-{{- else }}
-{{- default "default-external-gateway" .Values.clickhouseCluster.ingressHttp.gatewayName }}
-{{- end -}}
-{{- end -}}
-
-{{/* Return namespace for gateway */}}
-{{- define "clickhouse.gateway.namespace" -}}
-{{- if and .Values.GATEWAY_SYSTEM_NAMESPACE .Values.global.cloudIntegrationEnabled }}
-{{- .Values.GATEWAY_SYSTEM_NAMESPACE }}
-{{- else }}
-{{- default "gateway-system" .Values.clickhouseCluster.ingressHttp.gatewayNamespace }}
-{{- end -}}
-{{- end -}}
-
 {{- define "clickhouse.image" -}}
 {{- end -}}
 

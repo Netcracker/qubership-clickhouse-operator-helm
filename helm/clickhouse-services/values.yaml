@@ -36,6 +36,14 @@ clickhouseCluster:
 # Template ServiceMonitor for DR
   serviceMonitor: false
   shardsCount: 1
+  install: false
+  name: "clickhouse-cluster"
+  ingressHttp:
+    host: ""
+    gatewayName: default-external-gateway
+    gatewayNamespace: gateway-system
+    labels: {}
+    annotations: {}
 
 
 backupDaemon:
@@ -268,3 +276,7 @@ integrationTests:
 # INFRA_CLICKHOUSE_REPLICAS: 1
 # INFRA_CLICKHOUSE_ZK_HOST: "zk-host"
 # INFRA_CLICKHOUSE_FS_GROUP: 100600
+
+# PAAS_PLATFORM: ""
+# GATEWAY_SYSTEM_NAME: ""
+# GATEWAY_SYSTEM_NAMESPACE: ""
