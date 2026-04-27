@@ -157,7 +157,7 @@ jobs:
       - name: Run chart-releaser
         uses: netcracker/chart-releaser-action@main
         with:
-          charts_dir: operator/charts/
+          charts_dir: helm/
           release_name_template: "{{ .Version }}"
           skip_existing: true
           skip_upload: true
