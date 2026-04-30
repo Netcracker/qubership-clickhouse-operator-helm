@@ -81,7 +81,7 @@ All commits in this project MUST follow this format:
 ```
 
 Where:
-- `<type>` = fix, chore, feat, chore(deps), etc.
+- `<type>` = fix, chore, feat, chore(deps), refactor, docs, build, config.
 - `<ticket-number>` = REQUIRED - Always ask the user for the ticket number before creating any commit
 - `<meaningful message>` = Clear, concise description of the change
 - `<list of details>` - list of commit changes
