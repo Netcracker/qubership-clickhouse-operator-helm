@@ -244,6 +244,7 @@ integrationTests:
     pod: { }
     container: { }
   timeoutBeforeStart: 30
+  readinessTimeout: 500
   ## affinity: {}  Node scheduling rules
   # Example affinity configuration:
   # affinity:

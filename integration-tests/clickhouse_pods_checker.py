@@ -34,7 +34,7 @@ class DictToObject:
 
 environ = os.environ
 namespace = environ.get("NAMESPACE")
-timeout = 500
+timeout = int(environ.get('READINESS_TIMEOUT', 500))
 timeout_before_start = int(environ.get('TIMEOUT_BEFORE_START', 30))
 
 if __name__ == '__main__':
@@ -80,18 +80,21 @@ if __name__ == '__main__':
         backup_deployment = k8s_library.get_deployment_entity("clickhouse-backup-orchestrator", namespace)
     except:
         backup_deployment = None
+    readiness_backup = False
     if backup_deployment:
-        try:
-            all_pods_in_project = k8s_library.get_pods(namespace)
-            ready_pods = 0
-            for pod in all_pods_in_project:
-                if pod.metadata.labels.get('app') == 'clickhouse-backup-orchestrator' and pod.status.container_statuses[0].ready:
-                    readiness_backup = True
-                    break
-                else:
-                    readiness_backup = False
-        except:
-            exit(1)
+        timeout_start = time.time()
+        while time.time() < timeout_start + timeout:
+            try:
+                all_pods_in_project = k8s_library.get_pods(namespace)
+                for pod in all_pods_in_project:
+                    if pod.metadata.labels.get('app') == 'clickhouse-backup-orchestrator' and pod.status.container_statuses[0].ready:
+                        readiness_backup = True
+                        break
+            except:
+                pass
+            if readiness_backup:
+                break
+            time.sleep(10)
     else:
         readiness_backup = True
     if readiness_clickhouse and readiness_backup:
