@@ -116,31 +116,19 @@ func readSecretFile(path string) string {
 }
 
 func GetClickhouseUserName() string {
-	// Prefer file-based secret
-	if value := readSecretFile("/var/run/secrets/clickhouse/ch-credentials"); value != "" {
+	// Read username from mounted secret file
+	if value := readSecretFile("/var/run/secrets/clickhouse/ch-credentials/username"); value != "" {
 		return value
 	}
-
-	// Fallback to env variable
-	if value := os.Getenv("CLICKHOUSE_USERNAME"); value != "" {
-		return value
-	}
-
 	// Default fallback
 	return "clickhouse"
 }
 
 func GetClusterPassword() string {
-	// Prefer file-based secret
-	if value := readSecretFile("/var/run/secrets/dbaas/password"); value != "" {
+	// Read password from mounted secret file
+	if value := readSecretFile("/var/run/secrets/clickhouse/ch-credentials/password"); value != "" {
 		return value
 	}
-
-	// Fallback to env variable
-	if value := os.Getenv("CLICKHOUSE_PASSWORD"); value != "" {
-		return value
-	}
-
 	// Default fallback
 	return "clickhouse"
 }
