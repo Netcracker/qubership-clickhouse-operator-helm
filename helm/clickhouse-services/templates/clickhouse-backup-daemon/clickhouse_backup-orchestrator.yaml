@@ -39,9 +39,6 @@ spec:
             secretName: {{ include "clickhouse.certServicesSecret" . }}
             defaultMode: 420
 {{- end }}
-      {{ if .Values.backupDaemon.priorityClassName }}
-      priorityClassName: {{ .Values.backupDaemon.priorityClassName }}
-      {{ end }}
 {{- if and .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsUsername }}
         - name: backup-daemon-api-credentials
           secret:
@@ -52,6 +49,9 @@ spec:
           secret:
             secretName: s3-remote-storage-credentials
 {{- end }}
+      {{ if .Values.backupDaemon.priorityClassName }}
+      priorityClassName: {{ .Values.backupDaemon.priorityClassName }}
+      {{ end }}
       containers:
         - name: clickhouse-backup-orchestrator
           image: {{ template "docker_ch_backup_orch.image" . }}
