@@ -72,6 +72,8 @@ spec:
             {{- end }}
             - name: TIMEOUT_BEFORE_START
               value: {{ .Values.integrationTests.timeoutBeforeStart | default 30 | quote }}
+            - name: READINESS_TIMEOUT
+              value: {{ .Values.integrationTests.readinessTimeout | default 500 | quote }}
             - name: RANDOM_RUN_TRIGGER
               value: {{ randAlphaNum 10 | quote }}
           resources:
