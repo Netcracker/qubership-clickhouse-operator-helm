@@ -58,6 +58,7 @@
     {{ end }}
     - name: CLICKHOUSE_BACKUP_CONFIG
       value: /backup-config/clickhouse-backup-config.yaml
+{{/*
     - name: CLICKHOUSE_USERNAME
       valueFrom:
         secretKeyRef:
@@ -82,6 +83,11 @@
           name: "s3-remote-storage-credentials-ch-backup"
           key: secretAccessKey
     {{ end }}
+*/}}
+    {{ if eq (include "clickhouse.isS3Enabled" .) "true" }}
+      - name: ALLOW_EMPTY_BACKUPS
+      value: 'true'
+    {{ end }}
 {{- range $key, $val := .Values.backupDaemon.envs }}
     - name: {{ $key }}
       value: {{ $val | quote }}
@@ -97,6 +103,15 @@
 {{- if and .Values.tls.enabled }}
     - name: {{ .Values.tls.certificateSecretName }}
       mountPath: /etc/clickhouse-server/certs/
+      readOnly: true
+{{- end }}
+    - name: ch-credentials
+      mountPath: /var/run/secrets/clickhouse/ch-credentials
+      readOnly: true
+{{- if eq (include "clickhouse.isS3Enabled" .) "true" }}
+    - name: s3-remote-storage-credentials-ch-backup
+      mountPath: /var/run/secrets/clickhouse/s3-remote-storage-credentials-ch-backup
+      readOnly: true
 {{- end }}
   imagePullPolicy: IfNotPresent
   livenessProbe:
@@ -150,6 +165,7 @@
 {{- if and .Values.tls.enabled }}
     - name: {{ .Values.tls.certificateSecretName }}
       mountPath: /etc/clickhouse-server/certs/
+      readOnly: true
 {{- end }}
   imagePullPolicy: IfNotPresent
   securityContext:
@@ -200,6 +216,9 @@ Check if s3 storage is used for backups
 allowPrivilegeEscalation: false
 capabilities:
   drop: ["ALL"]
+readOnlyRootFilesystem: true
+seccompProfile:
+  type: "RuntimeDefault"
 {{- end -}}
 
 {{- define "clickhouse.globalPodSecurityContext" -}}

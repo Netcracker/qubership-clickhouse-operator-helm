@@ -18,6 +18,9 @@
 allowPrivilegeEscalation: false
 capabilities:
   drop: ["ALL"]
+readOnlyRootFilesystem: true
+seccompProfile:
+  type: "RuntimeDefault"
 {{- end -}}
 
 {{- define "clickhouse.globalPodSecurityContext" -}}
@@ -60,6 +63,7 @@ fsGroup: 101
     value: {{ .Values.backupDaemon.storage.s3.endpoint | quote }}
   - name: S3_BUCKET
     value: {{ .Values.backupDaemon.storage.s3.bucket | quote }}
+{{/*
   - name: S3_KEY_ID
     valueFrom:
       secretKeyRef:
@@ -70,6 +74,7 @@ fsGroup: 101
       secretKeyRef:
         name: s3-remote-storage-credentials
         key: secretAccessKey
+*/}}
 {{ end }}
 {{- end }}
 

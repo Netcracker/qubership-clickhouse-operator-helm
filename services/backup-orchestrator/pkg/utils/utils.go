@@ -92,18 +92,57 @@ func GetClusterName() string {
 	return os.Getenv("CLUSTER")
 }
 
-func GetClickhouseUserName() string {
-	if os.Getenv("CLICKHOUSE_USERNAME") == "" {
-		return "clickhouse"
+// func GetClickhouseUserName() string {
+// 	if os.Getenv("CLICKHOUSE_USERNAME") == "" {
+// 		return "clickhouse"
+// 	}
+// 	return os.Getenv("CLICKHOUSE_USERNAME")
+// }
+
+// func GetClusterPassword() string {
+// 	if os.Getenv("CLICKHOUSE_PASSWORD") == "" {
+// 		return "clickhouse"
+// 	}
+// 	return os.Getenv("CLICKHOUSE_PASSWORD")
+// }
+
+func readSecretFile(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
 	}
-	return os.Getenv("CLICKHOUSE_USERNAME")
+
+	return strings.TrimSpace(string(data))
+}
+
+func GetClickhouseUserName() string {
+	// Prefer file-based secret
+	if value := readSecretFile("/var/run/secrets/clickhouse/ch-credentials"); value != "" {
+		return value
+	}
+
+	// Fallback to env variable
+	if value := os.Getenv("CLICKHOUSE_USERNAME"); value != "" {
+		return value
+	}
+
+	// Default fallback
+	return "clickhouse"
 }
 
 func GetClusterPassword() string {
-	if os.Getenv("CLICKHOUSE_PASSWORD") == "" {
-		return "clickhouse"
+	// Prefer file-based secret
+	if value := readSecretFile("/var/run/secrets/dbaas/password"); value != "" {
+		return value
 	}
-	return os.Getenv("CLICKHOUSE_PASSWORD")
+
+	// Fallback to env variable
+	if value := os.Getenv("CLICKHOUSE_PASSWORD"); value != "" {
+		return value
+	}
+
+	// Default fallback
+	return "clickhouse"
 }
 
 func getTimeOut() int {

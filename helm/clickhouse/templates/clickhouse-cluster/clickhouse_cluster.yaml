@@ -223,6 +223,15 @@ spec:
                 secretName: {{ .Values.tls.certificateSecretName }}
                 defaultMode: 420
 {{- end }}
+            - name: ch-credentials
+              secret:
+                secretName: "{{ .Values.clickhouseOperator.credentialsToInstances.chCredentialsSecretName }}"
+                defaultMode: 420
+{{- if eq (include "clickhouse.isS3Enabled" .) "true" }}
+            - name: s3-remote-storage-credentials-ch-backup
+              secret:
+                secretName: s3-remote-storage-credentials-ch-backup
+{{- end }}
           affinity:
 {{ if .Values.clickhouseCluster.affinity }}
 {{ .Values.clickhouseCluster.affinity | toYaml | indent 12 }}
@@ -252,24 +261,28 @@ spec:
               image: {{ template "clickhouse.image" . }}
               imagePullPolicy: IfNotPresent
               env:
-                - name: CH_USER
-                  valueFrom:
-                    secretKeyRef:
-                      name: "{{ .Values.clickhouseOperator.credentialsToInstances.chCredentialsSecretName }}"
-                      key: "username"
-                - name: CH_PASSWORD
-                  valueFrom:
-                    secretKeyRef:
-                      name: "{{ .Values.clickhouseOperator.credentialsToInstances.chCredentialsSecretName }}"
-                      key: "password"
+                # - name: CH_USER
+                #   valueFrom:
+                #     secretKeyRef:
+                #       name: "{{ .Values.clickhouseOperator.credentialsToInstances.chCredentialsSecretName }}"
+                #       key: "username"
+                # - name: CH_PASSWORD
+                #   valueFrom:
+                #     secretKeyRef:
+                #       name: "{{ .Values.clickhouseOperator.credentialsToInstances.chCredentialsSecretName }}"
+                #       key: "password"
               volumeMounts:
                 - name: clickhouse-pvc
                   mountPath: /var/lib/clickhouse
                 - name: clickhouse-pvc
                   mountPath: /var/log/clickhouse-server
+                - name: ch-credentials
+                  mountPath: /var/run/secrets/clickhouse/ch-credentials
+                  readOnly: true
 {{- if or .Values.tls.enabled .Values.tls.zookeeper }}
                 - name: {{ .Values.tls.certificateSecretName }}
                   mountPath: /etc/clickhouse-server/certs/
+                  readOnly: true
 {{- end }}
               securityContext:
                 {{- include "clickhouse.globalContainerSecurityContext" . | nindent 16 }}
