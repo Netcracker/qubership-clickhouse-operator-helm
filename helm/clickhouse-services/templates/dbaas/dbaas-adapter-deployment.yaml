@@ -49,8 +49,6 @@ spec:
             secretName: {{ include "clickhouse.certServicesSecret" . }}
             defaultMode: 416
         {{- end }}
-	
-        # NEW: file-based secret projections
         - name: dbaas-user-credentials
           secret:
             secretName: nc-dbaas-user-credentials
@@ -126,7 +124,6 @@ spec:
               mountPath: /certs/
               readOnly: true
 {{- end }}
-            # NEW: file-based secret mounts
             - name: dbaas-user-credentials
               mountPath: /var/run/secrets/clickhouse/dbaas-user-credentials
               readOnly: true
@@ -226,8 +223,6 @@ spec:
               mountPath: /certs/
               readOnly: true
   {{- end }}
-		
-            # NEW: file-based secret mounts
             - name: dbaas-user-credentials
               mountPath: /var/run/secrets/clickhouse/dbaas-user-credentials
               readOnly: true

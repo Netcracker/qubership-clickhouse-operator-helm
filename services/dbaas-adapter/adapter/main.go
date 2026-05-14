@@ -66,16 +66,8 @@ var (
 	backupDaemonApiPass = flag.String("backup_daemon_api_pass", readSecretFile("/var/run/secrets/clickhouse/backup-daemon-api-credentials/password", ""), "Password of api clickhouse backup orchestrator ")
 
 	servePort = flag.Int("serve_port", 8080, "Port to serve requests incoming to adapter")
-	serveUser = flag.String(
-		"serve_user",
-		readSecretFile("/var/run/secrets/clickhouse/dbaas-adapter-credentials/username", "dbaas-aggregator"),
-		"Username to authorize incoming requests ",
-	)
-	servePass = flag.String(
-		"serve_pass",
-		readSecretFile("/var/run/secrets/clickhouse/dbaas-adapter-credentials/password", "dbaas-aggregator"),
-		"Password to authorize incoming requests ",
-	)
+	serveUser = flag.String("serve_user", readSecretFile("/var/run/secrets/clickhouse/dbaas-adapter-credentials/username", "dbaas-aggregator"), "Username to authorize incoming requests")
+	servePass = flag.String("serve_pass", readSecretFile("/var/run/secrets/clickhouse/dbaas-adapter-credentials/password", "dbaas-aggregator"), "Password to authorize incoming requests ")
 
 	phydbid = flag.String(
 		"phydbid",
@@ -95,17 +87,9 @@ var (
 		"Address in the form <scheme>://<host>:<port> to reach aggregator for registration, env DBAAS_AGGREGATOR_REGISTRATION_ADDRESS",
 	)
 
-	dbaasAggregatorRegistrationUsername = flag.String(
-		"registration_username",
-		coreUtils.GetEnv("DBAAS_AGGREGATOR_REGISTRATION_USERNAME", "cluster-dba"),
-		"Username of basic auth to reach aggregator for registration, env DBAAS_AGGREGATOR_REGISTRATION_USERNAME ",
-	)
+	dbaasAggregatorRegistrationUsername = flag.String("registration_username", readSecretFile("/var/run/secrets/clickhouse/dbaas-aggregator-registration-credentials/username", "cluster-dba"), "Username of basic auth to reach aggregator for registration")
 
-	dbaasAggregatorRegistrationPassword = flag.String(
-		"registration_password",
-		coreUtils.GetEnv("DBAAS_AGGREGATOR_REGISTRATION_PASSWORD", ""),
-		"Username of basic auth to reach aggregator for registration, env DBAAS_AGGREGATOR_REGISTRATION_PASSWORD ",
-	)
+	dbaasAggregatorRegistrationPassword = flag.String("registration_password", readSecretFile("/var/run/secrets/clickhouse/dbaas-aggregator-registration-credentials/password", ""), "Password of basic auth to reach aggregator for registration")
 
 	labelsFileName = flag.String(
 		"labels_file_location_name",
