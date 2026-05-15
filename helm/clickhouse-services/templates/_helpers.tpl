@@ -30,10 +30,10 @@ seccompProfile:
 {{- if .Values.securityContext }}
 {{ toYaml .Values.securityContext }}
 {{- else if not (.Capabilities.APIVersions.Has "apps.openshift.io/v1") }}
-runAsUser: 101
-fsGroup: 101
+runAsUser: 1001
+fsGroup: 1001
 {{- end -}}
-{{- end -}}
+{{- end -}}  
 
 {{- define "docker_ch_backup_orch.image" -}}
 {{- end -}}

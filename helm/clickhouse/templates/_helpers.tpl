@@ -228,6 +228,18 @@ seccompProfile:
 {{- if .Values.securityContext }}
 {{ toYaml .Values.securityContext }}
 {{- else if not (.Capabilities.APIVersions.Has "apps.openshift.io/v1") }}
+runAsUser: 1001
+fsGroup: 1001
+{{- end -}}
+{{- end -}}  
+
+{{- define "clickhouse-cluster.globalPodSecurityContext" -}}
+runAsNonRoot: true
+seccompProfile:
+  type: "RuntimeDefault"
+{{- if .Values.securityContext }}
+{{ toYaml .Values.securityContext }}
+{{- else if not (.Capabilities.APIVersions.Has "apps.openshift.io/v1") }}
 runAsUser: 101
 fsGroup: 101
 {{- end -}}
@@ -236,7 +248,6 @@ runAsUser: {{ .Values.INFRA_CLICKHOUSE_FS_GROUP }}
 fsGroup: {{ .Values.INFRA_CLICKHOUSE_FS_GROUP }}
 {{- end -}}
 {{- end -}}
-
 
 {{- define "clickhouse.storageClassName" -}}
   {{- if and (ne (.Values.STORAGE_RWO_CLASS | toString) "<nil>") .Values.global.cloudIntegrationEnabled -}}

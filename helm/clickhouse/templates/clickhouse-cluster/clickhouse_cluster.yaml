@@ -232,6 +232,8 @@ spec:
               secret:
                 secretName: s3-remote-storage-credentials-ch-backup
 {{- end }}
+            - name: tmp-storage
+              emptyDir: {}
           affinity:
 {{ if .Values.clickhouseCluster.affinity }}
 {{ .Values.clickhouseCluster.affinity | toYaml | indent 12 }}
@@ -284,6 +286,8 @@ spec:
                   mountPath: /etc/clickhouse-server/certs/
                   readOnly: true
 {{- end }}
+                - name: tmp-storage
+                  mountPath: /tmp
               securityContext:
                 {{- include "clickhouse.globalContainerSecurityContext" . | nindent 16 }}
                 {{- with .Values.clickhouseCluster.securityContext.container }}
@@ -299,7 +303,7 @@ spec:
               livenessProbe:
                 exec:
                   command:
-                    - /tmp/ping.sh
+                    - /usr/local/bin/ping.sh
                 initialDelaySeconds: 60
                 timeoutSeconds: 5
                 periodSeconds: 3
