@@ -37,5 +37,4 @@ clean:
 	rm -rf build/_output
 
 test:
-	git config --global url."https://${GH_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
 	go test -v ./...
