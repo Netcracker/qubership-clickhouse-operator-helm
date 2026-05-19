@@ -28,6 +28,7 @@ spec:
       prometheus/metrics: 'true'
       prometheus/port: '8888'
       distributed_ddl/path: {{ printf "/clickhouse/cluster_%s/task_queue/ddl" .Release.Namespace }}
+      distributed_ddl/replicas_path: {{ printf "/clickhouse/cluster_%s/task_queue/replicas" .Release.Namespace }} 
       # default values for data and log dirs
       path: /var/lib/clickhouse/data
       logger/log: /var/log/clickhouse-server/log/clickhouse-server.log
