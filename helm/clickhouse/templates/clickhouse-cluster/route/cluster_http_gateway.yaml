@@ -16,11 +16,7 @@ spec:
     port: {{ if .Values.tls.enabled }}443{{ else }}80{{ end }}
   hostnames: [{{ .Values.clickhouseCluster.ingressHttp.host | quote }}]
   rules:
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /
-    backendRefs:
+  - backendRefs:
     - name: clickhouse-{{ .Values.clickhouseCluster.name }}
       group: ""
       kind: Service
