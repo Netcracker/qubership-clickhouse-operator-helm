@@ -16,6 +16,10 @@ spec:
     port: 80
   hostnames: [{{ .Values.clickhouseCluster.ingressHttp.host | quote }}]
   rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
   - filters:
     - type: RequestRedirect
       requestRedirect:
