@@ -20,7 +20,7 @@ spec:
     - path:
         type: PathPrefix
         value: /
-  - backendRefs:
+    backendRefs:
     - name: clickhouse-{{ .Values.clickhouseCluster.name }}
       group: ""
       kind: Service
