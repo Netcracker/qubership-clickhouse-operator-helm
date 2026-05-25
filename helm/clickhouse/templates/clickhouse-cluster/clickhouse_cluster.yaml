@@ -251,7 +251,7 @@ spec:
 {{ .Values.tolerations | toYaml | indent 12 }}
 {{ end }}
           securityContext:
-            {{- include "clickhouse.globalPodSecurityContext" . | nindent 12 }}
+            {{- include "clickhouse-cluster.globalPodSecurityContext" . | nindent 12 }}
             {{- with .Values.clickhouseCluster.securityContext.pod }}
             {{- toYaml . | nindent 12 -}}
             {{- end }}
@@ -289,7 +289,7 @@ spec:
                 - name: tmp-storage
                   mountPath: /tmp
               securityContext:
-                {{- include "clickhouse.globalContainerSecurityContext" . | nindent 16 }}
+                {{- include "clickhouse-cluster.globalContainerSecurityContext" . | nindent 16 }}
                 {{- with .Values.clickhouseCluster.securityContext.container }}
                 {{- toYaml . | nindent 16 -}}
                 {{- end }}

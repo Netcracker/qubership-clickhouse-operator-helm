@@ -221,6 +221,14 @@ seccompProfile:
   type: "RuntimeDefault"
 {{- end -}}
 
+{{- define "clickhouse-cluster.globalContainerSecurityContext" -}}
+allowPrivilegeEscalation: false
+capabilities:
+  drop: ["ALL"]
+seccompProfile:
+  type: "RuntimeDefault"
+{{- end -}}
+
 {{- define "clickhouse.globalPodSecurityContext" -}}
 runAsNonRoot: true
 seccompProfile:
@@ -231,7 +239,11 @@ seccompProfile:
 runAsUser: 1001
 fsGroup: 1001
 {{- end -}}
-{{- end -}}  
+{{- if and (ne (.Values.INFRA_CLICKHOUSE_FS_GROUP	 | toString) "<nil>") .Values.global.cloudIntegrationEnabled }}
+runAsUser: {{ .Values.INFRA_CLICKHOUSE_FS_GROUP }}
+fsGroup: {{ .Values.INFRA_CLICKHOUSE_FS_GROUP }}
+{{- end -}}
+{{- end -}}
 
 {{- define "clickhouse-cluster.globalPodSecurityContext" -}}
 runAsNonRoot: true
@@ -248,6 +260,7 @@ runAsUser: {{ .Values.INFRA_CLICKHOUSE_FS_GROUP }}
 fsGroup: {{ .Values.INFRA_CLICKHOUSE_FS_GROUP }}
 {{- end -}}
 {{- end -}}
+
 
 {{- define "clickhouse.storageClassName" -}}
   {{- if and (ne (.Values.STORAGE_RWO_CLASS | toString) "<nil>") .Values.global.cloudIntegrationEnabled -}}
