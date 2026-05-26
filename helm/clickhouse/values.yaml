@@ -583,6 +583,7 @@ clickhouseCluster:
 #      crash_log_ttl: "1 DAY"
 #      text_log_ttl: "1 DAY"
 #      processors_profile_log_ttl: "1 DAY"
+#      query_views_log_ttl:  "1 DAY"
 
   ## Set of affinities that will be applied to clickhouse pods.
   # Type: object
