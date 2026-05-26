@@ -34,4 +34,3 @@ USER 1000:0
 # Expose the port
 EXPOSE 8080
 VOLUME ["${ROBOT_OUTPUT}"]
-
