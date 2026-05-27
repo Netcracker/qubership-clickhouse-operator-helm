@@ -59,7 +59,7 @@
     - name: CLICKHOUSE_BACKUP_CONFIG
       value: /backup-config/clickhouse-backup-config.yaml
     {{ if eq (include "clickhouse.isS3Enabled" .) "true" }}
-      - name: ALLOW_EMPTY_BACKUPS
+    - name: ALLOW_EMPTY_BACKUPS
       value: 'true'
     {{ end }}
 {{- range $key, $val := .Values.backupDaemon.envs }}
