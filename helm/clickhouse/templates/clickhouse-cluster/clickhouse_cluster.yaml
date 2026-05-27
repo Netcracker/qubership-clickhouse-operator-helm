@@ -261,16 +261,6 @@ spec:
               image: {{ template "clickhouse.image" . }}
               imagePullPolicy: IfNotPresent
               env:
-                # - name: CH_USER
-                #   valueFrom:
-                #     secretKeyRef:
-                #       name: "{{ .Values.clickhouseOperator.credentialsToInstances.chCredentialsSecretName }}"
-                #       key: "username"
-                # - name: CH_PASSWORD
-                #   valueFrom:
-                #     secretKeyRef:
-                #       name: "{{ .Values.clickhouseOperator.credentialsToInstances.chCredentialsSecretName }}"
-                #       key: "password"
               volumeMounts:
                 - name: clickhouse-pvc
                   mountPath: /var/lib/clickhouse

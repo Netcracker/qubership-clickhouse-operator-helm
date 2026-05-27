@@ -92,20 +92,6 @@ func GetClusterName() string {
 	return os.Getenv("CLUSTER")
 }
 
-// func GetClickhouseUserName() string {
-// 	if os.Getenv("CLICKHOUSE_USERNAME") == "" {
-// 		return "clickhouse"
-// 	}
-// 	return os.Getenv("CLICKHOUSE_USERNAME")
-// }
-
-// func GetClusterPassword() string {
-// 	if os.Getenv("CLICKHOUSE_PASSWORD") == "" {
-// 		return "clickhouse"
-// 	}
-// 	return os.Getenv("CLICKHOUSE_PASSWORD")
-// }
-
 func readSecretFile(path string) string {
 	data, err := os.ReadFile(path)
 	if err != nil {

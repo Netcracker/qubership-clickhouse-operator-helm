@@ -51,8 +51,6 @@ var (
 
 	chHost = flag.String("ch_host", coreUtils.GetEnv("CLICKHOUSE_HOST", "chi-cluster-replicated-0-0.click-aliv.svc"), "Host of clickhouse cluster, env: CLICKHOUSE_HOST")
 	chPort = flag.Int("ch_port", coreUtils.GetEnvAsInt("CLICKHOUSE_PORT", 9000), "Port of clickhouse cluster, env: CLICKHOUSE_PORT")
-	// chUser = flag.String("ch_user", coreUtils.GetEnv("CLICKHOUSE_USERNAME", "clickhouse_operator"), "Username of dbaas user in clickhouse, env: CLICKHOUSE_USERNAME")
-	// chPass = flag.String("ch_pass", coreUtils.GetEnv("CLICKHOUSE_PASSWORD", "clickhouse_operator_password"), "Password of dbaas user in clickhouse, env: CLICKHOUSE_PASSWORD")
 	chUser                  = flag.String("ch_user", readSecretFile("/var/run/secrets/clickhouse/dbaas-user-credentials/username", "clickhouse_operator"), "Username of dbaas user in clickhouse")
 	chPass                  = flag.String("ch_pass", readSecretFile("/var/run/secrets/clickhouse/dbaas-user-credentials/password", "clickhouse_operator_password"), "Password of dbaas user in clickhouse")
 	chSsl                   = flag.Bool("ch_ssl", coreUtils.GetEnvAsBool("CLICKHOUSE_SSL", false), "Enable ssl connection to clickhouse, env: CLICKHOUSE_SSL")

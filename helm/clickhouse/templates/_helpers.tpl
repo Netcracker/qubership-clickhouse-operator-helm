@@ -58,32 +58,6 @@
     {{ end }}
     - name: CLICKHOUSE_BACKUP_CONFIG
       value: /backup-config/clickhouse-backup-config.yaml
-{{/*
-    - name: CLICKHOUSE_USERNAME
-      valueFrom:
-        secretKeyRef:
-          name: "{{ .Values.clickhouseOperator.credentialsToInstances.chCredentialsSecretName }}"
-          key: username
-    - name: CLICKHOUSE_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: "{{ .Values.clickhouseOperator.credentialsToInstances.chCredentialsSecretName }}"
-          key: password
-    {{ if eq (include "clickhouse.isS3Enabled" .) "true" }}
-    - name: S3_ACCESS_KEY
-      valueFrom:
-        secretKeyRef:
-          name: "s3-remote-storage-credentials-ch-backup"
-          key: accessKeyId
-    - name: ALLOW_EMPTY_BACKUPS
-      value: 'true'
-    - name: S3_SECRET_KEY
-      valueFrom:
-        secretKeyRef:
-          name: "s3-remote-storage-credentials-ch-backup"
-          key: secretAccessKey
-    {{ end }}
-*/}}
     {{ if eq (include "clickhouse.isS3Enabled" .) "true" }}
       - name: ALLOW_EMPTY_BACKUPS
       value: 'true'

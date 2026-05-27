@@ -97,18 +97,6 @@ spec:
             - name: TIMEOUT
               value: {{ .Values.backupDaemon.timeout | quote }}
             {{- include "clickhouse_backup.envs" . | nindent 10 }}
-# {{- if and .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsUsername }}
-#             - name: BACKUP_DAEMON_API_CREDENTIALS_USERNAME
-#               valueFrom:
-#                 secretKeyRef:
-#                   name: backup-daemon-api-credentials
-#                   key: username
-#             - name: BACKUP_DAEMON_API_CREDENTIALS_PASSWORD
-#               valueFrom:
-#                 secretKeyRef:
-#                   name: backup-daemon-api-credentials
-#                   key: password
-# {{- end }}
           resources:
 {{ toYaml .Values.backupDaemon.orchestrator.resources | indent 12 }}
           volumeMounts:
@@ -121,6 +109,7 @@ spec:
 {{- if and .Values.tls.enabled }}
             - name: {{ include "clickhouse.certServicesSecret" . }}
               mountPath: {{ default "/tls/" }}
+              readonly: true
 {{- end }}
 {{- if and .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsUsername }}
             - name: backup-daemon-api-credentials

@@ -58,10 +58,12 @@ spec:
         - name: dbaas-aggregator-registration-credentials
           secret:
             secretName: nc-dbaas-aggregator-registration-credentials
+{{- if .Values.backupDaemon.install }}           
 {{- if and .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsUsername }}
         - name: backup-daemon-api-credentials
           secret:
             secretName: backup-daemon-api-credentials
+{{- end }}
 {{- end }}
 {{- if or .Values.dbaas.migrateRoles (gt (int .Values.clickhouseCluster.shardsCount) 1) }}
       initContainers:
@@ -76,16 +78,6 @@ spec:
               value: {{ default (printf "clickhouse-cluster.%s" .Release.Namespace) .Values.dbaas.chHost }}
             - name: CLICKHOUSE_PORT
               value: {{ default "9000" .Values.dbaas.chPort | quote }}
-            # - name: CLICKHOUSE_USERNAME
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: nc-dbaas-user-credentials
-            #       key: username
-            # - name: CLICKHOUSE_PASSWORD
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: nc-dbaas-user-credentials
-            #       key: password
             {{- if gt (int .Values.clickhouseCluster.shardsCount) 1 }}   
             - name: REPLICATED_USER_STORAGE
               value: "true"
@@ -102,20 +94,6 @@ spec:
             {{- end }}
             - name: MULTI_USERS_ENABLED
               value: {{ default "false" .Values.dbaas.multiUsers | quote }}
-{{- if .Values.backupDaemon.install }}
-# {{- if and .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsUsername }}
-#             - name: BACKUP_DAEMON_API_CREDENTIALS_USERNAME
-#               valueFrom:
-#                 secretKeyRef:
-#                   name: backup-daemon-api-credentials
-#                   key: username
-#             - name: BACKUP_DAEMON_API_CREDENTIALS_PASSWORD
-#               valueFrom:
-#                 secretKeyRef:
-#                   name: backup-daemon-api-credentials
-#                   key: password
-# {{- end }}
-{{- end }}
           resources:
 {{ toYaml .Values.dbaas.resources | indent 12 }}
           volumeMounts:
@@ -133,10 +111,12 @@ spec:
             - name: dbaas-aggregator-registration-credentials
               mountPath: /var/run/secrets/clickhouse/dbaas-aggregator-registration-credentials
               readOnly: true
+{{- if .Values.backupDaemon.install }}             
 {{- if and .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsUsername }}
             - name: backup-daemon-api-credentials
               mountPath: /var/run/secrets/clickhouse/backup-daemon-api-credentials
               readOnly: true
+{{- end }}             
 {{- end }}  
           securityContext:
             {{- include "clickhouse.globalContainerSecurityContext" . | nindent 12 }}
@@ -161,40 +141,10 @@ spec:
               value: {{ default (printf "http://nc-dbaas-clickhouse-adapter.%s:8080" .Release.Namespace) .Values.dbaas.adapter.address }}
             - name: DBAAS_AGGREGATOR_REGISTRATION_ADDRESS
               value: {{ .Values.dbaas.aggregator.registrationAddress | default "http://dbaas-aggregator.dbaas:8080"  }}
-            # - name: DBAAS_AGGREGATOR_REGISTRATION_USERNAME
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: nc-dbaas-aggregator-registration-credentials
-            #       key: username
-            # - name: DBAAS_AGGREGATOR_REGISTRATION_PASSWORD
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: nc-dbaas-aggregator-registration-credentials
-            #       key: password
             - name: CLICKHOUSE_HOST
               value: {{ default (printf "clickhouse-cluster.%s" .Release.Namespace) .Values.dbaas.chHost }}
             - name: CLICKHOUSE_PORT
               value: {{ default "9000" .Values.dbaas.chPort | quote }}
-            # - name: CLICKHOUSE_USERNAME
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: nc-dbaas-user-credentials
-            #       key: username
-            # - name: CLICKHOUSE_PASSWORD
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: nc-dbaas-user-credentials
-            #       key: password
-            # - name: DBAAS_ADAPTER_API_USER
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: nc-dbaas-adapter-credentials
-            #       key: username
-            # - name: DBAAS_ADAPTER_API_PASSWORD
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: nc-dbaas-adapter-credentials
-            #       key: password
             - name: DBAAS_AGGREGATOR_PHYSICAL_DATABASE_IDENTIFIER
               value: {{ .Values.dbaas.aggregator.physicalDatabaseIdentifier | default (printf "%s:%s" .Release.Namespace "clickhouse")}}
             {{- if gt (int .Values.clickhouseCluster.shardsCount) 1 }}   
