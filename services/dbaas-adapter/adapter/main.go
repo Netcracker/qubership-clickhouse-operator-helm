@@ -300,12 +300,14 @@ func setTLSConfig() *tls.Config {
 func readSecretFile(path string, defaultVal string) string {
 	data, err := os.ReadFile(path)
 	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to read secret file %s: %v", path, err))
 		return defaultVal
 	}
 
 	value := strings.TrimSpace(string(data))
 
 	if value == "" {
+		logger.Info(fmt.Sprintf("Secret file %s is empty, using default value", path))
 		return defaultVal
 	}
 
