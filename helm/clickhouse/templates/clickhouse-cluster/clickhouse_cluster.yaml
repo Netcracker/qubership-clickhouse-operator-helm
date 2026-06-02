@@ -249,7 +249,7 @@ spec:
 {{ .Values.tolerations | toYaml | indent 12 }}
 {{ end }}
           securityContext:
-            {{- include "clickhouse-cluster.globalPodSecurityContext" . | nindent 12 }}
+            {{- include "clickhouse.globalPodSecurityContext" . | nindent 12 }}
             {{- with .Values.clickhouseCluster.securityContext.pod }}
             {{- toYaml . | nindent 12 -}}
             {{- end }}
