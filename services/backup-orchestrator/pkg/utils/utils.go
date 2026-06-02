@@ -46,6 +46,12 @@ var (
 	log        = GetLogger()
 )
 
+const (
+	chCredentialsBasePath     = "/var/run/secrets/clickhouse/ch-credentials/"
+	defaultClickhouseUser     = "clickhouse"
+	defaultClickhousePassword = "clickhouse"
+)
+
 func GetClient() (client.Client, error) {
 	if k8sClient == nil {
 		crclient, err := createClient()
@@ -92,18 +98,32 @@ func GetClusterName() string {
 	return os.Getenv("CLUSTER")
 }
 
-func GetClickhouseUserName() string {
-	if os.Getenv("CLICKHOUSE_USERNAME") == "" {
-		return "clickhouse"
+func readSecretFile(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		log.Error(fmt.Sprintf("Failed to read secret file %s: %v", path, err))
+		return ""
 	}
-	return os.Getenv("CLICKHOUSE_USERNAME")
+
+	return strings.TrimSpace(string(data))
+}
+
+func GetClickhouseUserName() string {
+	// Read username from mounted secret file
+	if value := readSecretFile(chCredentialsBasePath + "username"); value != "" {
+		return value
+	}
+	// Default fallback
+	return defaultClickhouseUser
 }
 
 func GetClusterPassword() string {
-	if os.Getenv("CLICKHOUSE_PASSWORD") == "" {
-		return "clickhouse"
+	// Read password from mounted secret file
+	if value := readSecretFile(chCredentialsBasePath + "password"); value != "" {
+		return value
 	}
-	return os.Getenv("CLICKHOUSE_PASSWORD")
+	// Default fallback
+	return defaultClickhousePassword
 }
 
 func getTimeOut() int {

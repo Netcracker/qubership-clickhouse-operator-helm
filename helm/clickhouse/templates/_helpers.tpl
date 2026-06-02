@@ -58,29 +58,9 @@
     {{ end }}
     - name: CLICKHOUSE_BACKUP_CONFIG
       value: /backup-config/clickhouse-backup-config.yaml
-    - name: CLICKHOUSE_USERNAME
-      valueFrom:
-        secretKeyRef:
-          name: "{{ .Values.clickhouseOperator.credentialsToInstances.chCredentialsSecretName }}"
-          key: username
-    - name: CLICKHOUSE_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: "{{ .Values.clickhouseOperator.credentialsToInstances.chCredentialsSecretName }}"
-          key: password
     {{ if eq (include "clickhouse.isS3Enabled" .) "true" }}
-    - name: S3_ACCESS_KEY
-      valueFrom:
-        secretKeyRef:
-          name: "s3-remote-storage-credentials-ch-backup"
-          key: accessKeyId
     - name: ALLOW_EMPTY_BACKUPS
       value: 'true'
-    - name: S3_SECRET_KEY
-      valueFrom:
-        secretKeyRef:
-          name: "s3-remote-storage-credentials-ch-backup"
-          key: secretAccessKey
     {{ end }}
 {{- range $key, $val := .Values.backupDaemon.envs }}
     - name: {{ $key }}
@@ -97,6 +77,15 @@
 {{- if and .Values.tls.enabled }}
     - name: {{ .Values.tls.certificateSecretName }}
       mountPath: /etc/clickhouse-server/certs/
+      readOnly: true
+{{- end }}
+    - name: ch-credentials
+      mountPath: /var/run/secrets/clickhouse/ch-credentials
+      readOnly: true
+{{- if eq (include "clickhouse.isS3Enabled" .) "true" }}
+    - name: s3-remote-storage-credentials-ch-backup
+      mountPath: /var/run/secrets/clickhouse/s3-remote-storage-credentials-ch-backup
+      readOnly: true
 {{- end }}
   imagePullPolicy: IfNotPresent
   livenessProbe:
@@ -150,6 +139,7 @@
 {{- if and .Values.tls.enabled }}
     - name: {{ .Values.tls.certificateSecretName }}
       mountPath: /etc/clickhouse-server/certs/
+      readOnly: true
 {{- end }}
   imagePullPolicy: IfNotPresent
   securityContext:
@@ -200,6 +190,17 @@ Check if s3 storage is used for backups
 allowPrivilegeEscalation: false
 capabilities:
   drop: ["ALL"]
+readOnlyRootFilesystem: true
+seccompProfile:
+  type: "RuntimeDefault"
+{{- end -}}
+
+{{- define "clickhouse-cluster.globalContainerSecurityContext" -}}
+allowPrivilegeEscalation: false
+capabilities:
+  drop: ["ALL"]
+seccompProfile:
+  type: "RuntimeDefault"
 {{- end -}}
 
 {{- define "clickhouse.globalPodSecurityContext" -}}
@@ -217,7 +218,6 @@ runAsUser: {{ .Values.INFRA_CLICKHOUSE_FS_GROUP }}
 fsGroup: {{ .Values.INFRA_CLICKHOUSE_FS_GROUP }}
 {{- end -}}
 {{- end -}}
-
 
 {{- define "clickhouse.storageClassName" -}}
   {{- if and (ne (.Values.STORAGE_RWO_CLASS | toString) "<nil>") .Values.global.cloudIntegrationEnabled -}}

@@ -42,6 +42,13 @@ import (
 const (
 	appName = "clickhouse"
 	appPath = "/" + appName
+
+	secretsBasePath = "/var/run/secrets/clickhouse/"
+
+	dbaasUserCredsPath    = secretsBasePath + "dbaas-user-credentials/"
+	backupDaemonCredsPath = secretsBasePath + "backup-daemon-api-credentials/"
+	adapterCredsPath      = secretsBasePath + "dbaas-adapter-credentials/"
+	registrationCredsPath = secretsBasePath + "dbaas-aggregator-registration-credentials/"
 )
 
 var (
@@ -51,8 +58,8 @@ var (
 
 	chHost                  = flag.String("ch_host", coreUtils.GetEnv("CLICKHOUSE_HOST", "chi-cluster-replicated-0-0.click-aliv.svc"), "Host of clickhouse cluster, env: CLICKHOUSE_HOST")
 	chPort                  = flag.Int("ch_port", coreUtils.GetEnvAsInt("CLICKHOUSE_PORT", 9000), "Port of clickhouse cluster, env: CLICKHOUSE_PORT")
-	chUser                  = flag.String("ch_user", coreUtils.GetEnv("CLICKHOUSE_USERNAME", "clickhouse_operator"), "Username of dbaas user in clickhouse, env: CLICKHOUSE_USERNAME")
-	chPass                  = flag.String("ch_pass", coreUtils.GetEnv("CLICKHOUSE_PASSWORD", "clickhouse_operator_password"), "Password of dbaas user in clickhouse, env: CLICKHOUSE_PASSWORD")
+	chUser                  = flag.String("ch_user", readSecretFile(dbaasUserCredsPath+"username", "clickhouse_operator"), "Username of dbaas user in clickhouse")
+	chPass                  = flag.String("ch_pass", readSecretFile(dbaasUserCredsPath+"password", "clickhouse_operator_password"), "Password of dbaas user in clickhouse")
 	chSsl                   = flag.Bool("ch_ssl", coreUtils.GetEnvAsBool("CLICKHOUSE_SSL", false), "Enable ssl connection to clickhouse, env: CLICKHOUSE_SSL")
 	isMultiUsersEnabled     = flag.Bool("multi_users_enabled", coreUtils.GetEnvAsBool("MULTI_USERS_ENABLED", false), "Is multi Users functionality enabled, env: MULTI_USERS_ENABLED")
 	isReplicatedUserStorage = flag.Bool("replicated_user_storage", coreUtils.GetEnvAsBool("REPLICATED_USER_STORAGE", false), "Is replicated storage used for users, env: REPLICATED_USER_STORAGE")
@@ -60,20 +67,12 @@ var (
 	chDatabase              = flag.String("ch_database", coreUtils.GetEnv("CLICKHOUSE_DATABASE", "system"), "Clickhouse database, env: CLICKHOUSE_DATABASE")
 
 	backupAddress       = flag.String("backup_address", coreUtils.GetEnv("BACKUP_DAEMON_ADDRESS", "http://clickhouse-backup-orchestrator:8080"), "Address of clickhouse backup orchestrator, env: BACKUP_DAEMON_ADDRESS")
-	backupDaemonApiUser = flag.String("backup_daemon_api_user", coreUtils.GetEnv("BACKUP_DAEMON_API_CREDENTIALS_USERNAME", ""), "Username of api clickhouse backup orchestrator, env: BACKUP_DAEMON_API_CREDENTIALS_USERNAME")
-	backupDaemonApiPass = flag.String("backup_daemon_api_pass", coreUtils.GetEnv("BACKUP_DAEMON_API_CREDENTIALS_PASSWORD", ""), "Password of api clickhouse backup orchestrator, env: BACKUP_DAEMON_API_CREDENTIALS_PASSWORD")
+	backupDaemonApiUser = flag.String("backup_daemon_api_user", readSecretFile(backupDaemonCredsPath+"username", ""), "Username of api clickhouse backup orchestrator ")
+	backupDaemonApiPass = flag.String("backup_daemon_api_pass", readSecretFile(backupDaemonCredsPath+"password", ""), "Password of api clickhouse backup orchestrator ")
 
 	servePort = flag.Int("serve_port", 8080, "Port to serve requests incoming to adapter")
-	serveUser = flag.String(
-		"serve_user",
-		coreUtils.GetEnv("DBAAS_ADAPTER_API_USER", "dbaas-aggregator"),
-		"Username to authorize incoming requests, env: DBAAS_ADAPTER_API_USER",
-	)
-	servePass = flag.String(
-		"serve_pass",
-		coreUtils.GetEnv("DBAAS_ADAPTER_API_PASSWORD", "dbaas-aggregator"),
-		"Password to authorize incoming requests, env: DBAAS_ADAPTER_API_PASSWORD",
-	)
+	serveUser = flag.String("serve_user", readSecretFile(adapterCredsPath+"username", "dbaas-aggregator"), "Username to authorize incoming requests")
+	servePass = flag.String("serve_pass", readSecretFile(adapterCredsPath+"password", "dbaas-aggregator"), "Password to authorize incoming requests ")
 
 	phydbid = flag.String(
 		"phydbid",
@@ -93,17 +92,9 @@ var (
 		"Address in the form <scheme>://<host>:<port> to reach aggregator for registration, env DBAAS_AGGREGATOR_REGISTRATION_ADDRESS",
 	)
 
-	dbaasAggregatorRegistrationUsername = flag.String(
-		"registration_username",
-		coreUtils.GetEnv("DBAAS_AGGREGATOR_REGISTRATION_USERNAME", "cluster-dba"),
-		"Username of basic auth to reach aggregator for registration, env DBAAS_AGGREGATOR_REGISTRATION_USERNAME ",
-	)
+	dbaasAggregatorRegistrationUsername = flag.String("registration_username", readSecretFile(registrationCredsPath+"username", "cluster-dba"), "Username of basic auth to reach aggregator for registration")
 
-	dbaasAggregatorRegistrationPassword = flag.String(
-		"registration_password",
-		coreUtils.GetEnv("DBAAS_AGGREGATOR_REGISTRATION_PASSWORD", ""),
-		"Username of basic auth to reach aggregator for registration, env DBAAS_AGGREGATOR_REGISTRATION_PASSWORD ",
-	)
+	dbaasAggregatorRegistrationPassword = flag.String("registration_password", readSecretFile(registrationCredsPath+"password", ""), "Password of basic auth to reach aggregator for registration")
 
 	labelsFileName = flag.String(
 		"labels_file_location_name",
@@ -304,4 +295,21 @@ func setTLSConfig() *tls.Config {
 		RootCAs:      caCertPool,
 	}
 	return tlsConfig
+}
+
+func readSecretFile(path string, defaultVal string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to read secret file %s: %v", path, err))
+		return defaultVal
+	}
+
+	value := strings.TrimSpace(string(data))
+
+	if value == "" {
+		logger.Info(fmt.Sprintf("Secret file %s is empty, using default value", path))
+		return defaultVal
+	}
+
+	return value
 }

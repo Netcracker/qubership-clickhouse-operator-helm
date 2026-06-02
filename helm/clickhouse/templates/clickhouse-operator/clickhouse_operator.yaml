@@ -89,6 +89,7 @@ spec:
             {{- if and .Values.tls.enabled }}
             - name: {{ .Values.tls.certificateSecretName }}
               mountPath:  /tls/
+              readOnly: true
             {{- end }}
           env:
             - name: OPERATOR_POD_NODE_NAME
@@ -160,6 +161,7 @@ spec:
 {{- if and .Values.tls.enabled }}
             - name: {{ .Values.tls.certificateSecretName }}
               mountPath: /tls/
+              readOnly: true
 {{- end }}
           resources:
             requests:
