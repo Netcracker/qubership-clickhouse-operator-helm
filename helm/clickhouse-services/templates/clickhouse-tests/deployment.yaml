@@ -76,6 +76,8 @@ spec:
           volumeMounts:
             - name: output
               mountPath: /opt/robot/output
+            - name: tmp
+              mountPath: /tmp
             - name: clickhouse-integration-tests-secret
               mountPath: /var/run/secrets/clickhouse/clickhouse-integration-tests-secret
               readOnly: true
@@ -109,6 +111,8 @@ spec:
       serviceAccountName: clickhouse-integration-tests
       volumes:
         - name: output
+          emptyDir: { }
+        - name: tmp
           emptyDir: { }
         - name: clickhouse-integration-tests-secret
           secret:
