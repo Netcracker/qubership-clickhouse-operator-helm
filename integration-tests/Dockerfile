@@ -1,4 +1,4 @@
-FROM ghcr.io/netcracker/qubership-docker-integration-tests:0.4.2
+FROM ghcr.io/netcracker/qubership-docker-integration-tests:0.5.2
 ENV ROBOT_OUTPUT=${ROBOT_HOME}/output \
     DISTR_DIR=/tmp/deps \
     SERVICE_CHECKER_SCRIPT=${ROBOT_HOME}/clickhouse_pods_checker.py \
@@ -21,6 +21,8 @@ RUN set -x && apk upgrade --no-cache --available \
     && apk add --no-cache build-base python3-dev
 
 RUN set -x \
+    && pip3 install --no-cache-dir --upgrade pip setuptools wheel \
+    && pip3 install --no-cache-dir cython \
     && pip3 install -r ${ROBOT_HOME}/requirements.txt \
     && rm -rf /var/cache/apk/*
 
