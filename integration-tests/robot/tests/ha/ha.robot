@@ -10,6 +10,7 @@ ${TABLE}                                ha_table
 
 *** Keywords ***
 Setup
+    Load Clickhouse Secrets
     Backup-orchestrator session
     Create Database  ${DATABASE}
     Create Table  ${DATABASE}  ${TABLE}

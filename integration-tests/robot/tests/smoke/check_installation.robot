@@ -4,6 +4,7 @@ ${TABLE}                                test_insert_robot1
 
 *** Settings ***
 Resource            ../Lib/lib.robot
+Suite Setup         Load Clickhouse Secrets
 
 *** Test Cases ***
 Check Status Of Pods

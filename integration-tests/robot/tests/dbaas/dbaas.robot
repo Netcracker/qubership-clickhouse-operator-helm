@@ -1,6 +1,7 @@
 *** Settings ***
 Resource          ../dbaas/keywords.robot
 Resource            ../Lib/lib.robot
+Suite Setup       Load Clickhouse Secrets
 Test Setup        Prepare Dbaas Adapter
 
 *** Variables ***
