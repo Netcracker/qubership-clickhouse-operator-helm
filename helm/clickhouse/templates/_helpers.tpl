@@ -74,6 +74,8 @@
       mountPath: /backup-config
     - name: clickhouse-pvc
       mountPath: /var/lib/clickhouse
+    - name: tmp
+      mountPath: /tmp
 {{- if and .Values.tls.enabled }}
     - name: {{ .Values.tls.certificateSecretName }}
       mountPath: /etc/clickhouse-server/certs/
@@ -132,6 +134,8 @@
   volumeMounts:
     - name: clickhouse-pvc
       mountPath: /var/lib/clickhouse
+    - name: tmp
+      mountPath: /tmp
 {{ if hasKey .Values.backupDaemon.storage "nfs" }}
     - name: clickhouse-backup-pvc
       mountPath: /nfsbackups

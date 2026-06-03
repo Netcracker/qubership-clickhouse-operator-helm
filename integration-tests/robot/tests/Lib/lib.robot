@@ -1,14 +1,15 @@
 *** Variables ***
 ${CLICKHOUSE_HOST}                      %{CLICKHOUSE_HOST}
 ${CLICKHOUSE_PORT}                      %{CLICKHOUSE_PORT}
-${CLICKHOUSE_USER}                      %{CLICKHOUSE_USER}
-${CLICKHOUSE_PASSWORD}                  %{CLICKHOUSE_PASSWORD}
+${CLICKHOUSE_USER}                      ${EMPTY}
+${CLICKHOUSE_PASSWORD}                  ${EMPTY}
 ${NAMESPACE}                            %{NAMESPACE}
 ${CLICKHOUSE_BACKUP_HOST}               %{CLICKHOUSE_BACKUP_HOST}
 ${CLICKHOUSE_BACKUP_PORT}               %{CLICKHOUSE_BACKUP_PORT}
 ${TLS_ENABLED}                          %{TLS_ENABLED}
 ${RETRY_TIME}                           120s
 ${RETRY_INTERVAL}                       5s
+${SECRET_DIR}                           /var/run/secrets/clickhouse/clickhouse-integration-tests-secret
 
 *** Settings ***
 Documentation     Lib
@@ -18,13 +19,30 @@ Library           OperatingSystem
 Library           String
 Library           RequestsLibrary
 Library           ../Lib/ClickhouseLibrary.py  ch_host=${CLICKHOUSE_HOST}
-...                                            ch_user=${CLICKHOUSE_USER}
-...                                            ch_password=${CLICKHOUSE_PASSWORD}
 ...                                            ch_port=${CLICKHOUSE_PORT}
 Library           PlatformLibrary  managed_by_operator=true
 
 
 *** Keywords ***
+Get Secret Or Env
+    [Arguments]    ${env_name}    ${file_path}
+    ${value}=    Get Environment Variable    ${env_name}    default=${EMPTY}
+    IF    not $value
+        ${value}=    Get File    ${file_path}
+        ${value}=    Strip String    ${value}
+    END
+    RETURN    ${value}
+
+Load Clickhouse Secrets
+    ${user}=        Get Secret Or Env
+    ...    CLICKHOUSE_USER
+    ...    ${SECRET_DIR}/clickhouse_user
+    ${password}=    Get Secret Or Env
+    ...    CLICKHOUSE_PASSWORD
+    ...    ${SECRET_DIR}/clickhouse_password
+    Set Suite Variable    ${CLICKHOUSE_USER}      ${user}
+    Set Suite Variable    ${CLICKHOUSE_PASSWORD}  ${password}
+
 Create Database
     [Arguments]  ${db_name}
     Execute Query  create database IF NOT EXISTS "${db_name}" on cluster '{cluster}'

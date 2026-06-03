@@ -3,8 +3,6 @@ Library           RequestsLibrary
 Library           Collections
 Library           PlatformLibrary  managed_by_operator=true
 Library           ../Lib/ClickhouseLibrary.py  ch_host=${CLICKHOUSE_HOST}
-...                                            ch_user=${CLICKHOUSE_USER}
-...                                            ch_password=${CLICKHOUSE_PASSWORD}
 ...                                            ch_port=${CLICKHOUSE_PORT}
 
 *** Variables ***
@@ -12,8 +10,6 @@ ${DBAAS_ADAPTER_HOST}                  nc-dbaas-clickhouse-adapter
 ${DBAAS_ADAPTER_PORT}                  8080
 ${CLICKHOUSE_HOST}                      %{CLICKHOUSE_HOST}
 ${CLICKHOUSE_PORT}                      %{CLICKHOUSE_PORT}
-${CLICKHOUSE_USER}                      %{CLICKHOUSE_USER}
-${CLICKHOUSE_PASSWORD}                  %{CLICKHOUSE_PASSWORD}
 ${NAMESPACE}                            %{NAMESPACE}
 ${CLICKHOUSE_BACKUP_HOST}               %{CLICKHOUSE_BACKUP_HOST}
 ${CLICKHOUSE_BACKUP_PORT}               %{CLICKHOUSE_BACKUP_PORT}

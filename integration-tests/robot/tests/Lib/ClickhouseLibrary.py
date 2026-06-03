@@ -15,20 +15,33 @@
 import clickhouse_connect
 import logging
 import base64
+import os
 from robot.api.deco import keyword
 from PlatformLibrary import PlatformLibrary
 
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
+_SECRET_DIR = "/var/run/secrets/clickhouse/clickhouse-integration-tests-secret"
+
+
+def _read_secret(env_name, file_path):
+    value = os.environ.get(env_name, "")
+    if not value:
+        with open(file_path) as f:
+            value = f.read().strip()
+    return value
+
 
 class ClickhouseLibrary(object):
 
-    def __init__(self, ch_host, ch_user, ch_password, ch_port=8123):
+    def __init__(self, ch_host, ch_port=8123, ch_secret_path=_SECRET_DIR):
         self.ch_host = ch_host
         self.ch_port = ch_port
-        self.ch_user = ch_user
-        self.ch_password = ch_password
+        self.ch_user = _read_secret(
+            "CLICKHOUSE_USER", os.path.join(ch_secret_path, "clickhouse_user"))
+        self.ch_password = _read_secret(
+            "CLICKHOUSE_PASSWORD", os.path.join(ch_secret_path, "clickhouse_password"))
         self.pl_lib = PlatformLibrary(managed_by_operator="true")
 
     @keyword('Execute Query')
