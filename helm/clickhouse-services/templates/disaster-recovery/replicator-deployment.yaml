@@ -140,7 +140,7 @@ spec:
         - name: s3-credentials
           secret:
             secretName: s3-replicator-remote-storage-credentials
-            defaultMode: 420
+            defaultMode: 256
       {{- if and .Values.tls .Values.tls.enabled }}
         - name: {{ include "clickhouse.certServicesSecret" . }}
           secret:
