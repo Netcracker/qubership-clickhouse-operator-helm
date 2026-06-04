@@ -234,7 +234,6 @@ spec:
             - name: s3-remote-storage-credentials-ch-backup
               secret:
                 secretName: s3-remote-storage-credentials-ch-backup
-                defaultMode: 256
 {{- end }}
           affinity:
 {{ if .Values.clickhouseCluster.affinity }}
