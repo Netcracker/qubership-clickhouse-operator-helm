@@ -100,6 +100,7 @@ spec:
   {{- if .Values.tls.enabled }}
             - name: {{ include "clickhouse.certServicesSecret" . }}
               mountPath: {{ default "/tls/" }}
+              readOnly: true
   {{- end }}            
       serviceAccountName: {{ .Values.clickhouseOperator.serviceAccountName }}
       volumes:
