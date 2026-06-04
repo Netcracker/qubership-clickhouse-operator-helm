@@ -43,11 +43,13 @@ spec:
         - name: backup-daemon-api-credentials
           secret:
             secretName: backup-daemon-api-credentials
+            defaultMode: 256
 {{- end }}
 {{- if eq (include "clickhouse.isS3Enabled" .) "true" }}
         - name: s3-remote-storage-credentials
           secret:
             secretName: s3-remote-storage-credentials
+            defaultMode: 256
 {{- end }}
       {{ if .Values.backupDaemon.priorityClassName }}
       priorityClassName: {{ .Values.backupDaemon.priorityClassName }}
@@ -109,7 +111,7 @@ spec:
 {{- if and .Values.tls.enabled }}
             - name: {{ include "clickhouse.certServicesSecret" . }}
               mountPath: {{ default "/tls/" }}
-              readonly: true
+              readOnly: true
 {{- end }}
 {{- if and .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsUsername }}
             - name: backup-daemon-api-credentials
