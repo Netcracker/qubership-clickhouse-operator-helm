@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.26.1-alpine3.23 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26.4-alpine3.24 AS builder
 
 ENV GOSUMDB=off
 

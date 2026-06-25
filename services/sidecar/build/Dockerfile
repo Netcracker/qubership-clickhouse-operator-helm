@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.26.1-alpine3.23 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26.4-alpine3.24 AS builder
 
 
 ENV GOSUMDB=off
@@ -20,7 +20,7 @@ RUN go mod tidy
 ARG TARGETOS TARGETARCH
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /build/_output/bin/qubership-clickhouse-backup-sidecar -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} ./cmd/main.go
 
-FROM alpine:3.23
+FROM alpine:3.24
 
 
 ENV SIDECAR=/usr/local/bin/qubership-clickhouse-backup-sidecar \
