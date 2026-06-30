@@ -33,6 +33,14 @@ rules:
       - get
       - list
       - watch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - list
+      - watch
 {{- if .Values.clickhouseOperator.events }}
   - apiGroups:
       - ""
@@ -40,6 +48,7 @@ rules:
       - events
     verbs:
       - create
+      - patch
 {{- end }}
   - apiGroups:
       - apps

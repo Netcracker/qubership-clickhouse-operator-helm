@@ -202,6 +202,12 @@ spec:
               endpoint:
                 type: string
                 description: "Endpoint"
+              endpoints:
+                type: array
+                description: "All endpoints"
+                nullable: true
+                items:
+                  type: string                
               generation:
                 type: integer
                 minimum: 0
