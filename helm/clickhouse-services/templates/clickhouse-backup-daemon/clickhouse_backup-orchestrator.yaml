@@ -51,6 +51,10 @@ spec:
             secretName: s3-remote-storage-credentials
             defaultMode: 256
 {{- end }}
+        - name: ch-credentials
+          secret:
+            secretName: {{ .Values.backupDaemon.chCredentialsSecretName | default "clickhouse-operator-credentials" }}
+            defaultMode: 256
       {{ if .Values.backupDaemon.priorityClassName }}
       priorityClassName: {{ .Values.backupDaemon.priorityClassName }}
       {{ end }}
@@ -98,6 +102,8 @@ spec:
 {{- end }}
             - name: TIMEOUT
               value: {{ .Values.backupDaemon.timeout | quote }}
+            - name: DATA_VALIDATION_ENABLED
+              value: "true"
             {{- include "clickhouse_backup.envs" . | nindent 10 }}
           resources:
 {{ toYaml .Values.backupDaemon.orchestrator.resources | indent 12 }}
@@ -123,6 +129,9 @@ spec:
               mountPath: /var/run/secrets/clickhouse/s3-remote-storage-credentials
               readOnly: true
 {{- end }}
+            - name: ch-credentials
+              mountPath: /var/run/secrets/clickhouse/ch-credentials
+              readOnly: true
           livenessProbe:
             failureThreshold: 10
             initialDelaySeconds: 10
@@ -212,6 +221,8 @@ metadata:
     app: clickhouse-backup-orchestrator
     name: clickhouse-backup-orchestrator
     {{ include "kubernetes.labels" . | nindent 4 }}
+    cloud-backuper.netcracker.com/use-backup-daemon: "true"
+    cloud-backuper.netcracker.com/data-validation-enabled: "true"
   annotations:
 spec:
   type: ClusterIP
@@ -249,6 +260,9 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: "backup-daemon-api-credentials"
+  labels:
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    cloud-backuper.netcracker.com/backup-daemon-credentials: "true"
 data:
   username: {{ .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsUsername | b64enc }}
   password: {{ .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsPassword | b64enc }}
