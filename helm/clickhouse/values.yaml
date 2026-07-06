@@ -550,7 +550,6 @@ clickhouseCluster:
   serviceMonitor: false
 
   ## Prometheus scrape interval for the clickhouse-service-monitor ServiceMonitor.
-  ## Must be >= serviceMonitorScrapeTimeout.
   # Type: string
   # Mandatory: no
   # Default: "30s"
@@ -558,9 +557,6 @@ clickhouseCluster:
   # serviceMonitorScrapeInterval: 30s
 
   ## Prometheus scrape timeout for the clickhouse-service-monitor ServiceMonitor.
-  ## metrics-exporter collection can take 10-15s under load, so this must be higher
-  ## than the global Prometheus default of 10s to avoid false ClickHouseMetricsExporterDown alerts.
-  ## Must be < serviceMonitorScrapeInterval.
   # Type: string
   # Mandatory: no
   # Default: "30s"
