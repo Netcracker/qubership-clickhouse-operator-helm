@@ -157,7 +157,6 @@ func main() {
 			os.Exit(1)
 		}
 	case "marker-set":
-		Log.Info("marker-set called")
 		if err := marker.Set(cfg.MarkerValue); err != nil {
 			Log.Error("can't write marker", zap.Error(err))
 			os.Exit(1)
@@ -165,7 +164,6 @@ func main() {
 		Log.Info("marker-set successful")
 		os.Exit(0)
 	case "marker-get":
-		Log.Info("marker-get called")
 		value, err := marker.Get()
 		if err != nil {
 			Log.Error("can't read marker", zap.Error(err))
