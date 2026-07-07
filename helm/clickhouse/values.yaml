@@ -549,6 +549,20 @@ clickhouseCluster:
   #
   serviceMonitor: false
 
+  ## Prometheus scrape interval for the clickhouse-service-monitor ServiceMonitor.
+  # Type: string
+  # Mandatory: no
+  # Default: "30s"
+  #
+  # serviceMonitorScrapeInterval: 30s
+
+  ## Prometheus scrape timeout for the clickhouse-service-monitor ServiceMonitor.
+  # Type: string
+  # Mandatory: no
+  # Default: "30s"
+  #
+  # serviceMonitorScrapeTimeout: 30s
+
   prometheusRules:
     clickhouseUptime: 180
     distributedFilesToInsertThreshold: 50
