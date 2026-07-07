@@ -24,6 +24,7 @@ import (
 	terminate "github.com/Netcracker/qubership-clickhouse-backup-orchestrator/pkg/cancel"
 	"github.com/Netcracker/qubership-clickhouse-backup-orchestrator/pkg/delete"
 	k8sHelper "github.com/Netcracker/qubership-clickhouse-backup-orchestrator/pkg/helper"
+	"github.com/Netcracker/qubership-clickhouse-backup-orchestrator/pkg/marker"
 	"github.com/Netcracker/qubership-clickhouse-backup-orchestrator/pkg/restore"
 	"github.com/Netcracker/qubership-clickhouse-backup-orchestrator/pkg/utils"
 	"go.uber.org/zap"
@@ -43,6 +44,7 @@ type Config struct {
 	DbMap         string
 	DropSrcDb     string
 	AllowEviction string
+	MarkerValue   string
 }
 
 func init() {
@@ -52,6 +54,7 @@ func init() {
 	flagset.StringVar(&cfg.DbMap, "m", "", "Mapping of  databases")
 	flagset.StringVar(&cfg.DropSrcDb, "dropsrcdb", "", "Delete the source database when mapping")
 	flagset.StringVar(&cfg.AllowEviction, "allowEviction", "false", "Allow eviction during backup")
+	flagset.StringVar(&cfg.MarkerValue, "marker", "", "Marker value to write (used with action=marker-set)")
 }
 
 func main() {
@@ -153,6 +156,21 @@ func main() {
 			Log.Error("can't cancel action", zap.Error(err))
 			os.Exit(1)
 		}
+	case "marker-set":
+		if err := marker.Set(cfg.MarkerValue); err != nil {
+			Log.Error("can't write marker", zap.Error(err))
+			os.Exit(1)
+		}
+		Log.Info("marker-set successful")
+		os.Exit(0)
+	case "marker-get":
+		value, err := marker.Get()
+		if err != nil {
+			Log.Error("can't read marker", zap.Error(err))
+			os.Exit(1)
+		}
+		fmt.Print(value)
+		os.Exit(0)
 	}
 }
 

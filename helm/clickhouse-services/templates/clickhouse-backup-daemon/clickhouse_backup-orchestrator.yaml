@@ -212,6 +212,7 @@ metadata:
     app: clickhouse-backup-orchestrator
     name: clickhouse-backup-orchestrator
     {{ include "kubernetes.labels" . | nindent 4 }}
+    cloud-backuper.netcracker.com/data-validation-enabled: "true"
   annotations:
 spec:
   type: ClusterIP
@@ -249,6 +250,9 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: "backup-daemon-api-credentials"
+  labels:
+    {{ include "kubernetes.labels" . | nindent 4 }}
+    cloud-backuper.netcracker.com/backup-daemon-credentials: "true"
 data:
   username: {{ .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsUsername | b64enc }}
   password: {{ .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsPassword | b64enc }}
