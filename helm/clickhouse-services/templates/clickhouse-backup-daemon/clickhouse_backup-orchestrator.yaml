@@ -98,8 +98,6 @@ spec:
 {{- end }}
             - name: TIMEOUT
               value: {{ .Values.backupDaemon.timeout | quote }}
-            - name: DATA_VALIDATION_ENABLED
-              value: "true"
             {{- include "clickhouse_backup.envs" . | nindent 10 }}
           resources:
 {{ toYaml .Values.backupDaemon.orchestrator.resources | indent 12 }}
