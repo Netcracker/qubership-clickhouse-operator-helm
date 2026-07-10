@@ -1,0 +1,745 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "clickhouse-services values",
+  "type": "object",
+  "additionalProperties": true,
+
+  "properties": {
+
+    "affinity": {
+      "$ref": "#/$defs/affinity"
+    },
+
+    "global": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "cloudIntegrationEnabled": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+
+    "podLabels": {
+      "$ref": "#/$defs/podLabels"
+    },
+
+    "clickhouseOperator": {
+      "type": "object",
+      "properties": {
+        "serviceAccountName": {
+          "type": "string",
+          "default": "clickhouse-operator"
+        }
+      }
+    },
+
+    "clickhouseCluster": {
+      "type": "object",
+      "properties": {
+
+        "users": {
+          "type": "object",
+          "properties": {
+
+            "clickhouse": {
+              "type": "object",
+              "properties": {
+
+                "profile": {
+                  "type": "string",
+                  "default": "default"
+                },
+
+                "password": {
+                  "type": "string",
+                  "default": "clickhouse"
+                },
+
+                "networks/ip": {
+                  "type": "string",
+                  "default": "::/0"
+                }
+              }
+            }
+          }
+        },
+
+        "serviceMonitor": {
+          "type": "boolean",
+          "default": false
+        },
+
+        "shardsCount": {
+          "type": "integer",
+          "default": 1
+        }
+      }
+    },
+
+    "backupDaemon": {
+      "type": "object",
+      "properties": {
+
+        "install": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "timeout": {
+          "type": "string",
+          "default": "10"
+        },
+
+        "storage": {
+          "type": "object",
+          "properties": {
+
+            "remote": {
+              "type": "string",
+              "default": "none"
+            },
+
+            "nfs": {
+              "type": "object",
+              "properties": {
+
+                "imageSidecar": {
+                  "type": "string",
+                  "default": "ghcr.io/netcracker/qubership-docker-clickhouse-backup-sidecar:main"
+                },
+
+                "resources": {
+                  "$ref": "#/$defs/resourceRequirements"
+                },
+
+                "pvSize": {
+                  "type": "string",
+                  "default": "5Gi"
+                },
+
+                "storageClassName": {
+                  "type": "string",
+                  "default": "local-path"
+                },
+
+                "matchLabels": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "default": {
+                    "labelkey": "label_value"
+                  }
+                }
+              }
+            },
+
+            "s3": {
+              "type": "object",
+              "properties": {
+
+                "access_key": {
+                  "type": "string",
+                  "default": "minio"
+                },
+
+                "bucket": {
+                  "type": "string",
+                  "default": "click-backups"
+                },
+
+                "endpoint": {
+                  "type": "string",
+                  "default": "https://minio-service"
+                },
+
+                "secret_key": {
+                  "type": "string",
+                  "default": "minio123"
+                },
+
+                "debug": {
+                  "type": "boolean",
+                  "default": true
+                },
+
+                "disable_ssl": {
+                  "type": "boolean",
+                  "default": true
+                },
+
+                "acl": {
+                  "type": "string",
+                  "default": "private"
+                },
+
+                "force_path_style": {
+                  "type": "boolean",
+                  "default": true
+                }
+              }
+            }
+          }
+        },
+
+        "orchestrator": {
+          "type": "object",
+          "properties": {
+
+            "image": {
+              "type": "string",
+              "default": "ghcr.io/netcracker/qubership-docker-clickhouse-backup-orchestrator:main"
+            },
+
+            "resources": {
+              "$ref": "#/$defs/resourceRequirements"
+            },
+
+            "pvSize": {
+              "type": "string",
+              "default": "2Gi"
+            },
+
+            "storageClassName": {
+              "type": "string",
+              "default": "local-path"
+            },
+
+            "volumeName": {
+              "type": "string",
+              "default": ""
+            },
+
+            "nodeSelector": {
+              "type": "object",
+              "default": {}
+            },
+
+            "accessModes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [
+                "ReadWriteOnce"
+              ]
+            },
+
+            "envs": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "default": {
+                "STORAGE_EXTERNAL": "/backup-storage-external/",
+                "BACKUP_SCHEDULE": "0 * * * *",
+                "EVICTION_POLICY": "7d/7d,1y/delete",
+                "PUBLISH_CUSTOM_VARS": "false",
+                "ENABLE_INCREMENTAL": "true",
+                "INC_BACKUP_SCHEDULE": "None",
+                "ALLOW_PREFIX": "true"
+              }
+            },
+
+            "securityContext": {
+              "type": "object",
+              "properties": {
+                "container": {
+                  "type": "object",
+                  "default": {
+                    "runAsUser": 101,
+                    "runAsGroup": 101
+                  }
+                },
+                "pod": {
+                  "type": "object",
+                  "default": {}
+                }
+              }
+            },
+
+            "backupDaemonApiCredentialsUsername": {
+              "type": "string",
+              "default": ""
+            },
+
+            "backupDaemonApiCredentialsPassword": {
+              "type": "string",
+              "default": ""
+            }
+          }
+        }
+      }
+    },
+
+    "disasterRecovery": {
+      "type": "object",
+      "properties": {
+
+        "mode": {
+          "type": "string",
+          "default": "active"
+        },
+
+        "oppositeClickhouseHost": {
+          "type": "string",
+          "default": "clickhouse-cluster.clickhouse-dc-1"
+        },
+
+        "replicator": {
+          "type": "object",
+          "properties": {
+
+                "backupSchedule": {
+                  "type": "string",
+                  "default": "*/60 * * * *"
+                },
+
+                "s3": {
+                  "type": "object",
+                  "properties": {
+                    "access_key": {
+                      "type": "string",
+                      "default": "minio"
+                    },
+                    "bucket": {
+                      "type": "string",
+                      "default": "clickhouse"
+                    },
+                    "endpoint": {
+                      "type": "string",
+                      "default": "https://minio-service"
+                    },
+                    "secret_key": {
+                      "type": "string",
+                      "default": "minio123"
+                    }
+                  }
+                },
+
+                "resource": {
+                  "$ref": "#/$defs/resourceRequirements"
+                },
+
+                "securityContext": {
+                  "type": "object",
+                  "properties": {
+                    "pod": {
+                      "type": "object",
+                      "default": {}
+                    },
+                    "container": {
+                      "type": "object",
+                      "default": {
+                        "runAsUser": 101
+                      }
+                    }
+                  }
+                },
+
+                "nodeSelector": {
+                  "type": "object",
+                  "default": {}
+                }
+              }
+            },
+
+            "siteManager": {
+              "type": "object",
+              "properties": {
+
+                "image": {
+                  "type": "string",
+                  "default": "ghcr.io/netcracker/qubership-clickhouse-site-manager:main"
+                },
+
+                "downloadSchedule": {
+                  "type": "string",
+                  "default": "*/10 * * * *"
+                },
+
+                "httpAuth": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean",
+                      "default": true
+                    },
+                    "smNamespace": {
+                      "type": "string",
+                      "default": "site-manager"
+                    },
+                    "smServiceAccountName": {
+                      "type": "string",
+                      "default": "sm-auth-sa"
+                    }
+                  }
+                },
+
+                "securityContext": {
+                  "$ref": "#/$defs/securityContext"
+                },
+
+                "priorityClassName": {
+                  "type": "string",
+                  "default": "high-priority"
+                }
+              }
+            }
+          }
+        },
+
+    "dbaas": {
+      "type": "object",
+      "properties": {
+
+        "install": {
+          "type": "boolean",
+          "default": false
+        },
+
+        "dockerImage": {
+          "type": "string",
+          "default": "ghcr.io/netcracker/qubership-docker-clickhouse-dbaas-adapter:main"
+        },
+
+        "podLabels": {
+          "$ref": "#/$defs/podLabels"
+        },
+
+        "chHost": {
+          "type": "string",
+          "default": "clickhouse-cluster"
+        },
+
+        "dbName": {
+          "type": "string",
+          "default": "system"
+        },
+
+        "aggregator": {
+          "type": "object",
+          "properties": {
+
+            "registrationAddress": {
+              "type": "string",
+              "default": "http://dbaas-aggregator.dbaas:8080"
+            },
+
+            "registrationUsername": {
+              "type": "string",
+              "default": "cluster-dba"
+            },
+
+            "registrationPassword": {
+              "type": "string",
+              "default": "bNMQ5567_1p"
+            },
+
+            "physicalDatabaseIdentifier": {
+              "type": "string",
+              "default": "clickhouse"
+            }
+          }
+        },
+
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {
+            "clusterName": "clickhouse"
+          }
+        },
+
+        "clickhouse": {
+          "type": "object",
+          "properties": {
+
+            "username": {
+              "type": "string",
+              "default": "nc_dbaas_user"
+            },
+
+            "password": {
+              "type": "string",
+              "default": "pAssW0RD1"
+            }
+          }
+        },
+
+        "adapter": {
+          "type": "object",
+          "properties": {
+
+            "username": {
+              "type": "string",
+              "default": "dbaas-aggregator"
+            },
+
+            "password": {
+              "type": "string",
+              "default": "dbaas-aggregator"
+            },
+
+            "address": {
+              "type": "string",
+              "default": "dbaas-aggregator"
+            }
+          }
+        },
+
+        "resources": {
+          "$ref": "#/$defs/resourceRequirements"
+        },
+
+        "securityContext": {
+          "$ref": "#/$defs/securityContext"
+        },
+
+        "priorityClassName": {
+          "type": "string",
+          "default": "high-priority"
+        }
+      }
+    },
+
+    "tls": {
+      "type": "object",
+      "properties": {
+
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+
+        "zookeeper": {
+          "type": "boolean",
+          "default": false
+        },
+
+        "certificates": {
+          "type": "object",
+          "properties": {
+
+            "ca_crt": {
+              "type": ["string", "null"],
+              "default": null
+            },
+
+            "tls_key": {
+              "type": ["string", "null"],
+              "default": null
+            },
+
+            "tls_crt": {
+              "type": ["string", "null"],
+              "default": null
+            }
+          }
+        },
+
+        "certificateSecretName": {
+          "type": "string",
+          "default": "ch-cert"
+        },
+
+        "generateCerts": {
+          "type": "object",
+          "properties": {
+
+            "clusterIssuerName": {
+              "type": "string",
+              "default": ""
+            },
+
+            "enabled": {
+              "type": "boolean",
+              "default": false
+            },
+
+            "duration": {
+              "type": "integer",
+              "default": 365
+            },
+
+            "subjectAlternativeName": {
+              "type": "object",
+              "properties": {
+
+                "additionalDnsNames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "default": []
+                },
+
+                "additionalIpAddresses": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "default": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "tracing": {
+      "type": "object",
+      "properties": {
+
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+
+        "host": {
+          "type": "string",
+          "default": "jaeger-collector.tracing.svc:4317"
+        },
+
+        "service": {
+          "type": "string",
+          "default": "nc-clickhouse-backup-daemon"
+        }
+      }
+    },
+
+    "integrationTests": {
+      "type": "object",
+      "properties": {
+
+        "install": {
+          "type": "boolean",
+          "default": false
+        },
+
+        "image": {
+          "type": "string",
+          "default": "ghcr.io/netcracker/qubership-clickhouse-integration-tests:main"
+        },
+
+        "tags": {
+          "type": "string",
+          "default": "backupORdbaas"
+        },
+
+        "clickhouseHost": {
+          "type": "string",
+          "default": "clickhouse-cluster"
+        },
+
+        "clickhousePort": {
+          "type": "integer",
+          "default": 8123
+        },
+
+        "credentials": {
+          "type": "object",
+          "properties": {
+            "clickhouse": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "string",
+                  "default": "clickhouse"
+                }
+              }
+            }
+          }
+        },
+
+        "clickhouseBackupHost": {
+          "type": "string",
+          "default": "clickhouse-backup-orchestrator"
+        },
+
+        "clickhouseBackupPort": {
+          "type": "integer",
+          "default": 8080
+        },
+
+        "resources": {
+          "$ref": "#/$defs/resourceRequirements"
+        },
+
+        "securityContext": {
+          "$ref": "#/$defs/securityContext"
+        },
+
+        "timeoutBeforeStart": {
+          "type": "integer",
+          "default": 30
+        },
+
+        "readinessTimeout": {
+          "type": "integer",
+          "default": 500
+        },
+
+        "affinity": {
+          "$ref": "#/$defs/affinity"
+        }
+      }
+    }
+  },
+
+  "$defs": {
+
+    "resourceRequirements": {
+      "type": "object",
+      "properties": {
+
+        "limits": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+
+        "requests": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+
+    "securityContext": {
+      "type": "object",
+      "properties": {
+
+        "container": {
+          "type": "object"
+        },
+
+        "pod": {
+          "type": "object"
+        }
+      }
+    },
+
+    "affinity": {
+      "type": "object",
+      "default": {}
+    },
+
+    "podLabels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "default": {}
+    }
+
+  }
+}

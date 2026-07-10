@@ -1,50 +1,1107 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "http://example.com/example.json",
-    "type": "object",
-    "title": "The arangodb-operator JSON schema",
-    "description": "JSON Schema for arangodb-operator.",
-    "default": {},
-    "properties": {
-        "clickhouseCluster.resources.requests.cpu": {
-            "$id": "#/properties/arangoDb.agency.resources.requests.cpu",
-            "description": "cpu requests for agency arangodb",
-            "examples": [
-                "0.125", "0.250"
-            ],
-            "internal": true,
-            "title": "The ArangoDB Agency Resources CPU Requests",
-            "type": "string"
-        },
-        "clickhouseCluster.resources.requests.memory": {
-            "$id": "#/properties/arangoDb.agency.resources.requests.memory",
-            "description": "memory requests for agency arangodb",
-            "examples": [
-                "250Mi", "500Mi"
-            ],
-            "internal": true,
-            "title": "The ArangoDB Agency Resources Memory Requests",
-            "type": "string"
-        },
-        "clickhouseCluster.resources.limits.cpu": {
-            "$id": "#/properties/arangoDb.agency.resources.limits.cpu",
-            "description": "cpu limits for agency arangodb",
-            "examples": [
-                "0.125", "0.250"
-            ],
-            "internal": true,
-            "title": "The ArangoDB Agency Resources CPU Limits",
-            "type": "string"
-        },
-        "clickhouseCluster.resources.limits.memory": {
-            "$id": "#/properties/arangoDb.agency.resources.limits.memory",
-            "description": "memory limits for agency arangodb",
-            "examples": [
-                "250Mi", "500Mi"
-            ],
-            "internal": true,
-            "title": "The ArangoDB Agency Resources Memory Limits",
-            "type": "string"
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "clickhouse values",
+  "type": "object",
+  "additionalProperties": true,
+
+  "properties": {
+
+    "affinity": {
+      "$ref": "#/$defs/affinity"
+    },
+
+    "global": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "cloudIntegrationEnabled": {
+          "type": "boolean",
+          "default": true
         }
+      }
+    },
+
+    "tolerations": {
+      "$ref": "#/$defs/tolerations"
+    },
+
+    "podLabels": {
+      "$ref": "#/$defs/podLabels"
+    },
+
+    "clickhouseOperator": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+
+        "name": {
+          "type": "string",
+          "default": "clickhouse"
+        },
+
+        "image": {
+          "type": "string",
+          "default": "altinity/clickhouse-operator:0.27.2"
+        },
+
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+
+        "securityContext": {
+          "$ref": "#/$defs/securityContext"
+        },
+
+        "serviceAccountName": {
+          "type": "string",
+          "default": "clickhouse-operator"
+        },
+
+        "metricsExporterImage": {
+          "type": "string",
+          "default": "altinity/metrics-exporter:0.27.2"
+        },
+
+        "metricsExporterPort": {
+          "type": "integer",
+          "default": 8888
+        },
+
+        "metricsExporterResources": {
+          "$ref": "#/$defs/resources"
+        },
+
+        "statefulSetUpdateTimeout": {
+          "type": "integer",
+          "default": 300
+        },
+
+        "statefulSetUpdatePollPeriod": {
+          "type": "integer",
+          "default": 10
+        },
+
+        "onStatefulSetCreateFailureAction": {
+          "type": "string",
+          "default": "ignore"
+        },
+
+        "onStatefulSetUpdateFailureAction": {
+          "type": "string",
+          "default": "rollback"
+        },
+
+        "chCommonConfigsPath": {
+          "type": "string",
+          "default": "config.d"
+        },
+
+        "chHostConfigsPath": {
+          "type": "string",
+          "default": "conf.d"
+        },
+
+        "chUsersConfigsPath": {
+          "type": "string",
+          "default": "users.d"
+        },
+
+        "chiTemplatesPath": {
+          "type": "string",
+          "default": "templates.d"
+        },
+
+        "reconcileThreadsNumber": {
+          "type": "integer",
+          "default": 10
+        },
+
+        "chUserConf": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+
+            "chConfigUserDefaultProfile": {
+              "type": "string",
+              "default": "default"
+            },
+
+            "chConfigUserDefaultQuota": {
+              "type": "string",
+              "default": "default"
+            },
+
+            "chConfigUserDefaultNetworksIP": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [
+                "127.0.0.1"
+              ]
+            },
+
+            "chConfigUserDefaultPassword": {
+              "type": "string",
+              "default": "default"
+            }
+
+          }
+        },
+
+        "credentialsToInstances": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+
+            "chUsername": {
+              "type": "string",
+              "default": "clickhouse_operator"
+            },
+
+            "chPassword": {
+              "type": "string",
+              "default": "clickhouse_operator_password"
+            },
+
+            "chPort": {
+              "type": "integer",
+              "default": 8123
+            },
+
+            "chCredentialsSecretName": {
+              "type": "string",
+              "default": "clickhouse-operator-credentials"
+            }
+
+          }
+        },
+
+        "logParams": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+
+            "logtostderr": {
+              "type": "boolean",
+              "default": true
+            },
+
+            "alsologtostderr": {
+              "type": "boolean",
+              "default": false
+            },
+
+            "loglevel": {
+              "type": "string",
+              "default": "warning"
+            }
+
+          }
+        },
+
+        "role": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "install": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+
+        "affinity": {
+          "$ref": "#/$defs/affinity"
+        },
+
+        "tolerations": {
+          "$ref": "#/$defs/tolerations"
+        },
+
+        "podLabels": {
+          "$ref": "#/$defs/podLabels"
+        },
+
+        "events": {
+          "type": "boolean",
+          "default": false
+        }
+
+      }
+    },
+
+    "clickhouseCluster": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+
+        "install": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "scheme": {
+          "type": "string",
+          "default": "single"
+        },
+
+        "name": {
+          "type": "string",
+          "default": "cluster"
+        },
+
+        "image": {
+          "type": "string",
+          "default": "ghcr.io/netcracker/qubership-clickhouse-258:main"
+        },
+
+        "zookeeperHost": {
+          "type": "string",
+          "default": "zookeeper.zookeeper.svc"
+        },
+
+        "shardsCount": {
+          "type": "integer",
+          "default": 1
+        },
+
+        "replicasCount": {
+          "type": "integer",
+          "default": 2
+        },
+
+        "pvSize": {
+          "type": "string",
+          "default": "5Gi"
+        },
+
+        "storageClassName": {
+          "type": "string"
+        },
+
+        "localStorage": {
+          "type": "boolean"
+        },
+
+        "nodeSelector": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+
+        "nodeSelectorLeft": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+
+        "nodeSelectorRight": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+
+        "securityContext": {
+          "$ref": "#/$defs/securityContext"
+        },
+
+        "routeHttp": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+
+            "host": {
+              "type": "string"
+            },
+
+            "labels": {
+              "$ref": "#/$defs/podLabels"
+            },
+
+            "annotations": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+
+          }
+        },
+
+        "ingressHttp": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+
+            "host": {
+              "type": "string"
+            },
+
+            "gatewayName": {
+              "type": "string",
+              "default": "default-external-gateway"
+            },
+
+            "gatewayNamespace": {
+              "type": "string",
+              "default": "envoy-gateway"
+            },
+
+            "labels": {
+              "$ref": "#/$defs/podLabels"
+            },
+
+            "annotations": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+
+          }
+        },
+        "users": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "clickhouse": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "profile": {
+                  "type": "string",
+                  "default": "default"
+                },
+                "password": {
+                  "type": "string",
+                  "default": "clickhouse"
+                },
+                "networks/ip": {
+                  "type": "string",
+                  "default": "::/0"
+                }
+              }
+            }
+          }
+        },
+
+        "serviceMonitor": {
+          "type": "boolean",
+          "default": false
+        },
+
+        "serviceMonitorScrapeInterval": {
+          "type": "string",
+          "default": "30s"
+        },
+
+        "serviceMonitorScrapeTimeout": {
+          "type": "string",
+          "default": "30s"
+        },
+
+        "prometheusRules": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+
+            "clickhouseUptime": {
+              "type": "integer",
+              "default": 180
+            },
+
+            "distributedFilesToInsertThreshold": {
+              "type": "integer",
+              "default": 50
+            },
+
+            "maxPartCountForPartitionThreshold": {
+              "type": "integer",
+              "default": 100
+            },
+
+            "lowInsertedRowsPerQueryThreshold": {
+              "type": "integer",
+              "default": 1000
+            },
+
+            "longestRunningQueryTimeThreshold": {
+              "type": "integer",
+              "default": 600
+            },
+
+            "replicasMaxAbsoluteDelayThreshold": {
+              "type": "integer",
+              "default": 300
+            },
+
+            "clickHouseConnectionsThreshold": {
+              "type": "integer",
+              "default": 100
+            },
+
+            "clickHouseRunningQueriesThreshold": {
+              "type": "integer",
+              "default": 80
+            },
+
+            "clickHouseMutationsThreshold": {
+              "type": "integer",
+              "default": 100
+            }
+
+          }
+        },
+
+        "configuration": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+
+            "settings": {
+              "type": "object",
+              "additionalProperties": true,
+              "default": {}
+            },
+
+            "profiles": {
+              "type": "object",
+              "additionalProperties": true,
+              "default": {}
+            },
+
+            "custom": {
+              "type": "object",
+              "additionalProperties": true,
+              "default": {}
+            }
+
+          }
+        },
+        "affinity": {
+          "$ref": "#/$defs/affinity"
+        },
+
+        "tolerations": {
+          "$ref": "#/$defs/tolerations"
+        },
+
+        "podDistribution": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+
+              "type": {
+                "type": "string"
+              },
+
+              "scope": {
+                "type": "string"
+              }
+
+            }
+          }
+        },
+
+        "pdb": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+
+            "pdbManaged": {
+              "type": "string",
+              "default": ""
+            },
+
+            "maxUnavailable": {
+              "type": "object",
+              "additionalProperties": true,
+              "default": {}
+            }
+
+          }
+        },
+
+        "podLabels": {
+          "$ref": "#/$defs/podLabels"
+        },
+
+        "strictHealthCheck": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "skipBinaryChecksumChecks": {
+          "type": "boolean",
+          "default": false
+        }
+
+      }
+    },
+
+    "backupDaemon": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+
+        "install": {
+          "type": "boolean",
+          "default": false
+        },
+
+        "image": {
+          "type": "string",
+          "default": "altinity/clickhouse-backup:2.7.2"
+        },
+
+        "timeout": {
+          "type": "string",
+          "default": "10"
+        },
+
+        "envs": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        },
+
+        "storage": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+
+            "remote": {
+              "type": "string",
+              "default": "none"
+            },
+
+            "nfs": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+
+                "imageSidecar": {
+                  "type": "string",
+                  "default": "ghcr.io/netcracker/qubership-docker-clickhouse-backup-sidecar:main"
+                },
+
+                "resources": {
+                  "$ref": "#/$defs/resources"
+                },
+
+                "pvSize": {
+                  "type": "string",
+                  "default": "5Gi"
+                },
+
+                "storageClassName": {
+                  "type": "string"
+                },
+
+                "matchLabels": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+
+              }
+            },
+
+            "s3": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+
+                "access_key": {
+                  "type": "string"
+                },
+
+                "bucket": {
+                  "type": "string"
+                },
+
+                "endpoint": {
+                  "type": "string"
+                },
+
+                "secret_key": {
+                  "type": "string"
+                },
+
+                "debug": {
+                  "type": "boolean"
+                },
+
+                "disable_ssl": {
+                  "type": "boolean"
+                },
+
+                "acl": {
+                  "type": "string"
+                },
+
+                "force_path_style": {
+                  "type": "boolean"
+                }
+
+              }
+            }
+
+          }
+        },
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+
+        "securityContext": {
+          "$ref": "#/$defs/securityContext"
+        },
+
+        "tolerations": {
+          "$ref": "#/$defs/tolerations"
+        },
+
+        "serviceAccountName": {
+          "type": "string",
+          "default": "clickhouse-operator"
+        },
+
+        "enablePprof": {
+          "type": "boolean",
+          "default": false
+        },
+
+        "retention": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+
+            "local": {
+              "type": "integer",
+              "default": 0
+            },
+
+            "remote": {
+              "type": "integer",
+              "default": 0
+            }
+
+          }
+        }
+
+      }
+    },
+
+    "dbaas": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+
+        "install": {
+          "type": "boolean",
+          "default": false
+        },
+
+        "clickhouse": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+
+            "username": {
+              "type": "string",
+              "default": "nc_dbaas_user"
+            },
+
+            "password": {
+              "type": "string",
+              "default": "pAssW0RD1"
+            }
+
+          }
+        }
+
+      }
+    },
+
+    "tls": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+
+        "zookeeper": {
+          "type": "boolean",
+          "default": false
+        },
+
+        "certificates": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+
+            "ca_crt": {
+              "type": "string"
+            },
+
+            "tls_key": {
+              "type": "string"
+            },
+
+            "tls_crt": {
+              "type": "string"
+            }
+
+          }
+        },
+
+        "certificateSecretName": {
+          "type": "string",
+          "default": "ch-cert"
+        },
+
+        "generateCerts": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+
+            "clusterIssuerName": {
+              "type": "string",
+              "default": ""
+            },
+
+            "enabled": {
+              "type": "boolean",
+              "default": false
+                },
+
+            "duration": {
+              "type": "integer",
+              "default": 365
+            },
+
+            "subjectAlternativeName": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+
+                "additionalDnsNames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "default": []
+                },
+
+                "additionalIpAddresses": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "default": []
+                }
+
+              }
+            }
+
+          }
+        }
+
+      }
+    },
+
+    "tracing": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+
+        "host": {
+          "type": "string",
+          "default": "jaeger-collector.tracing.svc:4317"
+        },
+
+        "service": {
+          "type": "string",
+          "default": "nc-clickhouse-backup-daemon"
+        }
+
+      }
+    },
+
+    "integrationTests": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+
+        "install": {
+          "type": "boolean",
+          "default": false
+        },
+
+        "image": {
+          "type": "string",
+          "default": "ghcr.io/netcracker/qubership-clickhouse-integration-tests:main"
+        },
+
+        "tags": {
+          "type": "string",
+          "default": "smoke"
+        },
+
+        "clickhouseHost": {
+          "type": "string",
+          "default": "clickhouse-cluster"
+        },
+
+        "clickhousePort": {
+          "type": "integer",
+          "default": 8123
+        },
+
+        "credentials": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+
+            "clickhouse": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+
+                "user": {
+                  "type": "string",
+                  "default": "clickhouse"
+                }
+
+              }
+            }
+
+          }
+        },
+
+        "clickhouseBackupHost": {
+          "type": "string",
+          "default": "clickhouse-backup-orchestrator"
+        },
+
+        "clickhouseBackupPort": {
+          "type": "integer",
+          "default": 8080
+        },
+
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+
+        "securityContext": {
+          "$ref": "#/$defs/securityContext"
+        },
+
+        "affinity": {
+          "$ref": "#/$defs/affinity"
+        }
+
+      }
+    },
+
+    "clickhouseSecretMonitor": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+
+        "install": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "dockerImage": {
+          "type": "string",
+          "default": "ghcr.io/netcracker/qubership-clickhouse-secret-monitor:main"
+        },
+
+        "securityContext": {
+          "$ref": "#/$defs/securityContext"
+        },
+
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+
+        "affinity": {
+          "$ref": "#/$defs/affinity"
+        }
+
+      }
+    },
+
+    "clickhouseHook": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+
+        "install": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "dockerImage": {
+          "type": "string",
+          "default": "ghcr.io/netcracker/qubership-credential-manager:main"
+        },
+
+        "securityContext": {
+          "$ref": "#/$defs/securityContext"
+        },
+
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+
+        "affinity": {
+          "$ref": "#/$defs/affinity"
+        }
+
+      }
+    },
+
+    "postHook": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+
+        "install": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "dockerImage": {
+          "type": "string",
+          "default": "ghcr.io/netcracker/qubership-clickhouse-hook:main"
+        },
+
+        "securityContext": {
+          "$ref": "#/$defs/securityContext"
+        },
+
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+
+        "affinity": {
+          "$ref": "#/$defs/affinity"
+        }
+
+      }
     }
+
+  },
+
+  "$defs": {
+
+    "affinity": {
+      "type": "object",
+      "additionalProperties": true,
+      "default": {}
+    },
+
+    "podLabels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "default": {}
+    },
+
+    "tolerations": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+
+          "key": {
+            "type": "string"
+          },
+
+          "operator": {
+            "type": "string"
+          },
+
+          "value": {
+            "type": "string"
+          },
+
+          "effect": {
+            "type": "string"
+          }
+
+        }
+      }
+    },
+
+    "resources": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+
+        "limits": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        },
+
+        "requests": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        }
+
+      },
+      "default": {}
+    },
+
+    "securityContext": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+
+        "container": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        },
+
+        "pod": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        }
+
+      },
+      "default": {}
+    }
+
+  }
+
 }
