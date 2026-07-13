@@ -761,9 +761,9 @@ tls:
   enabled: false
   zookeeper: false
   certificates:
-    ca_crt:
-    tls_key:
-    tls_crt:
+    ca_crt: ""
+    tls_key: ""
+    tls_crt: ""
   certificateSecretName: ch-cert
   generateCerts:
     clusterIssuerName: ""
