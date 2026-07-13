@@ -51,6 +51,10 @@ spec:
             secretName: s3-remote-storage-credentials
             defaultMode: 256
 {{- end }}
+        - name: ch-credentials
+          secret:
+            secretName: {{ .Values.backupDaemon.chCredentialsSecretName | default "clickhouse-operator-credentials" }}
+            defaultMode: 256
       {{ if .Values.backupDaemon.priorityClassName }}
       priorityClassName: {{ .Values.backupDaemon.priorityClassName }}
       {{ end }}
@@ -118,6 +122,9 @@ spec:
               mountPath: /var/run/secrets/clickhouse/backup-daemon-api-credentials
               readOnly: true
 {{- end }}
+            - name: ch-credentials
+              mountPath: /var/run/secrets/clickhouse/ch-credentials
+              readOnly: true
 {{- if eq (include "clickhouse.isS3Enabled" .) "true" }}
             - name: s3-remote-storage-credentials
               mountPath: /var/run/secrets/clickhouse/s3-remote-storage-credentials
