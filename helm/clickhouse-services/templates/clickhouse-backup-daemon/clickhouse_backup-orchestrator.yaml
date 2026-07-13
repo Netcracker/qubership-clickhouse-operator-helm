@@ -54,7 +54,7 @@ spec:
         - name: ch-credentials
           secret:
             secretName: {{ .Values.backupDaemon.chCredentialsSecretName | default "clickhouse-operator-credentials" }}
-            defaultMode: 256
+            defaultMode: 420
       {{ if .Values.backupDaemon.priorityClassName }}
       priorityClassName: {{ .Values.backupDaemon.priorityClassName }}
       {{ end }}
