@@ -43,13 +43,13 @@ spec:
         - name: backup-daemon-api-credentials
           secret:
             secretName: backup-daemon-api-credentials
-            defaultMode: 256
+            defaultMode: 420
 {{- end }}
 {{- if eq (include "clickhouse.isS3Enabled" .) "true" }}
         - name: s3-remote-storage-credentials
           secret:
             secretName: s3-remote-storage-credentials
-            defaultMode: 256
+            defaultMode: 420
 {{- end }}
         - name: ch-credentials
           secret:
