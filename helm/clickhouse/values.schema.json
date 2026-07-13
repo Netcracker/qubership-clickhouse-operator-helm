@@ -394,7 +394,7 @@
         },
 
         "serviceMonitor": {
-          "type": "boolean",
+          "type": "string",
           "default": false
         },
 
@@ -756,15 +756,18 @@
           "properties": {
 
             "ca_crt": {
-              "type": "string"
+              "type": ["string", "null"],
+              "default": null
             },
 
             "tls_key": {
-              "type": "string"
+              "type": ["string", "null"],
+              "default": null
             },
 
             "tls_crt": {
-              "type": "string"
+              "type": ["string", "null"],
+              "default": null
             }
 
           }
