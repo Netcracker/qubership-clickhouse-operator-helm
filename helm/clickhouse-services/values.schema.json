@@ -526,18 +526,15 @@
           "properties": {
 
             "ca_crt": {
-              "type": ["string", "null"],
-              "default": null
+              "type": "string"
             },
 
             "tls_key": {
-              "type": ["string", "null"],
-              "default": null
+              "type": "string"
             },
 
             "tls_crt": {
-              "type": ["string", "null"],
-              "default": null
+              "type": "string"
             }
           }
         },
