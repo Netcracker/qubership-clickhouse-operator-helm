@@ -67,7 +67,18 @@
         },
 
         "serviceMonitor": {
-          "type": "boolean",
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "enable",
+                "disable"
+              ]
+            }
+          ],
           "default": false
         },
 

@@ -543,8 +543,8 @@ clickhouseCluster:
 #      password: readonly
 #      allow_databases/database: ["prom"]
 
-  ## Allow to disable create ServiceMonitor CR for clickhouse-cluster during deploy
-  # Type: string
+  ## Allow to enable/disable creation of the ServiceMonitor CR for clickhouse-cluster during deployment.
+  # Type: boolean | string (true/false or enable/disable)
   # Mandatory: no
   #
   serviceMonitor: false
