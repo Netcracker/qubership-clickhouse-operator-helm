@@ -52,21 +52,21 @@ spec:
         - name: dbaas-user-credentials
           secret:
             secretName: nc-dbaas-user-credentials
-            defaultMode: 256
+            defaultMode: 420
         - name: dbaas-adapter-credentials
           secret:
             secretName: nc-dbaas-adapter-credentials
-            defaultMode: 256
+            defaultMode: 420
         - name: dbaas-aggregator-registration-credentials
           secret:
             secretName: nc-dbaas-aggregator-registration-credentials
-            defaultMode: 256
+            defaultMode: 420
 {{- if .Values.backupDaemon.install }}
 {{- if and .Values.backupDaemon.orchestrator.backupDaemonApiCredentialsUsername }}
         - name: backup-daemon-api-credentials
           secret:
             secretName: backup-daemon-api-credentials
-            defaultMode: 256
+            defaultMode: 420
 {{- end }}
 {{- end }}
 {{- if or .Values.dbaas.migrateRoles (gt (int .Values.clickhouseCluster.shardsCount) 1) }}
