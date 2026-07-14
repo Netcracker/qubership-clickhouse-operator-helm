@@ -33,7 +33,8 @@ clickhouseCluster:
       profile: default
       password: clickhouse
       networks/ip: "::/0"
-# Template ServiceMonitor for DR
+  # Enable or disable ServiceMonitor creation for DR.
+  # Supported values: true/false or enable/disable.
   serviceMonitor: false
   shardsCount: 1
 
