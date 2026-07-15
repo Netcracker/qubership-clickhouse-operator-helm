@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS default.backup_restore_markers ON CLUSTER '{cluster}'
 	sentinel String,
 	marker   String,
 	written_at DateTime DEFAULT now()
-) ENGINE = ReplicatedReplacingMergeTree('/clickhouse/tables/default/backup_restore_markers/{uuid}', '{replica}')
+) ENGINE = ReplicatedReplacingMergeTree('/clickhouse/tables/default/backup_restore_markers/{uuid}', '{replica}', written_at)
 ORDER BY sentinel`
 
 	upsertSQL = `INSERT INTO default.backup_restore_markers (sentinel, marker) VALUES (?, ?)`
