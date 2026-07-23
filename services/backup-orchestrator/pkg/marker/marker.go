@@ -36,9 +36,27 @@ CREATE TABLE IF NOT EXISTS default.backup_restore_markers ON CLUSTER '{cluster}'
 ) ENGINE = ReplicatedReplacingMergeTree('/clickhouse/tables/default/backup_restore_markers/{uuid}', '{replica}', written_at)
 ORDER BY sentinel`
 
-	upsertSQL = `INSERT INTO default.backup_restore_markers (sentinel, marker) VALUES (?, ?)`
+	// Insert on cluster and explicitly set written_at
+	upsertSQL = `
+INSERT INTO default.backup_restore_markers
+(
+	sentinel,
+	marker,
+	written_at
+)
+VALUES
+(
+	?,
+	?,
+	now()
+)`
 
-	selectSQL = `SELECT marker FROM default.backup_restore_markers FINAL WHERE sentinel = ? LIMIT 1`
+	selectSQL = `
+SELECT marker
+FROM default.backup_restore_markers FINAL
+WHERE sentinel = ?
+LIMIT 1
+SETTINGS select_sequential_consistency = 1`
 )
 
 var log = utils.GetLogger()
