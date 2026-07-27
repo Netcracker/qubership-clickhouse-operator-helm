@@ -74,7 +74,7 @@ backupDaemon:
 
   orchestrator:
 
-    image: ghcr.io/netcracker/qubership-docker-clickhouse-backup-orchestrator:main
+    image: ghcr.io/netcracker/qubership-docker-clickhouse-backup-orchestrator:0.48.1
     resources:
       limits:
         cpu: 500m
@@ -150,7 +150,7 @@ backupDaemon:
 #       runAsUser: 101
 #     nodeSelector: {}
 #   siteManager:
-#     image: ghcr.io/netcracker/qubership-clickhouse-site-manager:main
+#     image: ghcr.io/netcracker/qubership-clickhouse-site-manager:0.48.1
 #     downloadSchedule: "*/10 * * * *"
 #     httpAuth:
 #       enabled: true
@@ -165,7 +165,7 @@ dbaas:
   # Optional flag for Clickhouse DBaaS Adapter deployment
   install: false
   # Docker Image that will be used for Clickhouse DBaaS Adapter container
-  dockerImage: ghcr.io/netcracker/qubership-docker-clickhouse-dbaas-adapter:main
+  dockerImage: ghcr.io/netcracker/qubership-docker-clickhouse-dbaas-adapter:0.48.1
   podLabels: {}
   # Clickhouse cluster entry point.
   #  chHost: clickhouse-cluster
@@ -225,7 +225,7 @@ tracing:
 
 integrationTests:
   install: false
-  image: "ghcr.io/netcracker/qubership-clickhouse-integration-tests:main"
+  image: "ghcr.io/netcracker/qubership-clickhouse-integration-tests:0.48.1"
   tags: "backupORdbaas"
   clickhouseHost: "clickhouse-cluster"
   clickhousePort: 8123
