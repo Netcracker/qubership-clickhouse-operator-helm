@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS default.backup_restore_markers ON CLUSTER '{cluster}'
 	written_at DateTime DEFAULT now()
 )
 ENGINE = ReplicatedMergeTree(
-	'/clickhouse/tables/{shard}/default/backup_restore_markers',
+	'/clickhouse/tables/default/backup_restore_markers/{uuid}',
 	'{replica}'
 )
 ORDER BY sentinel`
