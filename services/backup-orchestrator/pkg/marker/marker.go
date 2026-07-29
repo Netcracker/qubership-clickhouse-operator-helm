@@ -17,7 +17,6 @@ package marker
 import (
 	"database/sql"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
@@ -30,6 +29,7 @@ var log = utils.GetLogger()
 const (
 	markerSentinel = "current"
 	markerDatabase = "default"
+
 	createTableSQL = `
 CREATE TABLE IF NOT EXISTS default.backup_restore_markers ON CLUSTER '{cluster}'
 (
@@ -70,44 +70,46 @@ LIMIT 1
 SETTINGS select_sequential_consistency = 1`
 )
 
-var (
-	dbInstance *sql.DB
-	dbOnce     sync.Once
-
-	tableOnce sync.Once
-	tableErr  error
-)
-
 // Set writes marker
 func Set(marker string) error {
 
-	db, err := getDB()
+	db, err := openDB()
 	if err != nil {
 		return err
 	}
+	defer db.Close()
 
-	// create table only once per pod
-	tableOnce.Do(func() {
-		_, tableErr = db.Exec(createTableSQL)
-	})
-
-	if tableErr != nil {
-		return fmt.Errorf("create marker table: %w", tableErr)
+	// Create table if not exists
+	if _, err = db.Exec(createTableSQL); err != nil {
+		return fmt.Errorf(
+			"create marker table: %w",
+			err,
+		)
 	}
 
-	// delete existing marker
+	// Delete existing marker
 	if _, err = db.Exec(deleteSQL, markerSentinel); err != nil {
-		return fmt.Errorf("delete marker: %w", err)
+		return fmt.Errorf(
+			"delete marker: %w",
+			err,
+		)
 	}
 
-	// wait until mutation completes
+	// Wait for delete mutation
 	if err = waitForMutation(db); err != nil {
 		return err
 	}
 
-	// insert new marker
-	if _, err = db.Exec(insertSQL, markerSentinel, marker); err != nil {
-		return fmt.Errorf("insert marker: %w", err)
+	// Insert new marker
+	if _, err = db.Exec(
+		insertSQL,
+		markerSentinel,
+		marker,
+	); err != nil {
+		return fmt.Errorf(
+			"insert marker: %w",
+			err,
+		)
 	}
 
 	log.Info(
@@ -163,7 +165,7 @@ AND is_done=0
 // Get marker
 func Get() (string, error) {
 
-	db, err := getDB()
+	db, err := openDB()
 	if err != nil {
 		return "", err
 	}
@@ -187,56 +189,52 @@ func Get() (string, error) {
 			continue
 		}
 
-		return "", fmt.Errorf("read marker: %w", err)
+		return "", fmt.Errorf(
+			"read marker: %w",
+			err,
+		)
 	}
 
 	return "", nil
 }
 
-// singleton DB connection
-func getDB() (*sql.DB, error) {
+// Open ClickHouse connection
+func openDB() (*sql.DB, error) {
 
-	var err error
+	host := fmt.Sprintf(
+		"clickhouse-cluster.%s",
+		utils.GetNameSpace(),
+	)
 
-	dbOnce.Do(func() {
+	port := utils.GetDbPort()
 
-		host := fmt.Sprintf(
-			"clickhouse-cluster.%s",
-			utils.GetNameSpace(),
-		)
+	db := clickhouse.OpenDB(&clickhouse.Options{
 
-		port := utils.GetDbPort()
+		Addr: []string{
+			host + ":" + port,
+		},
 
-		dbInstance = clickhouse.OpenDB(&clickhouse.Options{
+		Auth: clickhouse.Auth{
+			Database: markerDatabase,
+			Username: utils.GetClickhouseUserName(),
+			Password: utils.GetClusterPassword(),
+		},
 
-			Addr: []string{
-				host + ":" + port,
-			},
+		Settings: clickhouse.Settings{
+			"max_execution_time": 60,
+		},
 
-			Auth: clickhouse.Auth{
-				Database: markerDatabase,
-				Username: utils.GetClickhouseUserName(),
-				Password: utils.GetClusterPassword(),
-			},
+		DialTimeout: 10 * time.Second,
 
-			Settings: clickhouse.Settings{
-				"max_execution_time": 60,
-			},
-
-			DialTimeout: 10 * time.Second,
-
-			TLS: utils.GetTlsConfig(),
-		})
-
-		err = dbInstance.Ping()
+		TLS: utils.GetTlsConfig(),
 	})
 
-	if err != nil {
+	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf(
 			"connect ClickHouse: %w",
 			err,
 		)
 	}
 
-	return dbInstance, nil
+	return db, nil
 }
