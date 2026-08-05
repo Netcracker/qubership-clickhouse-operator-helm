@@ -271,6 +271,14 @@
           "default": 2
         },
 
+        "pvcAnnotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+
         "pvSize": {
           "type": "string",
           "default": "5Gi"
@@ -625,6 +633,14 @@
                   "additionalProperties": {
                     "type": "string"
                   }
+                },
+
+                "pvcAnnotations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "default": {}
                 }
 
               }
