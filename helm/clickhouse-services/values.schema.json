@@ -143,6 +143,14 @@
                   "default": {
                     "labelkey": "label_value"
                   }
+                },
+
+                "pvcAnnotations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "default": {}
                 }
               }
             },
