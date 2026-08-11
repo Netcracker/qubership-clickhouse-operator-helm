@@ -189,7 +189,6 @@ metadata:
   annotations:
     helm.sh/resource-policy: "keep"
 {{ include "clickhouse.pvcAnnotations" . }}
-{{- end }}
   labels:
     app:  clickhouse-backup-orchestrator
   name: backup-ochestrator-pvc
