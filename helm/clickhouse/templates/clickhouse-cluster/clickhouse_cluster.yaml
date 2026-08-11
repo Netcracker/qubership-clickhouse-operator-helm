@@ -178,7 +178,7 @@ spec:
 {{ if .Values.backupDaemon.install }}
 {{ if eq (lower .Values.backupDaemon.storage.remote) "nfs" }}
       - name: clickhouse-backup-pvc
-{{ include "clickhouse.pvcMetadata" . | nindent 8 }}
+{{ include "clickhouse.pvcAnnotations" . | nindent 8 }}
         spec:
           accessModes:
           - ReadWriteOnce
