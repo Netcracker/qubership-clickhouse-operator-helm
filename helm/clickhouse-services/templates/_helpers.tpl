@@ -35,6 +35,16 @@ fsGroup: 101
 {{- end -}}
 {{- end -}}  
 
+{{- define "clickhouse.pvcAnnotations" -}}
+{{- with (default dict .Values.pvc) }}
+{{- with .metadata }}
+{{- with .annotations }}
+{{- toYaml . | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+
 {{- define "docker_ch_backup_orch.image" -}}
 {{- end -}}
 

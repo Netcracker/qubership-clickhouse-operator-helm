@@ -18,6 +18,15 @@
 {{- end -}}
 {{- end -}}
 
+{{- define "clickhouse.pvcAnnotations" -}}
+{{- with (default dict .Values.pvc) }}
+{{- with .metadata }}
+metadata:
+{{ toYaml . | nindent 2 }}
+{{- end }}
+{{- end }}
+{{- end }}
+
 {{- define "clickhouse.image" -}}
 {{- end -}}
 

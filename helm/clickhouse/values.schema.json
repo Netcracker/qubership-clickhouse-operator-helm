@@ -28,6 +28,23 @@
     "podLabels": {
       "$ref": "#/$defs/podLabels"
     },
+    
+    "pvc": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "annotations": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
 
     "clickhouseOperator": {
       "type": "object",
@@ -269,14 +286,6 @@
         "replicasCount": {
           "type": "integer",
           "default": 2
-        },
-
-        "pvcAnnotations": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "default": {}
         },
 
         "pvSize": {
@@ -633,14 +642,6 @@
                   "additionalProperties": {
                     "type": "string"
                   }
-                },
-
-                "pvcAnnotations": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "default": {}
                 }
 
               }
