@@ -29,6 +29,16 @@ tolerations: []
 podLabels: {}
 #  custom: label1
 
+## Optional configuration for the PersistentVolumeClaim.
+# Allows specifying PVC metadata, including annotations.
+# Type: object
+# Mandatory: no
+
+pvc: {}
+#   metadata: 
+#     annotations: 
+#       argocd.argoproj.io/sync-options: Prune=false 
+
 clickhouseOperator:
 
   ## A name of a microservice to deploy with.
@@ -365,13 +375,6 @@ clickhouseCluster:
   #
   replicasCount: 2
 
-  ## Custom annotations for ClickHouse PVCs (e.g. to prevent ArgoCD pruning)
-  # Type: object
-  # Mandatory: no
-  #
-  # pvcAnnotations:
-  #   argocd.argoproj.io/sync-options: Prune=false
-
   ## PVs size for ClickHouse data and logs
   # Type: string
   # Mandatory: no
@@ -690,8 +693,6 @@ backupDaemon:
 #      storageClassName: local-path
 #      matchLabels:
 #        ivshch: ivshlabel
-#      pvcAnnotations:
-#        argocd.argoproj.io/sync-options: Prune=false
 
 #    s3:
 #      access_key: minio

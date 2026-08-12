@@ -158,11 +158,7 @@ spec:
           clusterIP: None
     volumeClaimTemplates:
       - name: clickhouse-pvc
-{{- if .Values.clickhouseCluster.pvcAnnotations }}
-        metadata:
-          annotations:
-{{ toYaml .Values.clickhouseCluster.pvcAnnotations | indent 12 }}
-{{- end }}
+{{ include "clickhouse.pvcAnnotations" . | nindent 8 }}
         spec:
           accessModes:
             - ReadWriteOnce
@@ -182,11 +178,7 @@ spec:
 {{ if .Values.backupDaemon.install }}
 {{ if eq (lower .Values.backupDaemon.storage.remote) "nfs" }}
       - name: clickhouse-backup-pvc
-{{- if .Values.backupDaemon.storage.nfs.pvcAnnotations }}
-        metadata:
-          annotations:
-{{ toYaml .Values.backupDaemon.storage.nfs.pvcAnnotations | indent 12 }}
-{{- end }}
+{{ include "clickhouse.pvcAnnotations" . | nindent 8 }}
         spec:
           accessModes:
           - ReadWriteOnce

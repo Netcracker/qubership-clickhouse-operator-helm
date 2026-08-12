@@ -18,6 +18,17 @@ global:
 podLabels: {}
 #  custom: label1
 
+## Optional configuration for the PersistentVolumeClaim.
+# Allows specifying PVC metadata, including annotations.
+# Type: object
+# Mandatory: no
+
+pvc: {}
+#   metadata: 
+#     annotations: 
+#       argocd.argoproj.io/sync-options: Prune=false 
+
+
 clickhouseOperator:
 
   ## Provide a name in place of clickhouse-operator for ServiceAccount
@@ -61,8 +72,6 @@ backupDaemon:
     #   storageClassName: local-path
     #   matchLabels:
     #     labelkey: label_value
-    #   pvcAnnotations:
-    #     argocd.argoproj.io/sync-options: Prune=false
 
     # s3:
     #   access_key: minio
@@ -104,13 +113,6 @@ backupDaemon:
 
     accessModes:
       - ReadWriteOnce
-
-    ## Custom annotations for backup orchestrator PVC (e.g. to prevent ArgoCD pruning)
-    # Type: object
-    # Mandatory: no
-    #
-    # pvcAnnotations:
-    #   argocd.argoproj.io/sync-options: Prune=false
 
     envs:
       STORAGE_EXTERNAL: "/backup-storage-external/"

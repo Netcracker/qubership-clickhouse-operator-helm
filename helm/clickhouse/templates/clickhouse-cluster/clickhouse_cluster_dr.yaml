@@ -57,11 +57,7 @@ spec:
           clusterIP: None
     volumeClaimTemplates:
       - name: clickhouse-pvc-left
-{{- if .Values.clickhouseCluster.pvcAnnotations }}
-        metadata:
-          annotations:
-{{ toYaml .Values.clickhouseCluster.pvcAnnotations | indent 12 }}
-{{- end }}
+{{ include "clickhouse.pvcAnnotations" . | nindent 8 }}
         spec:
           accessModes:
             - ReadWriteOnce
@@ -77,11 +73,7 @@ spec:
 {{ toYaml .Values.clickhouseCluster.nodeSelectorLeft | indent 14 }}
 {{- end }}
       - name: clickhouse-pvc-right
-{{- if .Values.clickhouseCluster.pvcAnnotations }}
-        metadata:
-          annotations:
-{{ toYaml .Values.clickhouseCluster.pvcAnnotations | indent 12 }}
-{{- end }}
+{{ include "clickhouse.pvcAnnotations" . | nindent 8 }}
         spec:
           accessModes:
             - ReadWriteOnce

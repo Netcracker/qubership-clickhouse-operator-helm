@@ -25,6 +25,23 @@
       "$ref": "#/$defs/podLabels"
     },
 
+    "pvc": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "annotations": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+
     "clickhouseOperator": {
       "type": "object",
       "properties": {
@@ -143,14 +160,6 @@
                   "default": {
                     "labelkey": "label_value"
                   }
-                },
-
-                "pvcAnnotations": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "default": {}
                 }
               }
             },

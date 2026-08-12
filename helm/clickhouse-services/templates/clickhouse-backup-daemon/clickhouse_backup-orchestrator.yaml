@@ -188,9 +188,7 @@ kind: "PersistentVolumeClaim"
 metadata:
   annotations:
     helm.sh/resource-policy: "keep"
-{{- if .Values.backupDaemon.orchestrator.pvcAnnotations }}
-{{ toYaml .Values.backupDaemon.orchestrator.pvcAnnotations | indent 4 }}
-{{- end }}
+{{ include "clickhouse.pvcAnnotations" . }}
   labels:
     app:  clickhouse-backup-orchestrator
   name: backup-ochestrator-pvc
