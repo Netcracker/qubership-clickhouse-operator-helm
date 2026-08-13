@@ -102,6 +102,11 @@
         "shardsCount": {
           "type": "integer",
           "default": 1
+        },
+
+        "replicasCount": {
+          "type": "integer",
+          "default": 2
         }
       }
     },

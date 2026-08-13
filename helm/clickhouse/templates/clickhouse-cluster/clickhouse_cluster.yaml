@@ -95,7 +95,7 @@ spec:
           </zookeeper>
         </clickhouse>
   {{- end }}
-  {{- if gt (int .Values.clickhouseCluster.shardsCount) 1 }}
+  {{- if or (gt (int .Values.clickhouseCluster.shardsCount) 1) (gt (int (include "clickhouse.replicasCount" .)) 1) }}
       config.d/replicated_user_directories.xml: |
         <clickhouse>
           <user_directories replace="replace">
