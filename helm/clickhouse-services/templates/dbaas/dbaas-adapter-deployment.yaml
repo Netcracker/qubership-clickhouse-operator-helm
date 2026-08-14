@@ -69,7 +69,7 @@ spec:
             defaultMode: 420
 {{- end }}
 {{- end }}
-{{- if or .Values.dbaas.migrateRoles (gt (int .Values.clickhouseCluster.shardsCount) 1) (gt (int .Values.clickhouseCluster.replicasCount) 1) }}
+{{- if .Values.dbaas.migrateRoles }}
       initContainers:
         - name: nc-dbaas-clickhouse-adapter-init
           image: {{ template "docker_ch_dbaas.image" . }}
@@ -82,10 +82,8 @@ spec:
               value: {{ default (printf "clickhouse-cluster.%s" .Release.Namespace) .Values.dbaas.chHost }}
             - name: CLICKHOUSE_PORT
               value: {{ default "9000" .Values.dbaas.chPort | quote }}
-            {{- if or (gt (int .Values.clickhouseCluster.shardsCount) 1) (gt (int (include "clickhouse.replicasCount" .)) 1) }}
             - name: REPLICATED_USER_STORAGE
               value: "true"
-            {{- end }}
             {{- if .Values.dbaas.migrateRoles }}
             - name: ROLES_ADDITIONAL_GRANT
               value: "true"
@@ -151,10 +149,8 @@ spec:
               value: {{ default "9000" .Values.dbaas.chPort | quote }}
             - name: DBAAS_AGGREGATOR_PHYSICAL_DATABASE_IDENTIFIER
               value: {{ .Values.dbaas.aggregator.physicalDatabaseIdentifier | default (printf "%s:%s" .Release.Namespace "clickhouse")}}
-            {{- if or (gt (int .Values.clickhouseCluster.shardsCount) 1) (gt (int (include "clickhouse.replicasCount" .)) 1) }}
             - name: REPLICATED_USER_STORAGE
               value: "true"
-            {{- end }}
             - name: CLOUD_NAMESPACE
               value: {{ .Release.Namespace }}
             - name: CLICKHOUSE_SSL
