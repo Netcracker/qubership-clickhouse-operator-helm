@@ -45,14 +45,6 @@ fsGroup: 101
 {{- end }}
 {{- end }}
 
-{{- define "clickhouse.replicasCount" -}}
-  {{- if and (ne (.Values.INFRA_CLICKHOUSE_REPLICAS | toString) "<nil>") .Values.global.cloudIntegrationEnabled -}}
-    {{- .Values.INFRA_CLICKHOUSE_REPLICAS | toString }}
-  {{- else -}}
-    {{- default "2" .Values.clickhouseCluster.replicasCount -}}
-  {{- end -}}
-{{- end -}}
-
 {{- define "docker_ch_backup_orch.image" -}}
 {{- end -}}
 

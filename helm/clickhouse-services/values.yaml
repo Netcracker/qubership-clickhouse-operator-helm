@@ -48,7 +48,6 @@ clickhouseCluster:
   # Supported values: true/false or enable/disable.
   serviceMonitor: false
   shardsCount: 1
-  replicasCount: 2
 
 
 backupDaemon:
