@@ -1,6 +1,6 @@
 ---
 name: troubleshoot-clickhouse
-description: Diagnose and resolve failures in operator-managed ClickHouse clusters — replicated tables, sharded topology, ZooKeeper coordination, backups, and service components (site-manager, backup-orchestrator, dbaas-adapter, sidecar, secret-monitor, hook). Use whenever the user reports a pod crash or restart loop, a read-only replica, ZooKeeper connection loss after switchover, memory limit exceeded errors, DNS errors, rejected inserts, too many parts or mutations, replication lag, disk usage alerts, long-running queries, too many connections, data loss alerts, or a Helm values configuration question. Match the reported symptom to documented fixes; fall back to a general diagnostic checklist when nothing matches.
+description: Diagnose and resolve failures in ClickHouse operator clusters — replicated tables, sharded topology, ZooKeeper coordination, backups, and service components (site-manager, backup-orchestrator, dbaas-adapter, sidecar, secret-monitor, hook). Use whenever the user reports a pod crash or restart loop, a read-only replica, ZooKeeper connection loss after switchover, memory limit exceeded errors, DNS errors, rejected inserts, too many parts or mutations, replication lag, disk usage alerts, long-running queries, too many connections, data loss alerts, or a Helm values configuration question. Match the reported symptom to documented fixes; fall back to a general diagnostic checklist when nothing matches.
 ---
 
 ## How to use the reference file
