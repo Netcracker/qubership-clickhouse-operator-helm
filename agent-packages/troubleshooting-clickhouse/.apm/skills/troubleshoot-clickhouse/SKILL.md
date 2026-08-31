@@ -5,14 +5,14 @@ description: Diagnose and resolve failures in ClickHouse operator clusters — r
 
 ## How to use the reference file
 
-1. Grep issue headers: `grep -n "^## " references/Troubleshooting.md`
-2. If no results: `grep -n "^##[^# ]" references/Troubleshooting.md`
+1. Grep issue headers: `grep -n "^## " references/troubleshooting.md`
+2. If no results: `grep -n "^##[^# ]" references/troubleshooting.md`
 3. Match the user's symptom against the jump table below to select the right section.
 4. Load only that section — not the entire file.
 
 ## Symptom → reference section
 
-| Symptom | Section in references/Troubleshooting.md |
+| Symptom | Section in references/troubleshooting.md |
 |---------|------------------------------------------------|
 | Query processing error / broken connection | ## Query Processing |
 | ZooKeeper connection loss after DR switchover | ## ClickHouse lost connection to Zookeeper after switchover |
