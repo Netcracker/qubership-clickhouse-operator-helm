@@ -1,38 +1,22 @@
 ---
 name: troubleshoot-clickhouse
-description: Diagnose and resolve failures in ClickHouse operator clusters — replicated tables, sharded topology, ZooKeeper coordination, backups, and service components (site-manager, backup-orchestrator, dbaas-adapter, sidecar, secret-monitor, hook). Use whenever the user reports a pod crash or restart loop, a read-only replica, ZooKeeper connection loss after switchover, memory limit exceeded errors, DNS errors, rejected inserts, too many parts or mutations, replication lag, disk usage alerts, long-running queries, too many connections, data loss alerts, or a Helm values configuration question. Match the reported symptom to documented fixes; fall back to a general diagnostic checklist when nothing matches.
+description: Diagnose and resolve failures in ClickHouse operator clusters — query processing errors, ZooKeeper coordination failures after DR switchover, memory limit exceeded issues, and kernel compatibility problems. Use whenever the user reports a broken query connection, replicas in read-only mode after switchover, memory limit exceeded errors, or RENAME EXCHANGE not supported errors. Match the reported symptom to documented fixes; fall back to a general diagnostic checklist when nothing matches.
 ---
 
 ## How to use the reference file
 
 1. Grep issue headers: `grep -n "^## " references/troubleshooting.md`
 2. If no results: `grep -n "^##[^# ]" references/troubleshooting.md`
-3. Match the user's symptom against the jump table below to select the right section.
-4. Load only that section — not the entire file.
+3. Read only that section: offset at its line number, limit through to the next header's line number. Never load the whole file for one lookup.
 
 ## Symptom → reference section
 
 | Symptom | Section in references/troubleshooting.md |
 |---------|------------------------------------------------|
-| Query processing error / broken connection | ## Query Processing |
-| ZooKeeper connection loss after DR switchover | ## ClickHouse lost connection to Zookeeper after switchover |
-| Memory limit for query exceeded / OOMKilled | ## Memory limit (for query) exceeded |
-| RENAME EXCHANGE not supported / kernel issue | ## RENAME EXCHANGE is not supported |
-| Metrics exporter down | ## ClickHouseMetricsExporterDown |
-| ClickHouse pods not running | ## ClickHouseServerDown |
-| Metrics exporter fetch errors | ## ClickHouseMetricsExporterFetchErrors |
-| Pod restarted recently | ## ClickHouseServerRestartRecently |
-| DNS resolution errors | ## ClickHouseDNSErrors |
-| Rejected INSERT queries | ## ClickHouseRejectedInsert |
-| Too many parts in partition | ## ClickHouseMaxPartCountForPartition |
-| Long-running query | ## ClickHouseLongestRunningQuery |
-| Replica in read-only state | ## ClickHouseReadonlyReplica |
-| Replication lag / absolute delay | ## ClickHouseReplicasMaxAbsoluteDelay |
-| Too many client connections | ## ClickHouseTooManyConnections |
-| ZooKeeper hardware exceptions | ## ClickHouseZooKeeperHardwareExceptions |
-| Disk usage > 90% | ## ClickHouseDiskUsage |
-| Replicated data loss | ## ClickHouseReplicatedDataLoss |
-| Too many incomplete mutations | ## ClickHouseTooManyMutations |
+| Query processing error / broken connection |  Query Processing |
+| ZooKeeper connection loss after DR switchover |  ClickHouse lost connection to Zookeeper after switchover |
+| Memory limit for query exceeded / OOMKilled |  Memory limit (for query) exceeded |
+| RENAME EXCHANGE not supported / kernel issue |  RENAME EXCHANGE is not supported |
 
 ## Guardrails
 
