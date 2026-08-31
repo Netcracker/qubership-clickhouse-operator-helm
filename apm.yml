@@ -1,0 +1,11 @@
+name: qubership-clickhouse-operator-helm
+version: 1.0.0
+description: APM project for clickhouse operator
+dependencies:
+  apm: []
+  mcp: []
+includes: auto
+scripts: {}
+devDependencies:
+  apm:
+  - ./agent-packages/troubleshooting-clickhouse/

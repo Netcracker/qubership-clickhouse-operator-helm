@@ -1,0 +1,14 @@
+name: troubleshooting-clickhouse
+version: 1.0.0
+description: APM skill for troubleshooting ClickHouse component issues, 
+  including deployment, configuration, connectivity, storage, replication, 
+  backup, and operational failures.
+author: Developer
+targets:
+  - claude
+  - cursor
+dependencies:
+  apm: []
+  mcp: []
+includes: auto
+scripts: {}
