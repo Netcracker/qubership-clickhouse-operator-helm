@@ -1,7 +1,7 @@
 ---
 name: troubleshoot-clickhouse
 description: Diagnose and resolve query processing errors, ZooKeeper/replication failures, memory limit/OOM issues, kernel compatibility problems, merge/part backlog, and user/profile configuration issues, query performance, server settings, users/profiles, replication/ZooKeeper coupling, or documented ClickHouse failure modes. Match the reported symptom to the documented troubleshooting section; fall back to a general diagnostic checklist when no specific match exists.
-
+---
 ## How to use the reference file
 
 1. Grep issue headers:
