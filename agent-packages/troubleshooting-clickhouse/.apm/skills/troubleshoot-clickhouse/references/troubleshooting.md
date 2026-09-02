@@ -198,7 +198,7 @@ Not applicable.
 
 1. Complement CR with additional parameters with profiles options described below:
 
-Please use Helm to upgrade parameters refer to [How To Deploy](../../README.md#how-to-deploy)
+Please use Helm to upgrade parameters (../../README.md#how-to-deploy)
    
 ```
   configuration:
@@ -208,11 +208,11 @@ Please use Helm to upgrade parameters refer to [How To Deploy](../../README.md#h
       default/max_query_size: 524288
       default/use_uncompressed_cache: 1
 ```
-More info you may find here [Configuration parameters](../internal/dev/parameters.md#configuration)
+
 
 2. Enlarge resource for clickhouse node statefullsets up to:  
 
-Please use Helm to upgrade parameters refer to [How To Deploy](../../README.md#how-to-deploy)
+Please use Helm to upgrade parameters(../../README.md#how-to-deploy)
 
 ```
   resources:
