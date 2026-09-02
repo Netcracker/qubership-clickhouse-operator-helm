@@ -134,7 +134,7 @@ clickhouseCluster:
       "background_pool_size": 32
 ```
 
-Please use Helm to upgrade parameters, refer to [How To Deploy](../../README.md#how-to-deploy).
+
 
 ### Recommendations
 
@@ -198,7 +198,7 @@ Not applicable.
 
 1. Complement CR with additional parameters with profiles options described below:
 
-Please use Helm to upgrade parameters (../../README.md#how-to-deploy)
+
    
 ```
   configuration:
@@ -212,7 +212,7 @@ Please use Helm to upgrade parameters (../../README.md#how-to-deploy)
 
 2. Enlarge resource for clickhouse node statefullsets up to:  
 
-Please use Helm to upgrade parameters(../../README.md#how-to-deploy)
+
 
 ```
   resources:
