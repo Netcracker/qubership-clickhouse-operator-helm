@@ -30,7 +30,8 @@ jobs:
         with:
           files: |
             [
-              { "from": "docs/public/troubleshooting.md", "to": "agent-packages/troubleshooting-clickhouse/.apm/skills/troubleshoot-clickhouse/references/troubleshooting.md" }
+              { "from": "docs/public/troubleshooting.md", "to": "agent-packages/troubleshooting-clickhouse/.apm/skills/troubleshoot-clickhouse/references/troubleshooting.md" },
+              { "from": "docs/public/monitoring/alarm-troubleshooting.md", "to": "agent-packages/troubleshooting-clickhouse/.apm/skills/troubleshoot-clickhouse/references/alarm-troubleshooting.md" }
             ]
           title: "chore: sync troubleshooting skill reference"
           commit-message: "chore: sync troubleshooting skill reference"
