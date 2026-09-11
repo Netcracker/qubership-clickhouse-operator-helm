@@ -100,7 +100,7 @@ spec:
       config.d/write_marks_for_substreams_in_compact_parts.xml: |
         <clickhouse>
           <merge_tree>
-            <write_marks_for_substreams_in_compact_parts>{{ if .Values.clickhouseCluster.writeMarksForSubstreamsInCompactParts }}1{{ else }}0{{ end }}</write_marks_for_substreams_in_compact_parts>
+            <write_marks_for_substreams_in_compact_parts>{{ .Values.clickhouseCluster.writeMarksForSubstreamsInCompactParts }}</write_marks_for_substreams_in_compact_parts>
           </merge_tree>
         </clickhouse>
   {{- end }}
