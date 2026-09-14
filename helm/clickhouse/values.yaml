@@ -584,6 +584,13 @@ clickhouseCluster:
     clickHouseRunningQueriesThreshold: 80
     clickHouseMutationsThreshold: 100
 
+  ## Controls whether marks are written per substream in compact parts (.mrk4 format).
+  ## Set to false for backward compatibility with older ClickHouse versions before 25.6
+  # Type: boolean
+  # Mandatory: no
+  #
+  writeMarksForSubstreamsInCompactParts: true
+
   ## This parameters allows to specify all of the clickhouse parameters
   # Type: object
   # Mandatory: no
