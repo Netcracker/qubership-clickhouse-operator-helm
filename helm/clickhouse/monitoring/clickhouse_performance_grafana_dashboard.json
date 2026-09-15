@@ -1124,7 +1124,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "chi_clickhouse_table_parts{active!=\"0\", database=~\"$databases\", hostname=~\"$clickhouse_host\", namespace=\"$exported_namespace\"}",
+              "expr": "chi_clickhouse_table_parts{active!=\"0\", database=~\"$databases\", hostname=~\"$clickhouse_host\", exported_namespace=\"$exported_namespace\"}",
               "legendFormat": "{{table}}",
               "range": true,
               "refId": "A"
@@ -1219,7 +1219,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "chi_clickhouse_table_parts_rows{active!=\"0\", database=~\"$databases\", hostname=~\"$clickhouse_host\", namespace=\"$exported_namespace\"}",
+              "expr": "chi_clickhouse_table_parts_rows{active!=\"0\", database=~\"$databases\", hostname=~\"$clickhouse_host\", exported_namespace=\"$exported_namespace\"}",
               "legendFormat": "{{table}}",
               "range": true,
               "refId": "A"
@@ -1314,7 +1314,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "chi_clickhouse_table_parts_bytes{active!=\"0\", database=~\"$databases\", hostname=~\"$clickhouse_host\", namespace=\"$exported_namespace\"} / 1000000",
+              "expr": "chi_clickhouse_table_parts_bytes{active!=\"0\", database=~\"$databases\", hostname=~\"$clickhouse_host\", exported_namespace=\"$exported_namespace\"} / 1000000",
               "legendFormat": "{{table}}",
               "range": true,
               "refId": "A"
@@ -1409,7 +1409,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "chi_clickhouse_table_parts_bytes_uncompressed{active!=\"0\", database=~\"$databases\", hostname=~\"$clickhouse_host\", namespace=\"$exported_namespace\"} / 1000000",
+              "expr": "chi_clickhouse_table_parts_bytes_uncompressed{active!=\"0\", database=~\"$databases\", hostname=~\"$clickhouse_host\", exported_namespace=\"$exported_namespace\"} / 1000000",
               "legendFormat": "{{table}}",
               "range": true,
               "refId": "A"
@@ -1690,7 +1690,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(database) (chi_clickhouse_table_parts_rows{active!=\"0\", hostname=~\"$clickhouse_host\", namespace=\"$exported_namespace\"}) / 100000",
+              "expr": "sum by(database) (chi_clickhouse_table_parts_rows{active!=\"0\", hostname=~\"$clickhouse_host\", exported_namespace=\"$exported_namespace\"}) / 100000",
               "hide": false,
               "legendFormat": "__auto",
               "range": true,
