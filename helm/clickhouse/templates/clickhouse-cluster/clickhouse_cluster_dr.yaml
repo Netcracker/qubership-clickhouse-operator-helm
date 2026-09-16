@@ -25,14 +25,6 @@ spec:
       nodes:
         - host: {{ .Values.clickhouseCluster.zookeeperHost }}
     files:
-  {{- if hasKey .Values.clickhouseCluster "writeMarksForSubstreamsInCompactParts" }}
-      config.d/write_marks_for_substreams_in_compact_parts.xml: |
-        <clickhouse>
-          <merge_tree>
-            <write_marks_for_substreams_in_compact_parts>{{ .Values.clickhouseCluster.writeMarksForSubstreamsInCompactParts }}</write_marks_for_substreams_in_compact_parts>
-          </merge_tree>
-        </clickhouse>
-  {{- end }}
     clusters:
       - name: dr-cluster
         layout:
