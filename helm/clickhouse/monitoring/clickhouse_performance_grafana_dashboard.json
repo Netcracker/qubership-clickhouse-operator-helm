@@ -2102,14 +2102,14 @@
           "type": "prometheus",
           "uid": "${datasource}"
         },
-        "definition": "label_values(chi_clickhouse_table_parts{namespace=\"$exported_namespace\"}, database)",
+        "definition": "label_values(chi_clickhouse_table_parts{exported_namespace=\"$exported_namespace\"}, database)",
         "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "databases",
         "options": [],
         "query": {
-          "query": "label_values(chi_clickhouse_table_parts{namespace=\"$exported_namespace\"}, database)",
+          "query": "label_values(chi_clickhouse_table_parts{exported_namespace=\"$exported_namespace\"}, database)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 2,
@@ -2132,7 +2132,7 @@
           "type": "prometheus",
           "uid": "${datasource}"
         },
-        "definition": "label_values(chi_clickhouse_table_parts{namespace=\"$exported_namespace\"}, hostname)",
+        "definition": "label_values(chi_clickhouse_table_parts{exported_namespace=\"$exported_namespace\"}, hostname)",
         "hide": 0,
         "includeAll": true,
         "label": "ClickHouse Host",
@@ -2140,7 +2140,7 @@
         "name": "clickhouse_host",
         "options": [],
         "query": {
-          "query": "label_values(chi_clickhouse_table_parts{namespace=\"$exported_namespace\"}, hostname)",
+          "query": "label_values(chi_clickhouse_table_parts{exported_namespace=\"$exported_namespace\"}, hostname)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 2,
