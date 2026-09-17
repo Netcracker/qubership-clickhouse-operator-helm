@@ -862,6 +862,9 @@ postHook:
     requests: {}
   affinity: {}
 
+pvcAnnotationsCleanup:
+  dockerImage: "ghcr.io/netcracker/clickhouse-pvc-cleanup:main"
+
 
 # STORAGE_RWO_CLASS: "local-path"
 
