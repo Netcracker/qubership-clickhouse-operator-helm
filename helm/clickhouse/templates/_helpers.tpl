@@ -19,11 +19,15 @@
 {{- end -}}
 
 {{- define "clickhouse.pvcAnnotations" -}}
-{{- with (default dict .Values.pvc) }}
-{{- with .metadata }}
+{{- $pvc := default dict .Values.pvc }}
+{{- $meta := default dict $pvc.metadata }}
+{{- $annotations := default dict $meta.annotations }}
+{{- $customKeys := keys $annotations | sortAlpha | join "," }}
 metadata:
-{{ toYaml . | nindent 2 }}
-{{- end }}
+  annotations:
+    deployment.netcracker.com/custom-annotations: {{ $customKeys | quote }}
+{{- range $k, $v := $annotations }}
+    {{ $k }}: {{ $v | quote }}
 {{- end }}
 {{- end }}
 
