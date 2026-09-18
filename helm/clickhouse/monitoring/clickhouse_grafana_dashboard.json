@@ -8784,9 +8784,9 @@
         },
         "definition": "label_values({__name__ =~ \"chi_clickhouse_metric_Uptime|chi_clickhouse_metric_fetch_errors\", cluster=~\"$cluster\"}, exported_namespace)",
         "hide": 0,
-        "includeAll": true,
+        "includeAll": false,
         "label": "Namespace",
-        "multi": true,
+        "multi": false,
         "name": "exported_namespace",
         "options": [],
         "query": {
