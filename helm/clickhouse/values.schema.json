@@ -1040,6 +1040,19 @@
         }
 
       }
+    },
+
+    "pvcAnnotationsCleanup": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+
+        "dockerImage": {
+          "type": "string",
+          "default": "ghcr.io/netcracker/qubership-clickhouse-pvc-cleanup:main"
+        }
+
+      }
     }
 
   },
