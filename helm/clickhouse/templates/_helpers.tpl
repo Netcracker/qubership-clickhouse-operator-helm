@@ -322,6 +322,9 @@ app.kubernetes.io/technology: "go"
 {{- define "clickhouse_post_hook.image" -}}
 {{- end -}}
 
+{{- define "clickhouse_pvc_cleanup.image" -}}
+{{- end -}}
+
 {{- define "clickhouse.users" -}}
   {{- $len := len .Values.clickhouseCluster.users -}}
   {{- $counter := 0 -}}
