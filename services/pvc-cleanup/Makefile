@@ -7,14 +7,14 @@ override TAG_ENV = local
 endif
 
 ifndef DOCKER_NAMES
-override DOCKER_NAMES = "artifactorycn.netcracker.com:17009/netcracker/clickhouse-pvc-cleanup:${TAG_ENV}"
+override DOCKER_NAMES = "ghcr.io/netcracker/clickhouse-pvc-cleanup:${TAG_ENV}"
 endif
 
 sandbox-build: deps docker-build
 
 all: sandbox-build docker-push
 
-local: fmt deps compile docker-build  docker-push
+local: fmt deps compile docker-build
 
 deps:
 	go mod tidy
