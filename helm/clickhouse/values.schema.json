@@ -1050,6 +1050,18 @@
         "dockerImage": {
           "type": "string",
           "default": "ghcr.io/netcracker/qubership-clickhouse-pvc-cleanup:main"
+        },
+
+        "securityContext": {
+          "$ref": "#/$defs/securityContext"
+        },
+
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+
+        "affinity": {
+          "$ref": "#/$defs/affinity"
         }
 
       }

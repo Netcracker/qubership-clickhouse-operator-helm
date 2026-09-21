@@ -1,3 +1,7 @@
+{{- $pvc := default dict .Values.pvc -}}
+{{- $meta := default dict $pvc.metadata -}}
+{{- $annotations := default dict $meta.annotations -}}
+{{- $desiredCustom := keys $annotations | sortAlpha | join "," -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -22,8 +26,8 @@ spec:
     spec:
       restartPolicy: Never
       serviceAccountName: post-hook-sa
-      {{- if .Values.postHook.affinity }}
-      affinity: {{ .Values.postHook.affinity | toJson }}
+      {{- if .Values.pvcAnnotationsCleanup.affinity }}
+      affinity: {{ .Values.pvcAnnotationsCleanup.affinity | toJson }}
       {{- else if .Values.affinity }}
       affinity: {{ .Values.affinity | toJson }}
       {{- end }}
@@ -32,26 +36,26 @@ spec:
         image: {{ template "clickhouse_pvc_cleanup.image" . }}
         imagePullPolicy: Always
         env:
-          - name: NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          - name: DESIRED_CUSTOM_ANNOTATIONS
-            value: {{ $pvc := default dict .Values.pvc }}{{ $meta := default dict $pvc.metadata }}{{ $annotations := default dict $meta.annotations }}{{ keys $annotations | sortAlpha | join "," | quote }}
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: DESIRED_CUSTOM_ANNOTATIONS
+          value: {{ $desiredCustom | quote }}
         securityContext:
             {{- include "clickhouse.globalContainerSecurityContext" . | nindent 12 }}
-            {{- with .Values.postHook.securityContext.container }}
+            {{- with .Values.pvcAnnotationsCleanup.securityContext.container }}
             {{- toYaml . | nindent 12 -}}
             {{- end }}
         resources:
           requests:
-            memory: {{ default "64Mi" .Values.postHook.resources.requests.memory }}
-            cpu: {{ default "100m" .Values.postHook.resources.requests.cpu }}
+            memory: {{ default "64Mi" .Values.pvcAnnotationsCleanup.resources.requests.memory }}
+            cpu: {{ default "100m" .Values.pvcAnnotationsCleanup.resources.requests.cpu }}
           limits:
-            memory: {{ default "128Mi" .Values.postHook.resources.limits.memory }}
-            cpu: {{ default "200m" .Values.postHook.resources.limits.cpu }}
+            memory: {{ default "128Mi" .Values.pvcAnnotationsCleanup.resources.limits.memory }}
+            cpu: {{ default "200m" .Values.pvcAnnotationsCleanup.resources.limits.cpu }}
       securityContext:
         {{ (include "clickhouse.globalPodSecurityContext" . | nindent 8) }}
-        {{- with .Values.postHook.securityContext.pod }}
+        {{- with .Values.pvcAnnotationsCleanup.securityContext.pod }}
         {{- toYaml . | nindent 8 -}}
         {{- end }}
