@@ -3,7 +3,7 @@ kind: Role
 metadata:
   name: pvc-cleanup-role
   annotations:
-    "helm.sh/hook": post-upgrade
+    "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "0"
     "helm.sh/hook-delete-policy": hook-succeeded, hook-failed
   labels:
