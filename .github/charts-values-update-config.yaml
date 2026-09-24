@@ -15,6 +15,7 @@ charts:
       - ghcr.io/netcracker/qubership-docker-clickhouse-backup-sidecar:${release}
       - ghcr.io/netcracker/qubership-clickhouse-hook:${release}
       - ghcr.io/netcracker/qubership-clickhouse-secret-monitor:${release}
+      - ghcr.io/netcracker/qubership-clickhouse-pvc-cleanup:${release}
       - ghcr.io/netcracker/qubership-clickhouse-transfer:${release}
   - name: clickhouse-services
     chart_file: helm/clickhouse-services/Chart.yaml

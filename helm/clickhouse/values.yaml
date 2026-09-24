@@ -862,6 +862,16 @@ postHook:
     requests: {}
   affinity: {}
 
+pvcAnnotationsCleanup:
+  dockerImage: "ghcr.io/netcracker/qubership-clickhouse-pvc-cleanup:main"
+  securityContext:
+    container: {}
+    pod: {}
+  resources:
+    limits: {}
+    requests: {}
+  affinity: {}
+
 
 # STORAGE_RWO_CLASS: "local-path"
 

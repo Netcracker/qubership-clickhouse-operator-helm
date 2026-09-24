@@ -28,6 +28,8 @@ jobs:
             context: ""
           - name: qubership-clickhouse-secret-monitor
             context: ""
+          - name: qubership-clickhouse-pvc-cleanup
+            context: ""           
           - name: qubership-docker-clickhouse-backup-sidecar
             context: ""
           - name: qubership-docker-clickhouse-dbaas-adapter
