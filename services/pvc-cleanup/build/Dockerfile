@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.26.4-alpine3.24 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1-alpine3.24 AS builder
 
 ENV GOSUMDB=off
 
@@ -17,7 +17,7 @@ RUN go mod tidy
 ARG TARGETOS TARGETARCH
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /build/_output/bin/pvc-cleanup -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} ./cmd/main.go
 
-FROM scratch
+FROM alpine:3.24
 
 COPY --from=builder /build/_output/bin/pvc-cleanup /usr/local/bin/pvc-cleanup
 

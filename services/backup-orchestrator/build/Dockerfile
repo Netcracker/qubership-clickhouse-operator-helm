@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.26.4-alpine3.24 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1-alpine3.24 AS builder
 
 ENV GOSUMDB=off
 
@@ -19,7 +19,7 @@ RUN go mod tidy
 ARG TARGETOS TARGETARCH
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /build/_output/bin/qubership-clickhouse-backup-orchestrator -gcflags all=-trimpath=${GOPATH} -asmflags all=-trimpath=${GOPATH} ./cmd/main.go
 
-FROM ghcr.io/netcracker/qubership-backup-daemon-go:0.1.23
+FROM ghcr.io/netcracker/qubership-backup-daemon-go:0.1.25
 
 COPY build/backup-daemon.conf /etc/backup-daemon.conf
 

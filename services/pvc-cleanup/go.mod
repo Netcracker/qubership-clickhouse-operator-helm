@@ -1,6 +1,6 @@
 module github.com/Netcracker/qubership-clickhouse-operator-helm/pvc-cleanup
 
-go 1.26.4
+go 1.27.1
 
 require (
 	k8s.io/api v0.37.0
