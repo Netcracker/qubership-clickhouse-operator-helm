@@ -58,7 +58,7 @@
 
         "image": {
           "type": "string",
-          "default": "altinity/clickhouse-operator:0.27.2"
+          "default": "altinity/clickhouse-operator:0.27.4"
         },
 
         "resources": {
@@ -76,7 +76,7 @@
 
         "metricsExporterImage": {
           "type": "string",
-          "default": "altinity/metrics-exporter:0.27.2"
+          "default": "altinity/metrics-exporter:0.27.4"
         },
 
         "metricsExporterPort": {
@@ -590,7 +590,7 @@
 
         "image": {
           "type": "string",
-          "default": "altinity/clickhouse-backup:2.7.2"
+          "default": "altinity/clickhouse-backup:2.8.1"
         },
 
         "timeout": {

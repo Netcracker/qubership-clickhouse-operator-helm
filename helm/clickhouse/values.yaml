@@ -52,8 +52,7 @@ clickhouseOperator:
   # Type: string
   # Mandatory: yes
   #
-  image: altinity/clickhouse-operator:0.27.2
-
+  image: altinity/clickhouse-operator:0.27.4
   ## The resources describes the compute resource requests and limits for single Pod(operator).
   ## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
   # Type: object
@@ -116,7 +115,7 @@ clickhouseOperator:
   # Type: string
   # Mandatory: yes
   #
-  metricsExporterImage: altinity/metrics-exporter:0.27.2
+  metricsExporterImage: altinity/metrics-exporter:0.27.4
 
   ## Port for metric-exporter service
   # Type: integer
@@ -676,7 +675,7 @@ backupDaemon:
   # Mandatory: yes
   #
   #
-  image: altinity/clickhouse-backup:2.7.2
+  image: altinity/clickhouse-backup:2.8.1
   timeout: "10"
   envs: {}
   storage:
