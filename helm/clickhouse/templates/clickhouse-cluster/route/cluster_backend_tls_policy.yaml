@@ -9,6 +9,7 @@ metadata:
     {{ include "kubernetes.labels" . | nindent 4 }}
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: "Retry=true"
 spec:
   targetRefs:
   - group: ""
