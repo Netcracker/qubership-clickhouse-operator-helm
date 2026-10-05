@@ -1,0 +1,57 @@
+name: Run Clickhouse Pipeline
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+  push
+#  pull_request:
+#    types: [opened, synchronize, reopened]
+#    branches: [main]
+#  push:
+#    branches: [main]
+
+
+jobs:
+  Wait-for-images:
+    runs-on: ubuntu-latest
+    outputs:
+      skip_tests: ${{ steps.check.outputs.skip_tests }}
+    steps:
+      - name: Check if build.yaml was triggered for this commit
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            SHA="${{ github.sha }}"
+          fi
+          RUNS=$(gh run list --workflow build.yaml --repo ${{ github.repository }} --commit $SHA)
+          SKIP_TESTS="false"
+          if [ -z "$RUNS" ]; then
+            SKIP_TESTS="true"
+          fi
+          echo SKIP_TESTS: $SKIP_TESTS
+          echo "skip_tests=$SKIP_TESTS" >> $GITHUB_OUTPUT
+      - name: Wait for build.yaml to complete
+        if: steps.check.outputs.skip_tests == 'false'
+        uses: netcracker/qubership-workflow-hub/actions/wait-for-workflow@4ce44398bac0a6f82e55aeb4a753aada3530de5b  # v2.7.1
+        id: wait
+        with:
+          workflow: build.yaml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          poll-interval: 20
+
+  Clickhouse-Pipeline:
+    needs: Wait-for-images
+    uses: Netcracker/qubership-test-pipelines/.github/workflows/clickhouse.yaml@feat/clickhouse
+    with:
+      service_branch: '${{ github.head_ref || github.ref_name }}'
+      pipeline_branch: 'feat/clickhouse' # v1.16.0 renovate: depName=Netcracker/qubership-test-pipelines
+      runner_type: 'ubuntu-latest'
+    secrets:
+      AWS_S3_ACCESS_KEY_ID: ${{secrets.AWS_S3_ACCESS_KEY_ID}}
+      AWS_S3_ACCESS_KEY_SECRET: ${{secrets.AWS_S3_ACCESS_KEY_SECRET}}
