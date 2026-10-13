@@ -20,3 +20,12 @@ rules:
   - list
   - update
   - patch
+- apiGroups:
+  - clickhouse.altinity.com
+  resources:
+  - clickhouseinstallations
+  verbs:
+  - get
+  - list
+  - patch
+
