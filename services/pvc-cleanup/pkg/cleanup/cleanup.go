@@ -24,11 +24,13 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
+	"k8s.io/client-go/util/retry"
 )
 
 const customAnnotationsKey = "deployment.netcracker.com/custom-annotations"
@@ -64,7 +66,8 @@ func Run(namespace, desiredCustom string) error {
 		return err
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
 
 	pvcs, err := clientset.CoreV1().PersistentVolumeClaims(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -74,54 +77,76 @@ func Run(namespace, desiredCustom string) error {
 	desiredKeys := parseKeys(desiredCustom)
 
 	for i := range pvcs.Items {
-		pvc := &pvcs.Items[i]
-		if err := cleanupPVC(ctx, clientset, namespace, pvc, desiredKeys); err != nil {
-			fmt.Printf("WARNING: failed to cleanup PVC %s: %v\n", pvc.Name, err)
+		pvcName := pvcs.Items[i].Name
+		if err := cleanupPVC(ctx, clientset, namespace, pvcName, desiredKeys); err != nil {
+			fmt.Printf("WARNING: failed to cleanup PVC %s: %v\n", pvcName, err)
 		}
 	}
 
 	return nil
 }
 
-func cleanupPVC(ctx context.Context, clientset kubernetes.Interface, namespace string, pvc *corev1.PersistentVolumeClaim, desiredKeys map[string]bool) error {
-	if pvc.Annotations == nil {
-		return nil
-	}
+func cleanupPVC(ctx context.Context, clientset kubernetes.Interface, namespace, pvcName string, desiredKeys map[string]bool) error {
+	backoff := retry.DefaultBackoff
+	backoff.Steps = 3
 
-	tracked, exists := pvc.Annotations[customAnnotationsKey]
-	if !exists {
-		return nil
-	}
+	return retry.OnError(backoff, isRetryableError, func() error {
+		current, err := clientset.CoreV1().PersistentVolumeClaims(namespace).Get(ctx, pvcName, metav1.GetOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to get PVC: %w", err)
+		}
 
-	trackedKeys := parseKeys(tracked)
+		if current.Annotations == nil {
+			return nil
+		}
 
-	changed := false
-	for key := range trackedKeys {
-		if !desiredKeys[key] {
-			fmt.Printf("PVC %s: removing stale annotation '%s'\n", pvc.Name, key)
-			delete(pvc.Annotations, key)
+		tracked, exists := current.Annotations[customAnnotationsKey]
+		if !exists {
+			return nil
+		}
+
+		trackedKeys := parseKeys(tracked)
+
+		changed := false
+		for key := range trackedKeys {
+			if !desiredKeys[key] {
+				fmt.Printf("PVC %s: removing stale annotation '%s'\n", current.Name, key)
+				delete(current.Annotations, key)
+				changed = true
+			}
+		}
+
+		newTrackedValue := formatKeys(desiredKeys)
+		if current.Annotations[customAnnotationsKey] != newTrackedValue {
+			current.Annotations[customAnnotationsKey] = newTrackedValue
 			changed = true
 		}
-	}
 
-	newTrackedValue := formatKeys(desiredKeys)
-	if pvc.Annotations[customAnnotationsKey] != newTrackedValue {
-		pvc.Annotations[customAnnotationsKey] = newTrackedValue
-		changed = true
-	}
+		if !changed {
+			fmt.Printf("PVC %s: annotations up to date, skipping\n", current.Name)
+			return nil
+		}
 
-	if !changed {
-		fmt.Printf("PVC %s: annotations up to date, skipping\n", pvc.Name)
+		_, err = clientset.CoreV1().PersistentVolumeClaims(namespace).Update(ctx, current, metav1.UpdateOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to update PVC: %w", err)
+		}
+
+		fmt.Printf("PVC %s: patched successfully\n", current.Name)
 		return nil
-	}
+	})
+}
 
-	_, err := clientset.CoreV1().PersistentVolumeClaims(namespace).Update(ctx, pvc, metav1.UpdateOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to update PVC: %w", err)
+func isRetryableError(err error) bool {
+	if apierrors.IsConflict(err) {
+		fmt.Printf("Conflict detected, retrying: %v\n", err)
+		return true
 	}
-
-	fmt.Printf("PVC %s: patched successfully\n", pvc.Name)
-	return nil
+	if apierrors.IsServiceUnavailable(err) {
+		fmt.Printf("Service unavailable, retrying: %v\n", err)
+		return true
+	}
+	return false
 }
 
 func parseKeys(s string) map[string]bool {
