@@ -40,6 +40,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        - name: CHI_NAME
+          value: "cluster"
+        - name: PVC_NAME_PREFIX
+          value: "clickhouse-pvc-chi-cluster"
         - name: DESIRED_CUSTOM_ANNOTATIONS
           value: {{ $desiredCustom | quote }}
         securityContext:
