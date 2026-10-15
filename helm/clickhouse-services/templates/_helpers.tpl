@@ -98,6 +98,9 @@ fsGroup: 101
 {{- end -}}
 
 {{- define "find_image" -}}
+  {{- $image := .default -}}
+
+  {{ printf "%s" $image }}
 {{- end -}}
 
 {{- define "supplementary-tests.monitoredImages" -}}
