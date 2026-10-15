@@ -50,7 +50,11 @@ func MigrateRoles(adAdministration service.DbAdministration, adapterForStorage c
 		if d == "information_schema" || d == "default" || d == "system" || d == "INFORMATION_SCHEMA" {
 			continue
 		}
-		grantUsersForDatabase(*a, d)
+		err := grantUsersForDatabase(*a, d)
+		if err != nil {
+			log.Error(fmt.Sprintf("failed to grant users for database %s, stopping migration", d), zap.Error(err))
+			return
+		}
 	}
 	log.Info("Migration finished")
 }
@@ -111,48 +115,59 @@ func moveUserToReplicatedStorage(a cluster.ClusterAdapter, user string) {
 	log.Info(fmt.Sprintf("User %s moved to replicated storage", user))
 }
 
-func grantUsersForDatabase(a basic.ClickhouseServiceAdapter, database string) {
+func grantUsersForDatabase(a basic.ClickhouseServiceAdapter, database string) error {
 	log.Info(fmt.Sprintf("Processing database %s", database))
 	users, err := getUsersForDatabase(a, database)
 	if err != nil {
-		log.Error(fmt.Sprintf("processing of database %s aborted", database))
-		return
+		log.Error(fmt.Sprintf("processing of database %s aborted", database), zap.Error(err))
+		return err
 	}
 
 	log.Info(fmt.Sprintf("Users for migration %v", users))
 	for role, username := range users {
 		if role == basic.AdminRole {
-			grantAdminRemote(a, username)
-			grantDictionaryReload(a, username)
+			err := grantAdminRemote(a, username)
+			if err != nil {
+				return err
+			}
+			err = grantDictionaryReload(a, username)
+			if err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
-func grantDictionaryReload(a basic.ClickhouseServiceAdapter, username string) {
+func grantDictionaryReload(a basic.ClickhouseServiceAdapter, username string) error {
 	log.Debug(fmt.Sprintf("Setting SYSTEM RELOAD DICTIONARY grants to %s", username))
 	conn, err := a.GetConnection()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer conn.Close()
 	_, err = conn.Exec(basic.GrantDictionaryReloadQuery(username))
 	if err != nil {
 		log.Error(fmt.Sprintf("cannot grant SYSTEM RELOAD DICTIONARY to %s", username), zap.Error(err))
+		return err
 	}
+	return nil
 }
 
-func grantAdminRemote(a basic.ClickhouseServiceAdapter, username string) {
-	log.Debug(fmt.Sprintf("Granting ON CLUSTER REMOTE permissions to %s ", username))
+func grantAdminRemote(a basic.ClickhouseServiceAdapter, username string) error {
+	log.Debug(fmt.Sprintf("Granting ON CLUSTER REMOTE permissions to %s", username))
 	conn, err := a.GetConnection()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer conn.Close()
 
 	_, err = conn.Exec(basic.GrantAdminRemoteQuery(username))
 	if err != nil {
-		log.Error(fmt.Sprintf("Cannot grant ON CLUSTER REMOTE ON to %s ", username), zap.Error(err))
+		log.Error(fmt.Sprintf("Cannot grant ON CLUSTER REMOTE ON *.* to %s", username), zap.Error(err))
+		return err
 	}
+	return nil
 }
 
 func getUsersForDatabase(a basic.ClickhouseServiceAdapter, database string) (map[string]string, error) {
