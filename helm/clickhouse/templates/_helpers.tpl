@@ -295,6 +295,9 @@ Whether clickhouse certificates are specified
 {{ end }}
 
 {{- define "find_image" -}}
+  {{- $image := .default -}}
+
+  {{ printf "%s" $image }}
 {{- end -}}
 
 {{- define "clickhouse-tests.monitoredImages" -}}
@@ -313,16 +316,20 @@ app.kubernetes.io/technology: "go"
 {{- end -}}
 
 {{- define "clickhouse_pre_hook.image" -}}
+  {{- include "find_image" (dict "deployName" "credential_manager" "SERVICE_NAME" "credential_manager" "vals" .Values "default" .Values.clickhouseHook.dockerImage) -}}
 {{- end -}}
 
 {{- define "clickhouse_secret_monitor.image" -}}
+  {{- include "find_image" (dict "deployName" "clickhouse_secret_monitor" "SERVICE_NAME" "clickhouse_secret_monitor" "vals" .Values "default" .Values.clickhouseSecretMonitor.dockerImage) -}}
 {{- end -}}
 
 
 {{- define "clickhouse_post_hook.image" -}}
+  {{- include "find_image" (dict "deployName" "clickhouse_hook" "SERVICE_NAME" "clickhouse_hook" "vals" .Values "default" .Values.postHook.dockerImage) -}}
 {{- end -}}
 
 {{- define "clickhouse_pvc_cleanup.image" -}}
+  {{- include "find_image" (dict "deployName" "clickhouse_pvc_cleanup" "SERVICE_NAME" "clickhouse_pvc_cleanup" "vals" .Values "default" .Values.pvcAnnotationsCleanup.dockerImage) -}}
 {{- end -}}
 
 {{- define "clickhouse.users" -}}

@@ -47,15 +47,19 @@ fsGroup: 101
 {{- end }}
 
 {{- define "docker_ch_backup_orch.image" -}}
+  {{- include "find_image" (dict "deployName" "docker_ch_backup_orch" "SERVICE_NAME" "docker_ch_backup_orch" "vals" .Values "default" .Values.backupDaemon.orchestrator.image) -}}
 {{- end -}}
 
 {{- define "docker_ch_dbaas.image" -}}
+  {{- include "find_image" (dict "deployName" "dbaas_adapter" "docker_ch_dbaas_adapter" "docker_ch_dbaas_adapter" "vals" .Values "default" .Values.dbaas.dockerImage) -}}
 {{- end -}}
 
 {{- define "docker_ch_site_manager.image" -}}
+  {{- include "find_image" (dict "deployName" "docker_ch_site_manager" "SERVICE_NAME" "docker_ch_site_manager" "vals" .Values "default" .Values.disasterRecovery.siteManager.image) -}}
 {{- end -}}
 
 {{- define "clickhouseIntegrationTests.image" -}}
+  {{- include "find_image" (dict "deployName" "docker_ch_integration_tests" "SERVICE_NAME" "docker_ch_integration_tests" "vals" .Values "default" .Values.integrationTests.image) -}}
 {{- end -}}
 
 {{- define "clickhouse_backup.envs" -}}
