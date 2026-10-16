@@ -313,16 +313,20 @@ app.kubernetes.io/technology: "go"
 {{- end -}}
 
 {{- define "clickhouse_pre_hook.image" -}}
+  {{- printf "%s" .Values.clickhouseHook.dockerImage -}}
 {{- end -}}
 
 {{- define "clickhouse_secret_monitor.image" -}}
+  {{- printf "%s" .Values.clickhouseSecretMonitor.dockerImage -}}
 {{- end -}}
 
 
 {{- define "clickhouse_post_hook.image" -}}
+  {{- printf "%s" .Values.postHook.dockerImage -}}
 {{- end -}}
 
 {{- define "clickhouse_pvc_cleanup.image" -}}
+  {{- printf "%s" .Values.pvcAnnotationsCleanup.dockerImage -}}
 {{- end -}}
 
 {{- define "clickhouse.users" -}}

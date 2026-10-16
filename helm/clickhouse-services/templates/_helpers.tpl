@@ -47,15 +47,19 @@ fsGroup: 101
 {{- end }}
 
 {{- define "docker_ch_backup_orch.image" -}}
+  {{- printf "%s" .Values.backupDaemon.orchestrator.image -}}
 {{- end -}}
 
 {{- define "docker_ch_dbaas.image" -}}
+  {{- printf "%s" .Values.dbaas.dockerImage -}}
 {{- end -}}
 
 {{- define "docker_ch_site_manager.image" -}}
+  {{- printf "%s" .Values.disasterRecovery.siteManager.image -}}
 {{- end -}}
 
 {{- define "clickhouseIntegrationTests.image" -}}
+  {{- printf "%s" .Values.integrationTests.image -}}
 {{- end -}}
 
 {{- define "clickhouse_backup.envs" -}}
