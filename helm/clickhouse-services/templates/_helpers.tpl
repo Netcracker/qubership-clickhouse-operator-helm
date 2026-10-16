@@ -59,7 +59,7 @@ fsGroup: 101
 {{- end -}}
 
 {{- define "clickhouseIntegrationTests.image" -}}
-  {{- include "find_image" (dict "deployName" "docker_ch_integration_tests" "SERVICE_NAME" "docker_ch_integration_tests" "vals" .Values "default" .Values.integrationTests.image) -}}
+  {{- printf "%s" .Values.integrationTests.image -}}
 {{- end -}}
 
 {{- define "clickhouse_backup.envs" -}}
