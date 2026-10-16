@@ -5,11 +5,9 @@ The following topics are covered in this section:
 - [Introduction](#introduction)
 - [Common Troubleshooting Scenarios](#common-troubleshooting-scenarios)
     - [Query Processing](#query-processing)
-    - [ClickHouse lost connection to Zookeeper after switchover](#clickhouse-lost-connection-to-zookeeper-after-switchover)
-    - [Merge backlog / part count climbing](#merge-backlog--part-count-climbing)
-    - [ZooKeeper coupling failures](#zookeeper-coupling-failures)
-    - [Memory limit (for query) exceeded](#memory-limit-for-query-exceeded)
-    - [RENAME EXCHANGE is not supported](#rename-exchange-is-not-supported)
+    - [ClickHouse lost connection to Zookeeper after switchover](#clickHouse-lost-connection-to-zookeeper-after-switchover)
+    - [Memory limit (for query) exceeded](#memory-limit-(for-query)-exceeded)
+    - [RENAME EXCHANGE is not supported](#arangodb-follower-server-pod-logs-contain-an-error-about-stale-or-corrupted-data)
 
 # Introduction
 
@@ -94,89 +92,6 @@ It means Zookeeper cluster didn't start and need to restart Zookeeper.
 
 Restart ZooKeeper cluster.
 
-## Merge backlog / part count climbing
-
-### Description
-
-ClickHouse rejects inserts or experiences latency spikes when the number of data parts grows too high. This happens when the merge process cannot keep up with the rate of incoming inserts.
-
-### Alerts
-
-- `ClickHouseRejectedInsert` — INSERT queries rejected due to part count limits.
-- `ClickHouseMaxPartCountForPartition` — Part count for a partition exceeds the configured threshold (`clickhouseCluster.prometheusRules.maxPartCountForPartitionThreshold`).
-
-### Stack trace(s)
-
-```
-<Error> TCPHandler: Code: 252. DB::Exception: Too many parts (N). Merges are processing significantly slower than inserts. (TOO_MANY_PARTS)
-```
-
-### How to solve
-
-1. **Increase insert batch size on the client side.** Small, frequent inserts create many small parts that overwhelm the merge process. Batch inserts into larger blocks before sending to ClickHouse.
-
-2. **Tune part count limits** via Helm values:
-
-```yaml
-clickhouseCluster:
-  configuration:
-    settings:
-      "merge_tree/max_parts_in_total": 100000
-      "merge_tree/parts_to_throw_insert": 600
-```
-
-3. **Increase the merge thread pool** if CPU headroom allows:
-
-```yaml
-clickhouseCluster:
-  configuration:
-    settings:
-      "background_pool_size": 32
-```
-
-
-
-### Recommendations
-
-- Monitor `system.parts` and `system.merges` to track merge lag.
-- Verify CPU headroom before increasing the background pool size.
-- Reducing insert frequency is generally more effective than raising part count limits.
-
-## ZooKeeper coupling failures
-
-### Description
-
-Replicated tables fail to accept inserts when the ClickHouse cluster loses connectivity to ZooKeeper. Unlike the DR-switchover scenario, this can occur during normal operation due to network issues, authentication failures, or incorrect ZooKeeper configuration.
-
-### Alerts
-
-- `ClickHouseReadonlyReplica` — `ReplicatedMergeTree` tables enter read-only mode.
-- `ClickHouseZooKeeperHardwareExceptions` — ZooKeeper hardware exceptions detected.
-
-### Stack trace(s)
-
-```
-<Error> void DB::StorageReplicatedMergeTree::assertNotReadonly() const: Table is in readonly mode (zookeeper path: /clickhouse/tables/01-01/my_table)
-```
-
-### How to solve
-
-1. **Verify ZooKeeper cluster health first.** Check the ZooKeeper Grafana dashboard before making any ClickHouse-side changes.
-
-2. **Check ZooKeeper address and session timeout** in Helm values:
-
-3. **Diagnose the root cause:**
-   - Network issue (connectivity between ClickHouse pods and ZK pods) → operational fix.
-   - Authentication or ACL issue → check ZooKeeper access configuration.
-   - Wrong ZooKeeper address or port → configuration fix via Helm values.
-
-4. If ZooKeeper is healthy but ClickHouse still cannot connect, check inter-pod network policies and DNS resolution.
-
-### Recommendations
-
-- Always verify ZooKeeper health independently before recommending ClickHouse-side changes.
-- Do not manually delete ZooKeeper znodes or restart replicas without first confirming ZK connectivity.
-
 ## Memory limit (for query) exceeded
 
 ### Description
@@ -198,7 +113,7 @@ Not applicable.
 
 1. Complement CR with additional parameters with profiles options described below:
 
-
+Please use Helm to upgrade parameters refer to [How To Deploy](../../README.md#how-to-deploy)
    
 ```
   configuration:
@@ -208,11 +123,11 @@ Not applicable.
       default/max_query_size: 524288
       default/use_uncompressed_cache: 1
 ```
-
+More info you may find here [Configuration parameters](../internal/dev/parameters.md#configuration)
 
 2. Enlarge resource for clickhouse node statefullsets up to:  
 
-
+Please use Helm to upgrade parameters refer to [How To Deploy](../../README.md#how-to-deploy)
 
 ```
   resources:
@@ -223,10 +138,7 @@ Not applicable.
 
 ### Recommendations
 
-- **Per-query limit:** `profiles.default/max_memory_usage` controls how much memory a single query may use.
-- **Per-user limit:** `profiles.default/max_memory_usage_for_user` caps total memory across all queries from one user.
-- Raising either limit trades pod memory headroom for query latitude — verify pod memory utilization in Grafana before recommending an increase.
-- Values may differ depending on your specific case.
+***Note:*** Values may be different depends on your own specific case
 
 ## RENAME EXCHANGE is not supported
 
