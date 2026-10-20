@@ -1,5 +1,6 @@
 {{- if and .Values.clickhouseCluster.install (not .Values.tls.enabled) }}
 {{- if and .Values.clickhouseCluster.routeHttp }}
+{{- if contains "gateway-api-default" (include "clickhouse.gateway.type" .) }}
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
@@ -10,6 +11,7 @@ metadata:
   labels:
     name: http-route-clickhouse
     {{ include "kubernetes.labels" . | nindent 4 }}
+    {{ include "ingress.labels" . | nindent 4 }}
 {{- if .Values.clickhouseCluster.routeHttp.labels }}
 {{ .Values.clickhouseCluster.routeHttp.labels | toYaml | nindent 4 }}
 {{- end }}
@@ -25,5 +27,6 @@ spec:
 status:
   ingress:
     - routerName: http-route
+{{- end }}
 {{- end }}
 {{- end }}

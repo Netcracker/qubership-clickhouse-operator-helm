@@ -1,5 +1,6 @@
 {{- if and (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1") (eq .Values.PAAS_PLATFORM "KUBERNETES") -}}
 {{- if and .Values.clickhouseCluster.install .Values.clickhouseCluster.ingressHttp -}}
+{{- if contains "gateway-api-default" (include "clickhouse.gateway.type" .) }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -7,6 +8,7 @@ metadata:
   labels:
     name: http-gateway-clickhouse
     {{ include "kubernetes.labels" . | nindent 4 }}
+    {{ include "ingress.labels" . | nindent 4 }}
   annotations:
     argocd.argoproj.io/sync-wave: "1"
     argocd.argoproj.io/sync-options: "Retry=true"
@@ -29,5 +31,6 @@ spec:
       kind: Service
       port: {{ if .Values.tls.enabled }}8443{{ else }}8123{{ end }}
       weight: 1
+{{- end }}
 {{- end }}
 {{- end }}
