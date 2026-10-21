@@ -18,6 +18,17 @@
 {{- end -}}
 {{- end -}}
 
+{{/*
+Return type for gateway
+*/}}
+{{- define "clickhouse.gateway.type" -}}
+{{- if and .Values.GATEWAY_SYSTEM_TYPE .Values.global.cloudIntegrationEnabled }}
+{{- .Values.GATEWAY_SYSTEM_TYPE }}
+{{- else }}
+{{- default "legacy-ingress" .Values.clickhouseCluster.ingressHttp.gatewayType }}
+{{- end -}}
+{{- end -}}
+
 {{- define "clickhouse.pvcAnnotations" -}}
 {{- $pvc := default dict .Values.pvc }}
 {{- $meta := default dict $pvc.metadata }}
@@ -310,6 +321,12 @@ app.kubernetes.io/component: "operator"
 app.kubernetes.io/part-of: "clickhouse"
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/technology: "go"
+{{- end -}}
+
+{{/* Ingress/HTTPRoute labels */}}
+{{- define "ingress.labels" -}}
+deployment.netcracker.com/ingress-audience-type: "ops-user"
+deployment.netcracker.com/ingress-type: "private-network"
 {{- end -}}
 
 {{- define "clickhouse_pre_hook.image" -}}
