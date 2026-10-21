@@ -200,6 +200,8 @@ dbaas:
     username: "dbaas-aggregator"
     password: "dbaas-aggregator"
 #    address: "dbaas-aggregator" http://nc-dbaas-clickhouse-adapter.%s:8080" .Release.Namespace
+  declarativeRegistration:
+    operatorNamespace: "dbaas"
   # Resource limits for Clickhouse DBaaS Adapter Pod
   resources:
     limits:

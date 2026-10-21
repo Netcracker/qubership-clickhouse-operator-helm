@@ -520,6 +520,17 @@
           }
         },
 
+        "declarativeRegistration": {
+          "type": "object",
+          "properties": {
+
+            "operatorNamespace": {
+              "type": "string",
+              "default": "dbaas"
+            }
+          }
+        },
+
         "resources": {
           "$ref": "#/$defs/resourceRequirements"
         },
