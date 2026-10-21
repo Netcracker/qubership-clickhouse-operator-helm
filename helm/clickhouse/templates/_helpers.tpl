@@ -43,21 +43,26 @@ metadata:
 {{- end }}
 
 {{- define "clickhouse.image" -}}
+  {{- printf "%s" .Values.clickhouseCluster.image -}}
 {{- end -}}
 
 
 {{- define "clickhouse-operator.image" -}}
+  {{- printf "%s" .Values.clickhouseOperator.image -}}
 {{- end -}}
 
 
 {{- define "metrics-exporter.image" -}}
+  {{- printf "%s" .Values.clickhouseOperator.metricsExporterImage -}}
 {{- end -}}
 
 
 {{- define "docker_ch_backup.image" -}}
+  {{- printf "%s" .Values.backupDaemon.image -}}
 {{- end -}}
 
 {{- define "docker_ch_backup-sidecar.image" -}}
+  {{- printf "%s" .Values.backupDaemon.storage.nfs.imageSidecar -}}
 {{- end -}}
 
 {{- define "clickhouse_backup" -}}
@@ -306,9 +311,17 @@ Whether clickhouse certificates are specified
 {{ end }}
 
 {{- define "find_image" -}}
+  {{- $image := .default -}}
+  {{ printf "%s" $image }}
 {{- end -}}
 
 {{- define "clickhouse-tests.monitoredImages" -}}
+  {{- printf "deployment %s clickhouse-operator %s, " (.Values.clickhouseOperator.name) (include "find_image" (dict "SERVICE_NAME" "docker_clickhouse_operator" "vals" .Values "default" .Values.clickhouseOperator.image)) -}}
+  {{- printf "deployment %s metrics-exporter %s, " (.Values.clickhouseOperator.name) (include "find_image" (dict "SERVICE_NAME" "docker_metrics_exporter" "vals" .Values "default" .Values.clickhouseOperator.metricsExporterImage)) -}}
+  {{- printf "statefulset chi-%s-replicated-0-0 clickhouse-pod %s, " (.Values.clickhouseCluster.name) (include "find_image" (dict "SERVICE_NAME" "docker_ch_server" "vals" .Values "default" .Values.clickhouseCluster.image)) -}}
+  {{- if eq (.Values.backupDaemon.install | toString) "yes" -}}
+    {{- printf "statefulset chi-%s-replicated-0-0 clickhouse-backup %s" (.Values.clickhouseCluster.name) (include "find_image" (dict "SERVICE_NAME" "docker_ch_backup" "vals" .Values "default" .Values.backupDaemon.image)) -}}
+  {{- end -}}
 {{- end -}}
 
 

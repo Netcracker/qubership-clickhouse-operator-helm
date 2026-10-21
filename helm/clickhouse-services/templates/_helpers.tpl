@@ -98,9 +98,20 @@ fsGroup: 101
 {{- end -}}
 
 {{- define "find_image" -}}
+  {{- $image := .default -}}
+  {{ printf "%s" $image }}
 {{- end -}}
 
 {{- define "supplementary-tests.monitoredImages" -}}
+  {{- if eq (.Values.backupDaemon.install | toString) "yes" -}}
+    {{- printf "deployment clickhouse-backup-orchestrator clickhouse-backup-orchestrator %s, " (include "find_image" (dict "SERVICE_NAME" "docker_ch_backup_orch" "vals" .Values "default" ".Values.backupDaemon.orchestrator.image")) -}}
+  {{- end -}}
+  {{- if .Values.dbaas.install -}}
+    {{- printf "deployment nc-dbaas-clickhouse-adapter nc-dbaas-clickhouse-adapter %s, " (include "find_image" (dict "SERVICE_NAME" "docker_ch_dbaas_adapter" "vals" .Values "default" ".Values.dbaas.dockerImage")) -}}
+  {{- end -}}
+  {{- if .Values.integrationTests.install -}}
+    {{- printf "deployment clickhouse-integration-tests clickhouse-integration-tests %s" (include "find_image" (dict "SERVICE_NAME" "docker_ch_integration_tests" "vals" .Values "default" ".Values.integrationTests.image")) -}}
+  {{- end -}}
 {{- end -}}
 
 {{- define "clickhouse.smServiceAccount" -}}
@@ -213,19 +224,25 @@ Get TLS secret name for services
 {{- end -}}
 
 {{- define "clickhouse.dbaas.user" -}}
+  {{ .Values.dbaas.clickhouse.username -}}
 {{- end -}}
 
 {{- define "clickhouse.dbaas.password" -}}
+  {{ .Values.dbaas.clickhouse.password -}}
 {{- end -}}
 
 {{- define "clickhouse.dbaas.aggregator.user" -}}
+  {{- .Values.dbaas.aggregator.registrationUsername -}}
 {{- end -}}
 
 {{- define "clickhouse.dbaas.aggregator.password" -}}
+  {{- .Values.dbaas.aggregator.registrationPassword -}}
 {{- end -}}
 
 {{- define "clickhouse.dbaas.adapter.user" -}}
+  {{- .Values.dbaas.adapter.username -}}
 {{- end -}}
 
 {{- define "clickhouse.dbaas.adapter.password" -}}
+  {{- .Values.dbaas.adapter.password -}}
 {{- end -}}
