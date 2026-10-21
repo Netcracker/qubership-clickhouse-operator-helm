@@ -1,9 +1,12 @@
 {{- if and .Values.clickhouseCluster.install .Values.clickhouseCluster.ingressHttp -}}
+{{- if contains "legacy-ingress" (include "clickhouse.gateway.type" .) }}
 apiVersion: {{ if .Capabilities.APIVersions.Has "networking.k8s.io/v1" }}"networking.k8s.io/v1"{{ else }}"networking.k8s.io/v1beta1"{{ end }}
 kind: Ingress
 metadata:
   annotations:
+    {{- if contains "gateway-api-default" (include "clickhouse.gateway.type" .) }}
     gateway-api-converter.netcracker.com/ignore: "true"
+    {{- end }}
     {{- if or .Values.clickhouseCluster.ingressHttp.annotations .Values.tls.enabled }}
     {{- if .Values.clickhouseCluster.ingressHttp.annotations }}
     {{- .Values.clickhouseCluster.ingressHttp.annotations | toYaml | nindent 4 }}
@@ -18,6 +21,7 @@ metadata:
   labels:
     name: http-route-clickhouse
     {{ include "kubernetes.labels" . | nindent 4 }}
+    {{ include "ingress.labels" . | nindent 4 }}
 {{- if .Values.clickhouseCluster.ingressHttp.labels }}
 {{ .Values.clickhouseCluster.ingressHttp.labels | toYaml | nindent 4 }}
 {{- end }}
@@ -49,4 +53,5 @@ spec:
             serviceName: clickhouse-{{ .Values.clickhouseCluster.name }}
             servicePort: "http"
           {{- end }}
+{{- end }}
 {{- end }}

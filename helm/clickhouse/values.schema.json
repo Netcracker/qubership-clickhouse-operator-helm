@@ -372,6 +372,11 @@
               "default": "envoy-gateway"
             },
 
+            "gatewayType": {
+              "type": "string",
+              "default": "legacy-ingress"
+            },
+
             "labels": {
               "$ref": "#/$defs/podLabels"
             },
