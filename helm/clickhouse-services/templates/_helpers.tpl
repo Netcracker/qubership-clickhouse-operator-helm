@@ -104,13 +104,13 @@ fsGroup: 101
 
 {{- define "supplementary-tests.monitoredImages" -}}
   {{- if eq (.Values.backupDaemon.install | toString) "yes" -}}
-    {{- printf "deployment clickhouse-backup-orchestrator clickhouse-backup-orchestrator %s, " (include "find_image" (dict "SERVICE_NAME" "docker_ch_backup_orch" "vals" .Values "default" ".Values.backupDaemon.orchestrator.image")) -}}
+    {{- printf "deployment clickhouse-backup-orchestrator clickhouse-backup-orchestrator %s, " (include "find_image" (dict "SERVICE_NAME" "docker_ch_backup_orch" "vals" .Values "default" .Values.backupDaemon.orchestrator.image)) -}}
   {{- end -}}
   {{- if .Values.dbaas.install -}}
-    {{- printf "deployment nc-dbaas-clickhouse-adapter nc-dbaas-clickhouse-adapter %s, " (include "find_image" (dict "SERVICE_NAME" "docker_ch_dbaas_adapter" "vals" .Values "default" ".Values.dbaas.dockerImage")) -}}
+    {{- printf "deployment nc-dbaas-clickhouse-adapter nc-dbaas-clickhouse-adapter %s, " (include "find_image" (dict "SERVICE_NAME" "docker_ch_dbaas_adapter" "vals" .Values "default" .Values.dbaas.dockerImage)) -}}
   {{- end -}}
   {{- if .Values.integrationTests.install -}}
-    {{- printf "deployment clickhouse-integration-tests clickhouse-integration-tests %s" (include "find_image" (dict "SERVICE_NAME" "docker_ch_integration_tests" "vals" .Values "default" ".Values.integrationTests.image")) -}}
+    {{- printf "deployment clickhouse-integration-tests clickhouse-integration-tests %s" (include "find_image" (dict "SERVICE_NAME" "docker_ch_integration_tests" "vals" .Values "default" .Values.integrationTests.image)) -}}
   {{- end -}}
 {{- end -}}
 
