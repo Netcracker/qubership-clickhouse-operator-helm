@@ -1,0 +1,16 @@
+{{- if eq (include "clickhouse.dbaas.declarativeRegistration" .) "true" }}
+apiVersion: dbaas.netcracker.com/v1
+kind: PhysicalDatabase
+metadata:
+  name: {{ .Release.Name }}-clickhouse-physical-db
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: nc-dbaas-clickhouse-adapter
+    name: {{ .Release.Name }}-clickhouse-physical-db
+    {{ include "kubernetes.labels" . | nindent 4 }}
+spec:
+  operatorNamespace: {{ required "dbaas.declarativeRegistration.operatorNamespace is required when the PhysicalDatabase CRD is available" .Values.dbaas.declarativeRegistration.operatorNamespace | quote }}
+  adapterAddress: {{ include "clickhouse.dbaas.adapter.address" . | quote }}
+  credentialsSecretRef:
+    name: nc-dbaas-adapter-credentials
+{{- end }}
