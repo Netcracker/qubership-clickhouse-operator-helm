@@ -136,7 +136,7 @@ func (client *HttpBackupClient) GetLatestFullBackupId() (backupId string, err er
 func (client *HttpBackupClient) RequestIncrementalBackup() error {
 	backupId, err := client.requestBackup(IncrementalBackup)
 	if err != nil {
-		return nil
+		return err
 	}
 	logger.Info(fmt.Sprintf("incremental backupId: %s", backupId))
 	if err = client.waitForIncrementalBackupCompleted(backupId); err != nil {
@@ -158,6 +158,9 @@ func (client *HttpBackupClient) requestBackup(backupType string) (string, error)
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return "", err
+	}
+	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated {
+		return "", fmt.Errorf("backup request failed with status %d: %s", res.StatusCode, string(body))
 	}
 	return string(body), nil
 }
