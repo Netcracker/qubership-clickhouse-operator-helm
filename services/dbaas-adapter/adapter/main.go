@@ -30,6 +30,7 @@ import (
 
 	"github.com/Netcracker/qubership-clickhouse-dbaas-adapter/adapter/basic"
 	"github.com/Netcracker/qubership-clickhouse-dbaas-adapter/adapter/cluster"
+	"github.com/Netcracker/qubership-clickhouse-dbaas-adapter/adapter/declarative"
 	"github.com/Netcracker/qubership-clickhouse-dbaas-adapter/adapter/initial"
 	"github.com/Netcracker/qubership-dbaas-adapter-core/pkg/dao"
 	"github.com/Netcracker/qubership-dbaas-adapter-core/pkg/dbaas"
@@ -49,6 +50,7 @@ const (
 	backupDaemonCredsPath = secretsBasePath + "backup-daemon-api-credentials/"
 	adapterCredsPath      = secretsBasePath + "dbaas-adapter-credentials/"
 	registrationCredsPath = secretsBasePath + "dbaas-aggregator-registration-credentials/"
+	declarativeApiVersion = "v2"
 )
 
 var (
@@ -125,6 +127,13 @@ var (
 
 	namespace = flag.String("namespace", coreUtils.GetEnv("CLOUD_NAMESPACE", ""), "Namespace name, env: CLOUD_NAMESPACE")
 
+	declarativeRegistration = flag.Bool(
+		"declarative_registration",
+		coreUtils.GetEnvAsBool("DBAAS_DECLARATIVE_REGISTRATION_ENABLED", false),
+		"Let the DBaaS Operator register this physical database from a PhysicalDatabase custom resource "+
+			"instead of self-registering in dbaas-aggregator, env DBAAS_DECLARATIVE_REGISTRATION_ENABLED",
+	)
+
 	supports = dao.SupportsBase{
 		Users:             true,
 		Settings:          false,
@@ -134,27 +143,33 @@ var (
 
 func main() {
 	clusterAdapter := cluster.NewAdapter(*chHost, *chPort, *chUser, *chPass, *chDatabase, *chSsl)
-
-	basicRegistrationAuth := dao.BasicAuth{
-		Username: *dbaasAggregatorRegistrationUsername,
-		Password: *dbaasAggregatorRegistrationPassword,
-	}
-
-	dbaasClient, err := dbaas.NewDbaasClient(*dbaasAggregatorRegistrationAddress, &basicRegistrationAuth, nil)
-
-	if dbaasClient == nil {
-		panic(fmt.Errorf("failed to establish connection to DBaaS aggregator, err: %v", err))
-	}
-
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to get DBaaS aggregator version, err %v. Setting default API version", err))
-	}
-	// Getting dbaas-adpater api version
-	version, _ := dbaasClient.GetVersion()
-	if version == "v3" {
-		apiVersion = "v2"
+	var dbaasClient *dbaas.Client
+	if *declarativeRegistration {
+		apiVersion = declarativeApiVersion
+		logger.Info("Declarative physical database registration is enabled, skipping DBaaS aggregator connection")
 	} else {
-		apiVersion = "v1"
+		basicRegistrationAuth := dao.BasicAuth{
+			Username: *dbaasAggregatorRegistrationUsername,
+			Password: *dbaasAggregatorRegistrationPassword,
+		}
+
+		client, err := dbaas.NewDbaasClient(*dbaasAggregatorRegistrationAddress, &basicRegistrationAuth, nil)
+
+		if client == nil {
+			panic(fmt.Errorf("failed to establish connection to DBaaS aggregator, err: %v", err))
+		}
+
+		if err != nil {
+			logger.Error(fmt.Sprintf("Failed to get DBaaS aggregator version, err %v. Setting default API version", err))
+		}
+		dbaasClient = client
+		// Getting dbaas-adpater api version
+		version, _ := dbaasClient.GetVersion()
+		if version == "v3" {
+			apiVersion = "v2"
+		} else {
+			apiVersion = "v1"
+		}
 	}
 	logger.Info(fmt.Sprintf("API version obtained: %s", apiVersion))
 
@@ -195,14 +210,13 @@ func main() {
 		"",
 	)
 	updateTLSStatusForAdapter()
+	labels := ReadLabelsFile()
 	log.Fatal(fiber2.RunFiberServer(*servePort, func(app *fiber.App, ctx context.Context) error {
-		fiber2.BuildFiberDBaaSAdapterHandlers(
-			app,
-			*serveUser,
-			*servePass,
-			appPath,
-			administrationService,
-			service.NewPhysicalRegistrationService(
+		var physicalRegistration *service.PhysicalDatabaseRegistrationService
+		if *declarativeRegistration {
+			logger.Info("Declarative physical database registration is enabled, adapter self-registration is disabled")
+		} else {
+			physicalRegistration = service.NewPhysicalRegistrationService(
 				appName,
 				logger,
 				*phydbid,
@@ -211,19 +225,36 @@ func main() {
 					Username: *serveUser,
 					Password: *servePass,
 				},
-				ReadLabelsFile(), //labels
+				labels,
 				dbaasClient,
 				*registrationFixedDelay,
 				*registrationRetryTime,
 				*registrationRetryDelay,
 				administrationService,
 				ctx,
-			),
+			)
+		}
+
+		fiber2.BuildFiberDBaaSAdapterHandlers(
+			app,
+			*serveUser,
+			*servePass,
+			appPath,
+			administrationService,
+			physicalRegistration,
 			backupAdminServiceImpl,
 			supports.ToMap(),
 			logger,
 			false,
 			"")
+
+		declarative.NewDescriptorService(
+			*phydbid,
+			appName,
+			labels,
+			administrationService,
+			logger,
+		).RegisterHandlers(app, *serveUser, *servePass)
 		return nil
 	}))
 }

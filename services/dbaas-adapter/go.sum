@@ -4,8 +4,8 @@ github.com/ClickHouse/clickhouse-go/v2 v2.46.0 h1:s3eRy+hYmu5uzotB6ZhDofgHu8kDgG
 github.com/ClickHouse/clickhouse-go/v2 v2.46.0/go.mod h1:giJfUVlMkcfUEPVfRpt51zZaGEx9i17gCos8gBl392c=
 github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc=
 github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6XgeJcm8brE=
-github.com/Netcracker/qubership-dbaas-adapter-core v0.11.1 h1:h8/lbtIKWuvQCiWMz3MuWDpoJ3rdJQaVAgzPaT3M+j4=
-github.com/Netcracker/qubership-dbaas-adapter-core v0.11.1/go.mod h1:WwqayO1puRMdzoB6EbIpHWqhkYi4JT7v4pCVM6h15D8=
+github.com/Netcracker/qubership-dbaas-adapter-core v0.13.0 h1:RPt423n7xNmEzOd28Yw+ZqWX2f4/HmzHBwRDeU+Z42c=
+github.com/Netcracker/qubership-dbaas-adapter-core v0.13.0/go.mod h1:23N2B/J5pl0qP1lRFaEwoRC+0VW0g/NsMJ47xGx7RgQ=
 github.com/andybalholm/brotli v1.2.1 h1:R+f5xP285VArJDRgowrfb9DqL18yVK0gKAW/F+eTWro=
 github.com/andybalholm/brotli v1.2.1/go.mod h1:rzTDkvFWvIrjDXZHkuS16NPggd91W3kUSvPlQ1pLaKY=
 github.com/ansrivas/fiberprometheus/v2 v2.17.0 h1:p0gqs5LsSCWGoSFF44fCJkyU+XcE6TLRqEMu80b2iCo=

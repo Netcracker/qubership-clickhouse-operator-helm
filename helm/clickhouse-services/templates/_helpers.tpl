@@ -239,10 +239,45 @@ Get TLS secret name for services
   {{- .Values.dbaas.aggregator.registrationPassword -}}
 {{- end -}}
 
+{{/*
+Basic auth credentials the DBaaS Adapter authorizes incoming requests with. These must be
+materialized in the secret rather than left empty, because the DBaaS Operator reads the
+secret to call the adapter when declarative physical database registration is used.
+The defaults match the adapter's own built-in fallbacks.
+*/}}
 {{- define "clickhouse.dbaas.adapter.user" -}}
-  {{- .Values.dbaas.adapter.username -}}
+{{- $adapter := default dict .Values.dbaas.adapter -}}
+{{- default "dbaas-aggregator" $adapter.username -}}
 {{- end -}}
 
 {{- define "clickhouse.dbaas.adapter.password" -}}
-  {{- .Values.dbaas.adapter.password -}}
+{{- $adapter := default dict .Values.dbaas.adapter -}}
+{{- default "dbaas-aggregator" $adapter.password -}}
+{{- end -}}
+
+{{/*
+Address the DBaaS Adapter is reachable at from outside its own pod. Kept in one place so
+the adapter Deployment and the PhysicalDatabase custom resource cannot disagree on the
+scheme and port actually served. TLS is detected the same way the adapter does it, which
+only serves HTTPS when INTERNAL_TLS_ENABLED is exactly "true", so a string such as "false"
+does not switch the address to HTTPS.
+*/}}
+{{- define "clickhouse.dbaas.adapter.address" -}}
+{{- $adapter := default dict .Values.dbaas.adapter -}}
+{{- if $adapter.address -}}
+  {{- $adapter.address -}}
+{{- else if eq (toString .Values.INTERNAL_TLS_ENABLED) "true" -}}
+  {{- printf "https://nc-dbaas-clickhouse-adapter.%s:8443" .Release.Namespace -}}
+{{- else -}}
+  {{- printf "http://nc-dbaas-clickhouse-adapter.%s:8080" .Release.Namespace -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Whether the DBaaS Operator registers this physical database from a PhysicalDatabase
+custom resource. Decided once here from the CRD API capability so that the custom
+resource, its secret RBAC and the adapter's own mode can never disagree.
+*/}}
+{{- define "clickhouse.dbaas.declarativeRegistration" -}}
+{{- and .Values.dbaas.install (.Capabilities.APIVersions.Has "dbaas.netcracker.com/v1/PhysicalDatabase") | ternary "true" "" -}}
 {{- end -}}
