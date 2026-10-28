@@ -454,8 +454,9 @@ kubectl exec <clickhouse-pod> -c clickhouse-pod -- \
 
 Resolution:
 1. Expand PVC: `kubectl patch pvc <pvc-name> -p '{"spec":{"resources":{"requests":{"storage":"100Gi"}}}}'`
-2. Delete old data: `ALTER TABLE <table> DELETE WHERE <condition>`
-3. Detach partitions: `ALTER TABLE <table> DETACH PARTITION <partition>`
+2. Review data retention policies and identify expired or unnecessary data before considering cleanup
+3. Evaluate partition operations only after assessing data impact, recovery options, and obtaining the required approval. Avoid recommending data deletion or partition detachment as an immediate fix
+4. Verify free disk space, pod health, and replication status after remediation
 
 ## Diagnostic Workflow
 
@@ -637,17 +638,6 @@ kubectl exec <zk-pod> -n <zk-namespace> -- \
 kubectl exec <zk-pod> -n <zk-namespace> -- \
   /opt/zookeeper/bin/zkCli.sh -server localhost:2181 \
   ls /clickhouse/tables
-```
-
-### Monitoring & Alerting
-
-Check metrics:
-```bash
-# Port-forward to ClickHouse metrics endpoint
-kubectl port-forward <pod-name> 8123:8123
-
-# Query system tables
-curl "http://localhost:8123/?query=SELECT%20*%20FROM%20system.metrics"
 ```
 
 ## Prevention Best Practices
