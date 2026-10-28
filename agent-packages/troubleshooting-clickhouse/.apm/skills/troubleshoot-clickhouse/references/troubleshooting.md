@@ -682,13 +682,3 @@ Include in escalation:
 - `system.replicas` and `system.replication_queue` output
 - Metrics from `system.metrics` and `system.events`
 
-## Related Documentation
-
-- Installation Guide — Prerequisites, Helm parameters, platform-specific setup
-- Quickstart — Fast-path deployment
-- Active-Standby Cluster — DR configuration
-- Backup & Restore — pgBackRest/S3 integration
-- Monitoring — Prometheus metrics
-- Major Upgrade — Version compatibility, upgrade procedures
-- ZooKeeper Integration — Replication configuration
-- TLS Configuration — Certificate setup
