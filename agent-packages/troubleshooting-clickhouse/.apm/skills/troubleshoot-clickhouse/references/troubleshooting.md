@@ -226,9 +226,9 @@ Common Causes:
 - ZooKeeper quorum lost (less than majority running)
 
 Resolution:
-1. Ensure ZooKeeper is running: `kubectl get statefulset -n <zk-namespace>`
-2. Verify connectivity: `kubectl exec <clickhouse-pod> -- nc -zv <zk-host>:2181`
-3. Check Helm values: `zookeeper.servers[].host` and `zookeeper.servers[].port`
+1. Ensure ZooKeeper is running: `kubectl get pods -n <zk-namespace>`
+2. Verify connectivity: `kubectl exec <clickhouse> -c clickhouse-operator -- curl -v --connect-timeout 5 telnet://zookeeper.<zookeeper-host>:2181`
+3. Check Helm values: Verify clickhouseCluster.zookeeperHost
 4. Review network policies: `kubectl get networkpolicy -A`
 
 **Replication Queue Buildup**
@@ -251,7 +251,6 @@ Resolution:
 1. Check replica status: `SELECT * FROM system.replicas`
 2. Monitor queue depth: `SELECT * FROM system.replication_queue`
 3. If replica is stuck: `SYSTEM RESTART REPLICA <table>` (after confirming ZK connectivity)
-4. Increase replication thread count if safe: `max_replication_tasks_for_replicated_tables`
 
 **Table Insert Failures**
 
@@ -266,7 +265,7 @@ kubectl exec <clickhouse-pod> -c clickhouse-pod -- \
 # Check replication path in ZooKeeper
 kubectl exec <zk-pod> -n <zk-namespace> -- \
   /opt/zookeeper/bin/zkCli.sh -server localhost:2181 \
-  get /clickhouse/tables/<cluster>/<database>/<table>/metadata
+  ls /clickhouse/tables/<cluster>/<database>/<table>/metadata
 ```
 
 Resolution:
@@ -517,12 +516,12 @@ clickhouseCluster:
 
 **ZooKeeper Configuration** (for replication):
 ```yaml
-zookeeper:
-  servers:
-    - name: "zk-0"
-      host: "zk-0.zk-headless.default.svc.cluster.local"
-      port: 2181
-  sessionTimeoutMs: 30000
+clickhouseCluster:
+  zookeeper:
+    servers:
+        host: "zookeeper.zookeeper-service.svc"
+        port: 2181
+    sessionTimeoutMs: 30000
 ```
 
 **Server Settings** (config.xml):
