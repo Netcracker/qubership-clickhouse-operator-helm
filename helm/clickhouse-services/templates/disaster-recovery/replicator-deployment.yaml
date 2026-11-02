@@ -49,6 +49,8 @@ spec:
               value: {{ .Values.disasterRecovery.replicator.s3.endpoint | quote }}
             - name: S3_BUCKET
               value: {{ .Values.disasterRecovery.replicator.s3.bucket | quote }}
+            - name: BACKUP_DAEMON_SECRETS_DIR
+              value: /var/run/secrets/clickhouse/s3-credentials
             - name: REMOTE_STORAGE
               value: s3
             - name: BACKUP_SCHEDULE
@@ -140,6 +142,11 @@ spec:
         - name: s3-credentials
           secret:
             secretName: s3-replicator-remote-storage-credentials
+            items:
+              - key: accessKeyId
+                path: S3_KEY_ID
+              - key: secretAccessKey
+                path: S3_KEY_SECRET
             defaultMode: 420
       {{- if and .Values.tls .Values.tls.enabled }}
         - name: {{ include "clickhouse.certServicesSecret" . }}

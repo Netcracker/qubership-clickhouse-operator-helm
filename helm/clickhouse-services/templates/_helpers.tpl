@@ -78,6 +78,8 @@ fsGroup: 101
     value: {{ .Values.backupDaemon.storage.s3.endpoint | quote }}
   - name: S3_BUCKET
     value: {{ .Values.backupDaemon.storage.s3.bucket | quote }}
+  - name: BACKUP_DAEMON_SECRETS_DIR
+    value: /var/run/secrets/clickhouse/s3-remote-storage-credentials
 {{ end }}
 {{- end }}
 
