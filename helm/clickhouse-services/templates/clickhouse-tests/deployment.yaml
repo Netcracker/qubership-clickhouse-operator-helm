@@ -50,6 +50,8 @@ spec:
               value: {{ .Values.integrationTests.clickhouseBackupPort | quote }}
             - name: TAGS
               value: {{ .Values.integrationTests.tags }}
+            - name: DBAAS_DECLARATIVE_REGISTRATION_ENABLED
+              value: {{ eq (include "clickhouse.dbaas.declarativeRegistration" .) "true" | quote }}
             - name: STATUS_CUSTOM_RESOURCE_NAMESPACE
               valueFrom:
                 fieldRef:
