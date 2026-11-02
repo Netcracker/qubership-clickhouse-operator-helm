@@ -49,6 +49,11 @@ spec:
         - name: s3-remote-storage-credentials
           secret:
             secretName: s3-remote-storage-credentials
+            items:
+              - key: accessKeyId
+                path: S3_KEY_ID
+              - key: secretAccessKey
+                path: S3_KEY_SECRET
             defaultMode: 420
 {{- end }}
         - name: ch-credentials

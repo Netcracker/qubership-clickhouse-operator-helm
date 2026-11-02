@@ -19,6 +19,7 @@ ${RETRY_INTERVAL}                      1s
 ${API_VERSION}                         v2
 ${MICROSERVICE_NAME}                   chtests
 ${SCOPE}                               chtestscope
+${DBAAS_DECLARATIVE_REGISTRATION_ENABLED}    %{DBAAS_DECLARATIVE_REGISTRATION_ENABLED=false}
 
 *** Keywords ***
 Prepare Dbaas Adapter
@@ -53,13 +54,18 @@ Update Password By Dbaas Adapter
     Should Contain  str(${resp.content})  ${password}
 
 Check Health
-    ${resp}=  GET On Session  dbaassession  /health
-    ${status}=  Get From Dictionary  ${resp.json()}  status
-    Should Be Equal As Strings  ${status}  UP
-    ${physical_database_registration}=  Get From Dictionary  ${resp.json()}  physicalDatabaseRegistration
-    ${database_registration_status}=  Get From Dictionary  ${physical_database_registration}  status
-    @{success_statuses}    Create List    OK    WARNING
-    Should Contain  ${success_statuses}  ${database_registration_status}
+    ${resp}=    GET On Session    dbaassession    /health
+    ${status}=    Get From Dictionary    ${resp.json()}    status
+    Should Be Equal As Strings    ${status}    UP
+    ${physical_database_registration}=    Get From Dictionary    ${resp.json()}    physicalDatabaseRegistration
+    ${database_registration_status}=    Get From Dictionary    ${physical_database_registration}    status
+
+    IF    $DBAAS_DECLARATIVE_REGISTRATION_ENABLED == 'true'
+        Should Be Equal As Strings    ${database_registration_status}    UNKNOWN
+    ELSE
+        @{success_statuses}=    Create List    OK    WARNING
+        Should Contain    ${success_statuses}    ${database_registration_status}
+    END
 
 Delete Database By Dbaas Adapter
     [Arguments]  ${db_name}
