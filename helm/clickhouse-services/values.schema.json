@@ -526,7 +526,7 @@
 
             "operatorNamespace": {
               "type": "string",
-              "default": "dbaas"
+              "default": ""
             }
           }
         },

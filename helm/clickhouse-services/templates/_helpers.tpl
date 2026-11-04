@@ -276,6 +276,29 @@ does not switch the address to HTTPS.
 {{- end -}}
 
 {{/*
+Namespace the DBaaS Operator runs in
+*/}}
+{{- define "clickhouse.dbaas.operatorNamespace" -}}
+{{- $dbaas := default dict .Values.dbaas -}}
+{{- $explicit := toString (dig "declarativeRegistration" "operatorNamespace" "" $dbaas) -}}
+{{- if ne $explicit "" -}}
+  {{- $explicit -}}
+{{- else -}}
+  {{- $address := toString (dig "aggregator" "registrationAddress" "" $dbaas) -}}
+  {{- $host := first (splitList ":" (last (splitList "://" $address))) -}}
+  {{- $parts := splitList "." $host -}}
+  {{- $namespace := "" -}}
+  {{- if ge (len $parts) 2 -}}
+    {{- $namespace = index $parts 1 -}}
+  {{- end -}}
+  {{- if or (eq $namespace "") (regexMatch "^[0-9]+$" $namespace) -}}
+    {{- fail (printf "dbaas.aggregator.registrationAddress %q names no namespace. Set it to http://<aggregator>.<namespace>:<port> or set dbaas.declarativeRegistration.operatorNamespace." $address) -}}
+  {{- end -}}
+  {{- $namespace -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Whether the DBaaS Operator registers this physical database from a PhysicalDatabase
 custom resource. Decided once here from the CRD API capability so that the custom
 resource, its secret RBAC and the adapter's own mode can never disagree.
