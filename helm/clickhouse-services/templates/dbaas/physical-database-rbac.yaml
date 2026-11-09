@@ -31,5 +31,5 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: dbaas-operator
-    namespace: {{ required "dbaas.declarativeRegistration.operatorNamespace is required when the PhysicalDatabase CRD is available" .Values.dbaas.declarativeRegistration.operatorNamespace | quote }}
+    namespace: {{ include "clickhouse.dbaas.operatorNamespace" . | quote }}
 {{- end }}
