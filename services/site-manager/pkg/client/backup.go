@@ -19,12 +19,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/Netcracker/qubership-clickhouse-operator-helm/site-manager/pkg/util"
 	"go.uber.org/zap"
-	"io"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"net/http"
-	"time"
 )
 
 func GetDefaultBackupClient() *HttpBackupClient {
@@ -133,16 +135,42 @@ func (client *HttpBackupClient) GetLatestFullBackupId() (backupId string, err er
 	return successfulFullBackups[len(successfulFullBackups)-1], err
 }
 
+func (client *HttpBackupClient) HasAnyBackups() (bool, error) {
+	backups, err := client.GetRemoteBackups()
+	if err != nil {
+		return false, err
+	}
+	return len(backups) > 0, nil
+}
+
 func (client *HttpBackupClient) RequestIncrementalBackup() error {
 	backupId, err := client.requestBackup(IncrementalBackup)
+
 	if err != nil {
+		if isIllegalStateError(err) {
+			logger.Info("No valid backups found for incremental backup, creating full backup first as bootstrap")
+			_, bootstrapErr := client.RequestFullBackup()
+			if bootstrapErr != nil {
+				return fmt.Errorf("failed to create bootstrap full backup: %w", bootstrapErr)
+			}
+			return nil
+		}
 		return err
 	}
+
 	logger.Info(fmt.Sprintf("incremental backupId: %s", backupId))
 	if err = client.waitForIncrementalBackupCompleted(backupId); err != nil {
 		return err
 	}
 	return nil
+}
+
+func isIllegalStateError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errStr := err.Error()
+	return strings.Contains(errStr, "409") && strings.Contains(errStr, "illegal state")
 }
 
 func (client *HttpBackupClient) requestBackup(backupType string) (string, error) {
