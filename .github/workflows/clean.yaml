@@ -14,6 +14,8 @@ jobs:
       fail-fast: false
       matrix:
         component:
+          - name: qubership-clickhouse-269
+            context: ""
           - name: qubership-clickhouse-258
             context: ""
           - name: qubership-clickhouse-243
