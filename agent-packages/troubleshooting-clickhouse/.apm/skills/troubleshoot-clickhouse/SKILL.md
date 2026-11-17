@@ -119,7 +119,7 @@ Do not recommend:
 
 - **CRD**: `ClickhouseInstallation` (group: `clickhouse.altinity.com`)
 - **Healthy CR status**: `.status.status` = `"Completed"`
-- **Supported versions**: 243 (24.3.18) and 258 (25.8.18)
+- **Supported versions**: 243 (24.3.18), 258 (25.8.18), 269(26.9.30)
 - **Service components**: site-manager, backup-orchestrator, dbaas-adapter, sidecar, secretmonitor, hook
 - **DR topology**: Active/standby pairs with switchover via site-manager
 - **Replica availability**: At least one replica per shard must remain available before destructive recovery
