@@ -188,11 +188,11 @@ func (smHandler *siteManagerHandler) changePreConfigureMode(payload *SmPayload) 
 		}()
 
 		if !payload.NoWait {
-			log.Info("Requesting incremental backup")
+			log.Info("Requesting backup (full or incremental)")
 			if err = backupClient.RequestIncrementalBackup(); err == nil {
 				log.Info("pre-configure change mode successful")
 			} else {
-				log.Error("there is an error during requesting incremental backup", zap.Error(err))
+				log.Error("there is an error during requesting backup", zap.Error(err))
 				smHandler.K8sWrapper.UpdatePreConfigureStatus(payload.Mode, "failed")
 				return
 			}
