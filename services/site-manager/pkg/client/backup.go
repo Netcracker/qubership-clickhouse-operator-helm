@@ -292,8 +292,7 @@ func (client *HttpBackupClient) waitTillSuccessfulRestore(trackingId string, bac
 }
 
 func (client *HttpBackupClient) requestIncrementalRestore(backupId string) (trackingId string, err error) {
-	url := fmt.Sprintf("%s://%s:%s/incremental/restore",
-		client.Protocol, client.Host, client.Port)
+	url := fmt.Sprintf("%s://%s:%s/%s", client.Protocol, client.Host, client.Port, "incremental/restore")
 
 	jsonBody := map[string]string{"vault": backupId}
 	jsonValue, err := json.Marshal(jsonBody)
