@@ -232,54 +232,41 @@ func (smHandler *siteManagerHandler) changeSmMode(payload *SmPayload) {
 			return
 		}
 		// do the restore of latest
-		if !payload.NoWait {
-			log.Info("proceeding with incremental backups check")
+		log.Info("proceeding with incremental backups check")
+		restoreSucceeded := false
 
-			if ok := backupClient.CheckLatestIncrementalBackup(); ok {
-				log.Info("latest incremental backup found")
-
-				if err := backupClient.RequestRestoreOfLatestIncremental(); err != nil {
-					log.Error("incremental restore failed, trying full backup", zap.Error(err))
-
-					// Fall back to full backup
-					if ok := backupClient.CheckLatestFullBackup(); ok {
-						log.Info("latest full backup found")
-
-						if err := backupClient.RequestRestoreOfLatestFullBackup(); err != nil {
-							errMsg := "there is an error during restore of latest full backup"
-							log.Error(errMsg, zap.Error(err))
-							lastRestore.setFailed(errMsg)
-							smHandler.K8sWrapper.UpdateSMStatus(payload.Mode, "failed")
-							return
-						}
-					}
-				}
+		if ok := backupClient.CheckLatestIncrementalBackup(); ok {
+			log.Info("latest incremental backup found")
+			if err := backupClient.RequestRestoreOfLatestIncremental(); err != nil {
+				log.Error("incremental restore failed, trying full backup", zap.Error(err))
+			} else {
+				restoreSucceeded = true
 			}
-		} else {
-			log.Info("proceeding with incremental backups check")
-			if ok := backupClient.CheckLatestIncrementalBackup(); ok {
-				log.Info("latest incremental backup found")
-				if err := backupClient.RequestRestoreOfLatestIncremental(); err != nil {
-					errMsg := "there is an error during restore of latest incremental backup"
+		}
+
+		// Try full backup if incremental failed or not found
+		if !restoreSucceeded {
+			log.Info("proceeding with full backups check")
+			if ok := backupClient.CheckLatestFullBackup(); ok {
+				log.Info("latest full backup found")
+				if err := backupClient.RequestRestoreOfLatestFullBackup(); err != nil {
+					errMsg := "there is an error during restore of latest full backup"
 					log.Error(errMsg, zap.Error(err))
 					lastRestore.setFailed(errMsg)
 					smHandler.K8sWrapper.UpdateSMStatus(payload.Mode, "failed")
 					return
 				}
-			} else {
-
-				log.Info("proceeding with full backups check")
-				if ok := backupClient.CheckLatestFullBackup(); ok {
-					log.Info("latest Full backup found")
-					if err := backupClient.RequestRestoreOfLatestFullBackup(); err != nil {
-						errMsg := "there is an error during restore of latest Full backup"
-						log.Error(errMsg, zap.Error(err))
-						lastRestore.setFailed(errMsg)
-						smHandler.K8sWrapper.UpdateSMStatus(payload.Mode, "failed")
-						return
-					}
-				}
+				restoreSucceeded = true
 			}
+		}
+
+		//  restore failed, return error
+		if !restoreSucceeded {
+			errMsg := "there is an error during restore of latest incremental backup"
+			log.Error(errMsg)
+			lastRestore.setFailed(errMsg)
+			smHandler.K8sWrapper.UpdateSMStatus(payload.Mode, "failed")
+			return
 		}
 
 		// change service
