@@ -270,7 +270,7 @@
 
         "image": {
           "type": "string",
-          "default": "ghcr.io/netcracker/qubership-clickhouse-258:main"
+          "default": "ghcr.io/netcracker/qubership-clickhouse-269:main"
         },
 
         "zookeeperHost": {

@@ -54,6 +54,7 @@ Note: `dbaas-adapter` uses `adapter/main.go` as entry point (not `cmd/main.go`),
 ### Docker Components
 
 10 Docker images defined in `.github/build-config.cfg`. Six are the Go services above; four are standalone:
+- `qubership-clickhouse-269` (context: `269/`)
 - `qubership-clickhouse-258` (context: `258/`)
 - `qubership-clickhouse-243` (context: `243/`)
 - `qubership-clickhouse-integration-tests` (context: `integration-tests/`)

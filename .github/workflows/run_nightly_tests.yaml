@@ -6,20 +6,18 @@ permissions:
   actions: read
 
 on:
-  push
-#  schedule:
-#    - cron: '0 1 * * *'
+  schedule:
+    - cron: '0 2 * * *'
 
 jobs:
   Nightly-Clickhouse-Pipeline:
-    uses: Netcracker/qubership-test-pipelines/.github/workflows/clickhouse.yaml@feat/clickhouse # v1.17.0
+    uses: Netcracker/qubership-test-pipelines/.github/workflows/clickhouse.yaml@747df4a75b81fd05ed818a8cde6fc8198b2989c0 # v1.19.0
     with:
       service_branch: '${{ github.head_ref || github.ref_name }}'
-      pipeline_branch: 'feat/clickhouse' # v1.17.0 renovate: depName=Netcracker/qubership-test-pipelines
+      pipeline_branch: '747df4a75b81fd05ed818a8cde6fc8198b2989c0' # v1.19.0 renovate: depName=Netcracker/qubership-test-pipelines
       runner_type: 'ubuntu-latest'
       scope: nightly
       verify_timeout_minutes: 60
     secrets:
       AWS_S3_ACCESS_KEY_ID: ${{secrets.AWS_S3_ACCESS_KEY_ID}}
       AWS_S3_ACCESS_KEY_SECRET: ${{secrets.AWS_S3_ACCESS_KEY_SECRET}}
-

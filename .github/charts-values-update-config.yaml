@@ -10,6 +10,7 @@ charts:
     chart_file: helm/clickhouse/Chart.yaml
     values_file: helm/clickhouse/values.yaml
     image:
+      - ghcr.io/netcracker/qubership-clickhouse-269:${release}
       - ghcr.io/netcracker/qubership-clickhouse-243:${release}
       - ghcr.io/netcracker/qubership-clickhouse-258:${release}
       - ghcr.io/netcracker/qubership-docker-clickhouse-backup-sidecar:${release}

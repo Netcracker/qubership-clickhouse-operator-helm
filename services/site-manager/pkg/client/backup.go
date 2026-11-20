@@ -16,15 +16,19 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Netcracker/qubership-clickhouse-operator-helm/site-manager/pkg/util"
-	"go.uber.org/zap"
 	"io"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/Netcracker/qubership-clickhouse-operator-helm/site-manager/pkg/util"
+
+	"go.uber.org/zap"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 func GetDefaultBackupClient() *HttpBackupClient {
@@ -133,16 +137,42 @@ func (client *HttpBackupClient) GetLatestFullBackupId() (backupId string, err er
 	return successfulFullBackups[len(successfulFullBackups)-1], err
 }
 
+func (client *HttpBackupClient) HasAnyBackups() (bool, error) {
+	backups, err := client.GetRemoteBackups()
+	if err != nil {
+		return false, err
+	}
+	return len(backups) > 0, nil
+}
+
 func (client *HttpBackupClient) RequestIncrementalBackup() error {
 	backupId, err := client.requestBackup(IncrementalBackup)
+
 	if err != nil {
+		if isIllegalStateError(err) {
+			logger.Info("No valid backups found for incremental backup, creating full backup first as bootstrap")
+			_, bootstrapErr := client.RequestFullBackup()
+			if bootstrapErr != nil {
+				return fmt.Errorf("failed to create bootstrap full backup: %w", bootstrapErr)
+			}
+			return nil
+		}
 		return err
 	}
+
 	logger.Info(fmt.Sprintf("incremental backupId: %s", backupId))
 	if err = client.waitForIncrementalBackupCompleted(backupId); err != nil {
 		return err
 	}
 	return nil
+}
+
+func isIllegalStateError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errStr := err.Error()
+	return strings.Contains(errStr, "409") && strings.Contains(errStr, "illegal state")
 }
 
 func (client *HttpBackupClient) requestBackup(backupType string) (string, error) {
@@ -261,25 +291,75 @@ func (client *HttpBackupClient) waitTillSuccessfulRestore(trackingId string, bac
 	return err
 }
 
-// curl -XPOST -H "Content-Type: application/json" -d  '{"vault":"20170913T1114"}' localhost:8080/incremental/restore
 func (client *HttpBackupClient) requestIncrementalRestore(backupId string) (trackingId string, err error) {
 	url := fmt.Sprintf("%s://%s:%s/%s", client.Protocol, client.Host, client.Port, "incremental/restore")
+
 	jsonBody := map[string]string{"vault": backupId}
-	jsonValue, _ := json.Marshal(jsonBody)
-	res, err := http.Post(url, "application/json", bytes.NewBuffer(jsonValue))
+	jsonValue, err := json.Marshal(jsonBody)
 	if err != nil {
 		return "", err
 	}
-	defer res.Body.Close()
-	if res.StatusCode == http.StatusOK {
-		bodyBytes, err := io.ReadAll(res.Body)
-		if err != nil {
-			return "", err
-		}
-		return string(bodyBytes), nil
+
+	timeout := time.Duration(util.GetTimeOut()) * time.Minute
+
+	err = wait.PollUntilContextTimeout(
+		context.Background(),
+		5*time.Second,
+		timeout,
+		true,
+		func(ctx context.Context) (bool, error) {
+			req, err := http.NewRequestWithContext(
+				ctx,
+				http.MethodPost,
+				url,
+				bytes.NewBuffer(jsonValue),
+			)
+			if err != nil {
+				return false, err
+			}
+
+			req.Header.Set("Content-Type", "application/json")
+
+			res, err := http.DefaultClient.Do(req)
+			if err != nil {
+				return false, err
+			}
+			defer res.Body.Close()
+
+			bodyBytes, err := io.ReadAll(res.Body)
+			if err != nil {
+				return false, err
+			}
+
+			switch res.StatusCode {
+			case http.StatusOK, http.StatusCreated:
+				trackingId = strings.TrimSpace(string(bodyBytes))
+
+				if trackingId == "" {
+					return false, fmt.Errorf("empty tracking ID received from incremental restore API")
+				}
+
+				return true, nil
+
+			case http.StatusLocked:
+				logger.Info("incremental restore API is locked, retrying...")
+				return false, nil
+
+			default:
+				return false, fmt.Errorf(
+					"incremental restore failed: status code: %d, response: %s",
+					res.StatusCode,
+					string(bodyBytes),
+				)
+			}
+		},
+	)
+
+	if err != nil {
+		return "", err
 	}
 
-	return "", nil
+	return trackingId, nil
 }
 
 func (client *HttpBackupClient) RequestRestoreOfLatestIncremental() error {
@@ -317,23 +397,60 @@ func (client *HttpBackupClient) RequestRestoreOfLatestFullBackup() error {
 }
 
 func (client *HttpBackupClient) requestFullRestore(backupId string) (trackingId string, err error) {
-	url := fmt.Sprintf("%s://%s:%s/%s", client.Protocol, client.Host, client.Port, "/restore")
+	url := fmt.Sprintf("%s://%s:%s/%s", client.Protocol, client.Host, client.Port, "restore")
+
 	jsonBody := map[string]string{"vault": backupId}
-	jsonValue, _ := json.Marshal(jsonBody)
-	res, err := http.Post(url, "application/json", bytes.NewBuffer(jsonValue))
+	jsonValue, err := json.Marshal(jsonBody)
 	if err != nil {
 		return "", err
 	}
-	defer res.Body.Close()
-	if res.StatusCode == http.StatusOK {
-		bodyBytes, err := io.ReadAll(res.Body)
-		if err != nil {
-			return "", err
-		}
-		return string(bodyBytes), nil
+
+	timeout := time.Duration(util.GetTimeOut()) * time.Minute
+
+	err = wait.PollUntilContextTimeout(
+		context.Background(),
+		5*time.Second,
+		timeout,
+		true,
+		func(ctx context.Context) (bool, error) {
+			res, err := http.Post(url, "application/json", bytes.NewBuffer(jsonValue))
+			if err != nil {
+				return false, err
+			}
+			defer res.Body.Close()
+
+			bodyBytes, err := io.ReadAll(res.Body)
+			if err != nil {
+				return false, err
+			}
+
+			switch res.StatusCode {
+			case http.StatusOK, http.StatusCreated:
+				trackingId = strings.TrimSpace(string(bodyBytes))
+
+				if trackingId == "" {
+					return false, fmt.Errorf("empty tracking ID received from full restore API")
+				}
+
+				return true, nil
+
+			case http.StatusLocked:
+				logger.Info("full restore API is locked, retrying...")
+				return false, nil
+
+			default:
+				return false, fmt.Errorf(
+					"full restore failed: status code: %d, response: %s",
+					res.StatusCode, string(bodyBytes))
+			}
+		},
+	)
+
+	if err != nil {
+		return "", err
 	}
 
-	return "", nil
+	return trackingId, nil
 }
 
 func (client *HttpBackupClient) CheckLatestIncrementalBackup() bool {
