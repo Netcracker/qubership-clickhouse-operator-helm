@@ -19,19 +19,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"io"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"net/http"
 	"os"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"strconv"
 	"strings"
 	"time"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
 const tlsEnv = "TLS_ENABLED"
@@ -138,7 +139,7 @@ func GetKubeClientSet() kubernetes.Clientset {
 }
 
 func WaitTillActionCompletedForHost(host string) error {
-	timeout := time.Duration(getTimeOut())
+	timeout := time.Duration(GetTimeOut())
 	err := wait.PollImmediate(5*time.Second, timeout*time.Minute, func() (done bool, err error) {
 		var actionRow ActionRow
 		log.Info("waiting until action will success")
@@ -165,7 +166,7 @@ func WaitTillActionCompletedForHost(host string) error {
 	return err
 }
 
-func getTimeOut() int {
+func GetTimeOut() int {
 	if os.Getenv("TIMEOUT") == "" {
 		return 10
 	}
