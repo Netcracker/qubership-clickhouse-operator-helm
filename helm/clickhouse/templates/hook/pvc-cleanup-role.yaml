@@ -3,9 +3,10 @@ kind: Role
 metadata:
   name: pvc-cleanup-role
   annotations:
-    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook": post-install, post-upgrade
     "helm.sh/hook-weight": "0"
     "helm.sh/hook-delete-policy": hook-succeeded, hook-failed
+  namespace: {{ .Release.Namespace }}  
   labels:
     name: {{ .Values.clickhouseOperator.name }}
     {{ include "kubernetes.labels" . | nindent 4 }}
@@ -19,3 +20,12 @@ rules:
   - list
   - update
   - patch
+- apiGroups:
+  - clickhouse.altinity.com
+  resources:
+  - clickhouseinstallations
+  verbs:
+  - get
+  - list
+  - patch
+

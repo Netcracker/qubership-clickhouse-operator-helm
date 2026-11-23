@@ -16,130 +16,229 @@ package cleanup
 
 import (
 	"context"
-	"flag"
 	"fmt"
-	"path/filepath"
+	"log"
 	"sort"
 	"strings"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
+	"k8s.io/client-go/util/retry"
 )
 
-const customAnnotationsKey = "deployment.netcracker.com/custom-annotations"
+const (
+	ManagedAnnotationsKey = "deployment.netcracker.com/custom-annotations"
+	DefaultCHIName        = "cluster"
+	DefaultPVCNamePrefix  = "clickhouse-pvc-chi-cluster"
 
-func getKubeClient() (*kubernetes.Clientset, error) {
-	k8sConfig, err := rest.InClusterConfig()
-	if err != nil {
-		var kubeconfig *string
-		if home := homedir.HomeDir(); home != "" {
-			kubeconfig = flag.String("kubec", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-		} else {
-			kubeconfig = flag.String("kubec", "", "absolute path to the kubeconfig file")
-		}
-		flag.Parse()
+	WaitTimeout  = 15 * time.Minute
+	PollInterval = 5 * time.Second
+)
 
-		k8sConfig, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
+var chiGVR = schema.GroupVersionResource{
+	Group:    "clickhouse.altinity.com",
+	Version:  "v1",
+	Resource: "clickhouseinstallations",
+}
+
+// WaitForCHICompleted waits until the CHI reports Completed.
+// Verify the status fields against your installed operator version.
+func WaitForCHICompleted(
+	ctx context.Context,
+	client dynamic.Interface,
+	namespace string,
+	chiName string,
+	timeout time.Duration,
+) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	ticker := time.NewTicker(PollInterval)
+	defer ticker.Stop()
+
+	for {
+		chi, err := client.Resource(chiGVR).
+			Namespace(namespace).
+			Get(ctx, chiName, metav1.GetOptions{})
 		if err != nil {
-			return nil, fmt.Errorf("failed to build kubeconfig: %w", err)
+			return fmt.Errorf("get CHI %s: %w", chiName, err)
+		}
+
+		status, _, _ := unstructured.NestedString(
+			chi.Object, "status", "status",
+		)
+		taskID, _, _ := unstructured.NestedString(
+			chi.Object, "status", "taskID",
+		)
+		completedTaskIDs, _, _ := unstructured.NestedStringSlice(
+			chi.Object, "status", "taskIDsCompleted",
+		)
+
+		taskCompleted := false
+		for _, completedID := range completedTaskIDs {
+			if taskID != "" && completedID == taskID {
+				taskCompleted = true
+				break
+			}
+		}
+
+		log.Printf(
+			"CHI=%s status=%q taskID=%q taskCompleted=%t generation=%d",
+			chiName,
+			status,
+			taskID,
+			taskCompleted,
+			chi.GetGeneration(),
+		)
+
+		if status == "Completed" && taskCompleted {
+			return nil
+		}
+
+		if status == "Error" || status == "Aborted" {
+			return fmt.Errorf(
+				"CHI %s reconciliation failed: status=%q taskID=%q",
+				chiName, status, taskID,
+			)
+		}
+
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf(
+				"timed out waiting for CHI %s reconciliation: %w",
+				chiName, ctx.Err(),
+			)
+		case <-ticker.C:
 		}
 	}
-	k8sConfig.Timeout = 60 * time.Second
-
-	client, err := kubernetes.NewForConfig(k8sConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create kubernetes client: %w", err)
-	}
-	return client, nil
 }
 
-func Run(namespace, desiredCustom string) error {
-	clientset, err := getKubeClient()
-	if err != nil {
-		return err
-	}
-
-	ctx := context.Background()
-
-	pvcs, err := clientset.CoreV1().PersistentVolumeClaims(namespace).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to list PVCs: %w", err)
-	}
-
-	desiredKeys := parseKeys(desiredCustom)
-
-	for i := range pvcs.Items {
-		pvc := &pvcs.Items[i]
-		if err := cleanupPVC(ctx, clientset, namespace, pvc, desiredKeys); err != nil {
-			fmt.Printf("WARNING: failed to cleanup PVC %s: %v\n", pvc.Name, err)
+// CleanupPVC removes obsolete annotations previously tracked as deployment-managed.
+func CleanupPVC(
+	ctx context.Context,
+	client kubernetes.Interface,
+	namespace string,
+	pvcName string,
+	desiredKeys []string,
+) error {
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		pvc, err := client.CoreV1().PersistentVolumeClaims(namespace).
+			Get(ctx, pvcName, metav1.GetOptions{})
+		if err != nil {
+			return fmt.Errorf("get PVC %s: %w", pvcName, err)
 		}
-	}
 
-	return nil
-}
+		changed := removeObsoleteAnnotations(pvc, desiredKeys)
+		if !changed {
+			log.Printf("PVC %s: no annotation changes required", pvcName)
+			return nil
+		}
 
-func cleanupPVC(ctx context.Context, clientset kubernetes.Interface, namespace string, pvc *corev1.PersistentVolumeClaim, desiredKeys map[string]bool) error {
-	if pvc.Annotations == nil {
+		_, err = client.CoreV1().PersistentVolumeClaims(namespace).
+			Update(ctx, pvc, metav1.UpdateOptions{})
+		if err != nil {
+			if apierrors.IsConflict(err) {
+				log.Printf("PVC %s: resource-version conflict; retrying", pvcName)
+			}
+			return err
+		}
+
+		log.Printf("PVC %s: obsolete annotations cleaned up", pvcName)
 		return nil
+	})
+}
+
+func removeObsoleteAnnotations(
+	pvc *corev1.PersistentVolumeClaim,
+	desiredKeys []string,
+) bool {
+	annotations := pvc.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
 	}
 
-	tracked, exists := pvc.Annotations[customAnnotationsKey]
+	// Without tracking metadata, we cannot safely identify which
+	// existing annotations were managed by this deployment.
+	previouslyManaged, exists := annotations[ManagedAnnotationsKey]
 	if !exists {
-		return nil
+		annotations[ManagedAnnotationsKey] = joinSortedKeys(desiredKeys)
+		pvc.SetAnnotations(annotations)
+		log.Printf(
+			"PVC %s: tracking annotation missing; initialized tracking without deleting annotations",
+			pvc.Name,
+		)
+		return true
 	}
 
-	trackedKeys := parseKeys(tracked)
+	desired := make(map[string]struct{}, len(desiredKeys))
+	for _, key := range desiredKeys {
+		if key != "" {
+			desired[key] = struct{}{}
+		}
+	}
 
 	changed := false
-	for key := range trackedKeys {
-		if !desiredKeys[key] {
-			fmt.Printf("PVC %s: removing stale annotation '%s'\n", pvc.Name, key)
-			delete(pvc.Annotations, key)
+
+	for _, key := range parseKeys(previouslyManaged) {
+		if _, stillDesired := desired[key]; stillDesired {
+			continue
+		}
+
+		if _, found := annotations[key]; found {
+			delete(annotations, key)
 			changed = true
+			log.Printf("PVC %s: removed obsolete annotation %q", pvc.Name, key)
 		}
 	}
 
-	newTrackedValue := formatKeys(desiredKeys)
-	if pvc.Annotations[customAnnotationsKey] != newTrackedValue {
-		pvc.Annotations[customAnnotationsKey] = newTrackedValue
+	newTracking := joinSortedKeys(desiredKeys)
+	if annotations[ManagedAnnotationsKey] != newTracking {
+		annotations[ManagedAnnotationsKey] = newTracking
 		changed = true
 	}
 
-	if !changed {
-		fmt.Printf("PVC %s: annotations up to date, skipping\n", pvc.Name)
+	if changed {
+		pvc.SetAnnotations(annotations)
+	}
+
+	return changed
+}
+
+func parseKeys(value string) []string {
+	if strings.TrimSpace(value) == "" {
 		return nil
 	}
 
-	_, err := clientset.CoreV1().PersistentVolumeClaims(namespace).Update(ctx, pvc, metav1.UpdateOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to update PVC: %w", err)
-	}
-
-	fmt.Printf("PVC %s: patched successfully\n", pvc.Name)
-	return nil
-}
-
-func parseKeys(s string) map[string]bool {
-	keys := make(map[string]bool)
-	for _, k := range strings.Split(s, ",") {
-		k = strings.TrimSpace(k)
-		if k != "" {
-			keys[k] = true
+	var keys []string
+	for _, key := range strings.Split(value, ",") {
+		key = strings.TrimSpace(key)
+		if key != "" {
+			keys = append(keys, key)
 		}
 	}
 	return keys
 }
 
-func formatKeys(keys map[string]bool) string {
-	sorted := make([]string, 0, len(keys))
-	for k := range keys {
-		sorted = append(sorted, k)
+func joinSortedKeys(keys []string) string {
+	unique := make(map[string]struct{}, len(keys))
+	for _, key := range keys {
+		key = strings.TrimSpace(key)
+		if key != "" {
+			unique[key] = struct{}{}
+		}
 	}
-	sort.Strings(sorted)
-	return strings.Join(sorted, ",")
+
+	result := make([]string, 0, len(unique))
+	for key := range unique {
+		result = append(result, key)
+	}
+	sort.Strings(result)
+
+	return strings.Join(result, ",")
 }
