@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -82,6 +83,14 @@ func (downloader *BackupsDownloader) Download(ignoreActive bool) error {
 		return err
 	}
 	logger.Info(fmt.Sprintf("list of remoteBackups %s", remoteBackups))
+
+	latestFullBackupId, err := downloader.BackupClient.GetLatestFullBackupId()
+	if err != nil {
+		logger.Warn("unable to obtain latest full backup Id, all remote backups will be considered", zap.Error(err))
+		latestFullBackupId = ""
+	}
+	remoteBackups = selectBackupChain(remoteBackups, latestFullBackupId)
+	logger.Info(fmt.Sprintf("backups chain to download (from latest full %q): %s", latestFullBackupId, remoteBackups))
 
 	missingBackups := downloader.getMissingLocalBackups(mapOfLocalBackups, remoteBackups)
 
@@ -241,35 +250,68 @@ func (downloader *BackupsDownloader) downloadMissingBackups(missingBackupsMap ma
 		if len(missingBackups) == 0 {
 			continue
 		}
-		if !downloader.DownloadAll {
-			missingBackups = []string{missingBackups[0]}
-		}
 		for _, backupId := range missingBackups {
-			logger.Info(fmt.Sprintf("starting to download %s backups", backupId))
-			downloadBackupAction := fmt.Sprintf("backup/download/%s", backupId+"_"+host)
-			url := fmt.Sprintf("%s://%s:7171/%s", util.GetProtocol(), host, downloadBackupAction)
-			logger.Info("will post action: " + url)
-			res, err := http.Post(url, "text/plain", nil)
+			err := downloadBackupForHost(host, backupId)
 			if err != nil {
-				return err
-			}
-			defer res.Body.Close()
-			if res.StatusCode != http.StatusOK {
-				bodyBytes, err := io.ReadAll(res.Body)
-				if err != nil {
-					logger.Error("there is an error during body read", zap.Error(err))
+				if isNotFoundOnRemoteStorage(err) {
+					// backup is listed by backup daemon, but its data is absent in clickhouse-backup remote storage
+					// (e.g. stale metadata after storage cleanup). Skip it instead of failing the whole download.
+					logger.Warn(fmt.Sprintf("backup %s for host %s is not found on remote storage, skipping", backupId, host), zap.Error(err))
+					continue
 				}
-				return errors.New(fmt.Sprintf("failed to do the actions: %s", string(bodyBytes)))
-			}
-
-			if err = res.Body.Close(); err != nil {
 				return err
 			}
-
-			if err = util.WaitTillActionCompletedForHost(host); err != nil {
-				return err
+			if !downloader.DownloadAll {
+				// scheduled mode: download one backup per run
+				break
 			}
 		}
 	}
 	return nil
+}
+
+func downloadBackupForHost(host, backupId string) error {
+	logger.Info(fmt.Sprintf("starting to download %s backups", backupId))
+	downloadBackupAction := fmt.Sprintf("backup/download/%s", backupId+"_"+host)
+	url := fmt.Sprintf("%s://%s:7171/%s", util.GetProtocol(), host, downloadBackupAction)
+	logger.Info("will post action: " + url)
+	res, err := http.Post(url, "text/plain", nil)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(res.Body)
+		if err != nil {
+			logger.Error("there is an error during body read", zap.Error(err))
+		}
+		return errors.New(fmt.Sprintf("failed to do the actions: %s", string(bodyBytes)))
+	}
+
+	return util.WaitTillActionCompletedForHost(host)
+}
+
+func isNotFoundOnRemoteStorage(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "not found on remote storage")
+}
+
+// selectBackupChain removes duplicates (the same id can be returned both as full and incremental backup),
+// sorts ids in chronological order and keeps only backups starting from the latest full backup,
+// because only this chain is needed for restore. If latestFullBackupId is empty, all backups are kept.
+func selectBackupChain(backups []string, latestFullBackupId string) []string {
+	seen := make(map[string]struct{}, len(backups))
+	chain := make([]string, 0, len(backups))
+	for _, id := range backups {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		// backup ids have fixed-length format YYYYMMDDTHHMMSS, so lexicographic order is chronological
+		if latestFullBackupId != "" && id < latestFullBackupId {
+			continue
+		}
+		chain = append(chain, id)
+	}
+	sort.Strings(chain)
+	return chain
 }
