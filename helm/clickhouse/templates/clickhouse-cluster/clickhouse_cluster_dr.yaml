@@ -10,6 +10,13 @@ metadata:
     {{ include "kubernetes.labels" . | nindent 4 }}
 
 spec:
+  reconcile:
+    host:
+      wait:
+        probes:
+          # See clickhouse_cluster.yaml: applies even when the running operator has an old config.
+          startup: "no"
+          readiness: "yes"
   configuration:
     settings:
       prometheus/asynchronous_metrics: 'true'
