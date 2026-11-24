@@ -94,7 +94,7 @@ func getUserQuery(user string) string {
 }
 
 func changeUserPassword(user, password string) string {
-	return fmt.Sprintf("ALTER USER \"%s\" IDENTIFIED WITH sha256_password BY '%s'", escapeString(user), escapeString(password))
+	return fmt.Sprintf("ALTER USER \"%s\" ON CLUSTER '{cluster}' IDENTIFIED WITH sha256_password BY '%s'", escapeString(user), escapeString(password))
 }
 
 func deleteMetadataQuery() string {
