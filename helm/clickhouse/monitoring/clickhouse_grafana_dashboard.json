@@ -1849,7 +1849,7 @@
             "9": "c",
             "10": "e"
           },
-          "expr": "sum(chi_clickhouse_metric_fetch_errors{exported_namespace=~\"$exported_namespace\",chi=~\"$chi\",hostname=~\"$hostname\",fetch_type=\"system.metrics\", cluster=~\"$cluster\"})",
+          "expr": "sum(chi_clickhouse_metric_fetch_errors{exported_namespace=~\"$exported_namespace\",chi=~\"$chi\",hostname=~\"$hostname\",fetch_type=\"system_metrics\", cluster=~\"$cluster\"})",
           "intervalFactor": 2,
           "legendFormat": "",
           "refId": "A",

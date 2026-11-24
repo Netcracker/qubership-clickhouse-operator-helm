@@ -36,7 +36,7 @@ spec:
             description: "`metrics-exporter` metrics are absent on {{ .Release.Namespace }}"
 
         - alert: ClickHouseServerDown
-          expr: chi_clickhouse_metric_fetch_errors{fetch_type='system.metrics', namespace="{{ .Release.Namespace }}"} > 0
+          expr: chi_clickhouse_metric_fetch_errors{fetch_type='system_metrics', namespace="{{ .Release.Namespace }}"} > 0
           labels:
             severity: critical
             namespace: {{ .Release.Namespace }}
@@ -47,7 +47,7 @@ spec:
             description: "`metrics-exporter` failed metrics fetch {{`{{ $labels.fetch_type }}`}}. Please check instance status ```kubectl get pods -n {{ .Release.Namespace }}```"
 
         - alert: ClickHouseMetricsExporterFetchErrors
-          expr: chi_clickhouse_metric_fetch_errors{fetch_type!='system.metrics', namespace="{{ .Release.Namespace }}"} > 0
+          expr: chi_clickhouse_metric_fetch_errors{fetch_type!='system_metrics', namespace="{{ .Release.Namespace }}"} > 0
           labels:
             severity: high
             namespace: {{ .Release.Namespace }}
