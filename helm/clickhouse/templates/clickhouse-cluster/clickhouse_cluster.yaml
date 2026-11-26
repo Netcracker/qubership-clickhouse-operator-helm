@@ -9,6 +9,16 @@ metadata:
     {{ include "kubernetes.labels" . | nindent 4 }}
     deployer.cleanup/allow: "false"
 spec:
+  reconcile:
+    host:
+      wait:
+        probes:
+          # Same as the operator config, but set on the CHI so that it applies even when the
+          # running operator pod still has the old config (for example during an upgrade).
+          # Without the readiness wait, operator 0.27.3+ defers the last replica of a shard
+          # and aborts the CHI with ShardHasNoHealthyPeer.
+          startup: "no"
+          readiness: "yes"
   defaults:
     distributedDDL:
       profile: default
