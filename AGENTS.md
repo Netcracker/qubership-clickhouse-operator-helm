@@ -1,113 +1,162 @@
 # AGENTS.md
 
-This file provides guidance to AI coding assistants when working with code in this repository.
+ClickHouse Operator providing ClickHouse as a service on Kubernetes and OpenShift.
+Monorepo with Helm charts, Go microservices, and integration tests.
 
-## Project Overview
 
-ClickHouse Operator providing ClickHouse as a service on Kubernetes and OpenShift. The repo contains Helm charts for deployment and six Go microservices that handle backup, monitoring, secrets, and database administration.
+## Repository Layout
 
-## Build Commands
+Monorepo with Go services using per-service `go.mod` files.
 
-Each service lives under `services/<name>/` with its own Makefile and Go module (Go 1.26.1). All services share the same Make targets:
+- `services/site-manager` — Backup scheduler + HTTP server; gocron and K8s controller-runtime.
+- `services/backup-orchestrator` — CLI for backup/restore/delete ops; flag-based actions.
+- `services/dbaas-adapter` — DBaaS API server (Fiber); four adapter modes: `basic/`, `cluster/`, `declarative/`, `initial/`.
+- `services/sidecar` — Minimal backup transfer server on port 7172.
+- `services/secret-monitor` — K8s informer watcher; reconciles secrets and credentials.
+- `services/hook` — Post-deployment hook that calls `handler.UnlockSecret()`.
+- `services/pvc-cleanup` — Persistent volume cleanup utility.
+- `helm/clickhouse/` — Main Helm chart; includes CRDs, operator deployment, cluster configs, hooks.
+- `helm/clickhouse-services/` — Supplementary services chart.
+- `integration-tests/` — Python/Robot Framework test suite.
+- `docker-transfer/` — Docker image context.
+- `243/`, `258/`, `269/` — Docker image contexts.
+- `docs/` — User-facing documentation.
+- `agent-packages/` — Agent automation packages.
 
-```bash
+## Service Code Organization
+
+Each service under `services/<name>/` has:
+- `Makefile` — Targets: `deps`, `fmt`, `compile`, `docker-build`, `docker-push`, `clean`. See Docker Image Push Rules before using image-related targets.
+- `go.mod`, `go.sum` — Check `go.mod` for the Go version and dependencies required by each service
+- `cmd/main.go` or `adapter/main.go` — Entry point.
+
+Common dependencies: `go.uber.org/zap` (logging), `k8s.io/client-go`, `sigs.k8s.io/controller-runtime`.
+
+**Note:** `dbaas-adapter` uses `adapter/main.go`; compile builds from `./adapter`.
+
+## Helm Chart Organization
+
+Both charts follow standard Helm structure:
+
+- `Chart.yaml` — Chart metadata and versions.
+- `values.yaml` — Default parameters; must have sensible defaults for all new keys.
+- `templates/` — Kubernetes manifests rendered from values.
+  - `_helpers.tpl` — Shared template functions for labels, annotations, security contexts.
+- `crds/` — Contains the ClickHouseInstallation CRD.
+  - `crd.yaml` — CRD vendored from upstream Altinity and updated alongside operator version upgrades.
+- `monitoring/` — Pre-built Grafana dashboards included in the ClickHouse chart.
+  - `clickhouse_grafana_dashboard.json` — General ClickHouse metrics dashboard.
+  - `clickhouse_performance_grafana_dashboard.json` — Performance metrics dashboard.
+
+## Build Triggers and Pass Conditions
+
+### Service Dependencies (`services/*/go.mod`, `services/*/go.sum`)
+
+```sh
 cd services/<service-name>
-
-make deps        # go mod tidy
-make fmt         # gofmt -l -s -w .
-make compile     # CGO_ENABLED=0 go build (output: build/_output/bin/...)
-make docker-build  # build Docker image (TAG_ENV=local by default)
-make docker-push   # push Docker image
-make clean       # rm -rf build/_output
+make deps
 ```
 
-Only `dbaas-adapter` has a `make test` target:
-```bash
-cd services/dbaas-adapter
-make test   # runs go test -v ./...
+Pass: Exit 0; `go.mod` and `go.sum` consistent.
+
+### Service Code (`services/**/*.go`)
+
+```sh
+cd services/<service-name>
+make fmt && make compile
 ```
 
-Unit tests exist only in `services/dbaas-adapter/adapter/basic/` (testify/assert). Integration tests are Python/Robot Framework based in `integration-tests/`.
+Pass: Exit 0; binary in `build/_output/bin/`. `make fmt` runs `gofmt -l -s -w .` which rewrites files; review the diff for formatting changes.
 
-## Architecture
+### Services with Tests
 
-### Services (`services/`)
+For services that have `*_test.go` files:
 
-| Service | Entry Point | Purpose |
-|---|---|---|
-| **site-manager** | `cmd/main.go` | Backup scheduler + HTTP server; uses gocron and K8s controller-runtime |
-| **backup-orchestrator** | `cmd/main.go` | CLI for backup/restore/delete operations against ClickHouse; flag-based actions (`backup`, `restore`, `delete`, `incrementalDelete`, `dblist`, `incremental-backup`, `cancel`) |
-| **dbaas-adapter** | `adapter/main.go` | DBaaS API server using Fiber framework; three adapter modes: `basic/`, `cluster/`, `initial/` |
-| **sidecar** | `cmd/main.go` | Minimal backup transfer server on port 7172 |
-| **secret-monitor** | `cmd/main.go` | K8s informer-based watcher that reconciles secrets and manages credentials |
-| **hook** | `cmd/main.go` | One-shot post-deployment hook that calls `handler.UnlockSecret()` |
-
-Common dependencies across services: `go.uber.org/zap` (logging), `k8s.io/client-go` (K8s API), `sigs.k8s.io/controller-runtime`.
-
-Note: `dbaas-adapter` uses `adapter/main.go` as entry point (not `cmd/main.go`), and its compile target builds from `./adapter`.
-
-### Helm Charts (`helm/`)
-
-- **`helm/clickhouse/`** — Main chart (v0.1.0). Includes CRDs (`crds/crd.yaml`), operator deployment, cluster definitions, backup daemon config, hooks, secret watchers, TLS issuers, and test templates. Template helpers in `_helpers.tpl`.
-- **`helm/clickhouse-services/`** — Supplementary services chart.
-
-### Docker Components
-
-10 Docker images defined in `.github/build-config.cfg`. Six are the Go services above; four are standalone:
-- `qubership-clickhouse-269` (context: `269/`)
-- `qubership-clickhouse-258` (context: `258/`)
-- `qubership-clickhouse-243` (context: `243/`)
-- `qubership-clickhouse-integration-tests` (context: `integration-tests/`)
-- `qubership-clickhouse-transfer` (context: `docker-transfer/`)
-
-### CI/CD (`.github/workflows/`)
-
-- **build.yaml** — Triggers on release, push to main, and PRs. Multi-platform builds (amd64/arm64) with changeset-based matrix strategy. Registry: `ghcr.io/netcracker`.
-- **helm-charts-release.yaml** — Manual trigger for Helm chart releases.
-- **license.yaml** — Apache 2.0 license header compliance checks on Go, Shell, and Python files.
-
-## Key Patterns
-
-- All Go services use `GOPRIVATE=https://github.com/Netcracker` for private module access.
-- Docker builds are multi-stage (Alpine 3.23 + Go builder → minimal Alpine runtime).
-- Services read TLS certs from `/tls/ca.crt` at runtime in Kubernetes.
-- The backup-orchestrator uses a config file at `build/backup-daemon.conf` for runtime settings.
-
-## Commit Message Pattern
-
-All commits in this project MUST follow this format:
-
-```
-<type>: [<ticket-number>] <meaningful message> <list of details>
+```sh
+cd services/<service-name>
+go test ./...
 ```
 
-Where:
-- `<type>` = fix, chore, feat, chore(deps), refactor, docs, build, config.
-- `<ticket-number>` = REQUIRED - Always ask the user for the ticket number before creating any commit
-- `<meaningful message>` = Clear, concise description of the change
-- `<list of details>` - list of commit changes
+Pass: All tests pass; exit 0.
 
-**Example:**
+**Note:** Site-manager, backup-orchestrator, and other services have test files but no test target defined. Run `go test ./...` for each service with tests.
+
+### Helm Charts (`helm/clickhouse/**`, `helm/clickhouse-services/**`)
+
+```sh
+helm lint helm/clickhouse
+helm lint helm/clickhouse-services
+helm template test helm/clickhouse
+helm template test helm/clickhouse-services
 ```
-feat: [CPCAP-1234] add backup retention policy configuration
+
+Pass: All commands exit 0; no Helm lint errors; review any warnings; templates render successfully.
+
+## Compatibility Rules
+
+All changes MUST preserve backward compatibility unless an explicit breaking change is approved.
+
+### Helm Charts
+
+Applies to:
+- `helm/clickhouse/`
+- `helm/clickhouse-services/`
+
+#### Helm Values
+
+- Every new parameter MUST have a default; never break existing values files.
+- Never rename or remove keys; breaking changes require explicit user approval and ticket.
+- Document any migration path for users.
+- Use deprecation aliases when deprecating old keys; test both old and new keys work during transition.
+
+### ClickHouseInstallation CRD (`helm/clickhouse/crds/crd.yaml`)
+
+- CRD at `helm/clickhouse/crds/crd.yaml` is sourced from the upstream Altinity ClickHouse Operator and should remain aligned with the corresponding operator release. Update it only as part of an operator version upgrade. Do not modify it independently without an explicit requirement.
+- When updating the operator version, verify compatibility with existing ClickHouseInstallation (CHI) resources using current production values. Run `helm template test helm/clickhouse --include-crds` to include the CRD in the rendered output for review. Note that Helm template rendering alone does not validate existing CR instances against the CRD schema.
+
+### Docker Image Push Rules
+
+Never run `make all`, `make docker-push`, or push to any registry unless the user explicitly asks. Confirm destination registry and tag first; then ask permission before pushing.
+
+## Key Architecture and Development Patterns
+
+### Docker and CI/CD
+
+- `make docker-build` — Build images locally.
+- `make docker-push` — Push images to the configured registry (see Docker Image Push Rules).
+
+Helm charts maintain independent chart versions. Docker image tags are managed by the CI/CD build and release workflows.
+
+Automated workflows under `.github/workflows/`:
+- **build.yaml** — Builds Docker images; triggered on releases, pushes to `main`, pull requests, and manual dispatch. Supports `amd64` and `arm64`. Registry: `ghcr.io/netcracker`.
+- **run_tests.yaml** — Runs integration tests after build.yaml completes; triggered on PR and push to `main`.
+- **helm-charts-release.yaml** — Manually triggered; releases Helm charts with version input.
+- **license.yaml** — Auto-adds license headers to Go, Shell, Python files on push to `main`; creates PR.
+- **run_nightly_tests.yaml** — Scheduled nightly integration test runs.
+- **clean.yaml** — Cleanup workflow for image registry.
+- **renovate-approve.yaml** — Auto-approves Renovate dependency updates.
+- **apm-package-update.yml** — APM package synchronization.
+
+### Go Dependencies
+- **Private Go modules:** Go services use `GOPRIVATE` for private modules hosted under `github.com/Netcracker`. Preserve the existing configuration when modifying dependencies.
+
+### Dockerfile Conventions
+- Images use multi-stage builds with an Alpine-based Go builder stage and a minimal Alpine runtime stage. Follow the existing Dockerfile pattern.
+
+### TLS Configuration
+- Services running in Kubernetes read CA certificates from `/tls/ca.crt`. Preserve this path and the existing TLS configuration when modifying certificate handling.
+
+### Backup Orchestrator Configuration
+- The backup-orchestrator uses `build/backup-daemon.conf` for runtime configuration. Preserve its expected format and configuration handling.
+
+## Commit Message Format
+
+```
+<type>: <ticket-number> <message>
 
 - <change 1>
 - <change 2>
-- ...
-
-
-fix: [CPCAP-5678] resolve memory leak in monitoring agent
-
-- <change 1>
-- <change 2>
-- ...
-
-
-chore(deps): [CPCAP-9012] bump kubernetes dependencies to v0.35.1
-
-- <change 1>
-- <change 2>
-- ...
 ```
 
-**Important:** Never create a commit without first asking the user for the ticket number.
+Types: `fix`, `feat`, `chore`, `chore(deps)`, `refactor`, `docs`, `build`, `config`.
+Always include ticket number and ask user to confirm before committing.
